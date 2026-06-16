@@ -21,10 +21,14 @@ npm install
 ## Run shell (dev)
 
 ```bash
+npm run dev
+# or directly:
 npm -w apps/player-shell run dev
 ```
 
 Open: http://localhost:5173
+
+Theme packages are resolved directly from their TypeScript source via Vite aliases — no pre-build step is needed for development.
 
 ### Tenant switching
 
@@ -72,12 +76,17 @@ Stories: `BrandButton` (Primary, Disabled, Loading, FullWidth, WithIcon) and `Br
 ## Build
 
 ```bash
-# Shell
-npm -w apps/player-shell run build
+# Build everything (themes first, then shell)
+npm run build
 
-# Theme package
-npm -w themes/theme-tenant-alpha run build
+# Build themes only
+npm run build:themes
+
+# Build shell only (requires themes already built)
+npm -w apps/player-shell run build
 ```
+
+> Theme packages must be compiled (`npm run build:themes`) before a shell-only build, because the production bundle resolves from `dist/`. In dev mode this is not required — Vite resolves themes directly from source.
 
 ## Project structure
 
