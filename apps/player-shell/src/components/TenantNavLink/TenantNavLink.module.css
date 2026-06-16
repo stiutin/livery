@@ -1,0 +1,23 @@
+.shellNavLink {
+  align-items: center;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.shellNavLink:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  text-decoration: none;
+}
+
+.shellNavLink--active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
