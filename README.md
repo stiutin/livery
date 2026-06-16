@@ -91,48 +91,83 @@ npm -w apps/player-shell run build
 ## Project structure
 
 ```
-apps/player-shell/src/
-├── components/
-│   └── AppLayout.tsx        # persistent header + nav (layout route)
-├── routes/
-│   ├── App.tsx              # route tree
-│   ├── HomePage.tsx         # tenant selector + branded component demo
-│   ├── HomePage.test.tsx
-│   ├── LoginPage.tsx        # react-hook-form login
-│   ├── LoginPage.test.tsx
-│   ├── BillingPage.tsx      # invoice creation with full state machine
-│   ├── BillingPage.test.tsx
-│   └── ThemePreview.tsx     # live colour swatch + component preview
-├── services/
-│   ├── identityApi.ts       # mocked auth adapter
-│   └── billingApi.ts        # mocked billing adapter
-├── tenant/
-│   ├── TenantContext.tsx    # provider
-│   ├── context.ts           # createContext
-│   └── useTenant.ts         # consumer hook
-└── theme/
-    ├── ThemeBoot.tsx        # reads URL params → TenantProvider + ThemeLoader
-    ├── ThemeLoader.tsx      # applies CSS variable tokens to <html>
-    ├── themeRegistry.ts     # brandId → { themeConfig, themeModule }
-    ├── themeContracts.ts    # ThemeModule type
-    ├── themeFallback.tsx    # fallback BrandButton + BrandCard
-    └── useThemeComponents.tsx
+apps/player-shell/
+├── src/
+│   ├── components/
+│   │   ├── AppLayout/
+│   │   │   ├── AppLayout.tsx        # persistent header + nav (layout route)
+│   │   │   └── AppLayout.module.css
+│   │   ├── BackToHome/
+│   │   │   ├── BackToHome.tsx       # back-navigation link with param preservation
+│   │   │   └── BackToHome.module.css
+│   │   └── TenantNavLink/
+│   │       ├── TenantNavLink.tsx    # nav link that carries tenant query params
+│   │       └── TenantNavLink.module.css
+│   ├── constants/
+│   │   └── common.const.ts          # shared app-wide constants
+│   ├── routes/
+│   │   ├── App.tsx                  # route tree
+│   │   ├── BillingPage/
+│   │   │   ├── BillingPage.tsx      # invoice creation with full state machine
+│   │   │   └── BillingPage.test.tsx
+│   │   ├── HomePage/
+│   │   │   ├── HomePage.tsx         # tenant selector + branded component demo
+│   │   │   ├── HomePage.test.tsx
+│   │   │   └── HomePage.module.css
+│   │   ├── LoginPage/
+│   │   │   ├── LoginPage.tsx        # react-hook-form login
+│   │   │   └── LoginPage.test.tsx
+│   │   └── ThemePreview/
+│   │       ├── ThemePreview.tsx     # live colour swatch + component preview
+│   │       └── ThemePreview.module.css
+│   ├── services/
+│   │   ├── identityApi.ts           # mocked auth adapter
+│   │   └── billingApi.ts            # mocked billing adapter
+│   ├── styles/
+│   │   └── global.css               # global CSS reset + base styles
+│   ├── tenant/
+│   │   ├── TenantContext.tsx        # provider
+│   │   ├── context.ts               # createContext
+│   │   └── useTenant.ts             # consumer hook
+│   ├── test/
+│   │   └── setup.ts                 # vitest global test setup
+│   ├── theme/
+│   │   ├── ThemeBoot.tsx            # reads URL params → TenantProvider + ThemeLoader
+│   │   ├── ThemeLoader.tsx          # applies CSS variable tokens to <html>
+│   │   ├── themeRegistry.ts         # brandId → { themeConfig, themeModule }
+│   │   ├── themeContracts.ts        # ThemeModule type
+│   │   ├── themeFallback.tsx        # fallback BrandButton + BrandCard
+│   │   ├── themeTypes.ts            # shared theme type definitions
+│   │   ├── useThemeComponents.tsx
+│   │   ├── theme-tenant-alpha.d.ts  # ambient types for alpha package
+│   │   ├── theme-tenant-beta.d.ts   # ambient types for beta package
+│   │   └── index.ts                 # re-exports
+│   ├── types/
+│   │   ├── billingState.ts          # billing page state types
+│   │   └── loginForm.ts             # login form field types
+│   ├── utils/
+│   │   └── formatters.utils.ts      # currency / locale formatters
+│   └── main.tsx                     # app entry point
+└── public/
+    └── favicon.svg
 
 themes/theme-tenant-alpha/src/   # violet brand
 ├── components/
-│   ├── BrandButton.tsx      # branded button, hover/focus via JS state
+│   ├── BrandButton.tsx              # branded button, hover/focus via JS state
 │   ├── BrandButton.stories.tsx
-│   ├── BrandCard.tsx        # card with brand border
+│   ├── BrandCard.tsx                # card with brand border
 │   └── BrandCard.stories.tsx
-├── theme.config.ts          # token values as JS object
-├── tokens.css               # same values as CSS custom properties
-└── index.ts                 # package exports
+├── theme.config.ts                  # token values as JS object
+├── themeTypes.ts                    # theme-local type definitions
+├── tokens.css                       # same values as CSS custom properties
+└── index.ts                         # package exports
 
-themes/theme-tenant-beta/src/    # teal brand (same structure as alpha)
+themes/theme-tenant-beta/src/    # teal brand
 ├── components/
 │   ├── BrandButton.tsx
 │   └── BrandCard.tsx
 ├── theme.config.ts
+├── themeTypes.ts
 ├── tokens.css
 └── index.ts
 ```
