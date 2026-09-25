@@ -17,14 +17,14 @@ The packages are intentionally kept separate. The shell owns all runtime behavio
 
 ### Responsibilities
 
-| Concern                 | Location                       |
-| ----------------------- | ------------------------------ |
-| Routing                 | `src/routes/App.tsx`           |
-| Layout / persistent nav | `src/components/AppLayout.tsx` |
-| Feature pages           | `src/routes/`                  |
-| Tenant context          | `src/tenant/`                  |
-| API adapters            | `src/services/`                |
-| Theme loading boundary  | `src/theme/`                   |
+| Concern                 | Location                                 |
+| ----------------------- | ---------------------------------------- |
+| Routing                 | `src/routes/App.tsx`                     |
+| Layout / persistent nav | `src/components/AppLayout/AppLayout.tsx` |
+| Feature pages           | `src/routes/`                            |
+| Tenant context          | `src/tenant/`                            |
+| API adapters            | `src/services/`                          |
+| Theme loading boundary  | `src/theme/`                             |
 
 ### Pages
 
