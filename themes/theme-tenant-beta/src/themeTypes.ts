@@ -1,4 +1,4 @@
-export type ThemeConfig = {
-  name: string
-  tokens: Record<string, string>
+export interface ThemeConfig {
+  name: string;
+  tokens: Record<string, string>;
 }

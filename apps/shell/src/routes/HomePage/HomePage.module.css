@@ -1,0 +1,21 @@
+.tenantGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 16px 0;
+}
+
+.tenantField {
+  display: grid;
+  gap: 8px;
+}
+
+.tenantField label {
+  font-size: 0.8125rem;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

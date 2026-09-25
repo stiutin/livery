@@ -1,4 +1,4 @@
-import type { ThemeConfig } from './themeTypes'
+import type {ThemeConfig} from './themeTypes';
 
 export const themeConfig: ThemeConfig = {
   name: 'tenant-alpha',
@@ -17,9 +17,7 @@ export const themeConfig: ThemeConfig = {
     '--info': '#06B6D4',
     '--danger': '#EF4444',
     '--shadow-elev-1': '0 6px 18px rgba(16,24,40,0.08)',
-  }
-}
+  },
+};
 
-export default themeConfig
-
-
+export default themeConfig;

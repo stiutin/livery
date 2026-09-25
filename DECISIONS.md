@@ -8,7 +8,7 @@ Next.js would add SSR complexity that a white-label shell doesn't need in the MV
 
 A single repo with three workspace members:
 
-- `apps/player-shell`
+- `apps/shell`
 - `themes/theme-tenant-alpha`
 - `themes/theme-tenant-beta`
 
@@ -80,7 +80,7 @@ const THEME_REGISTRY: Record<BrandId, () => Promise<ResolvedTheme>> = {
 
 This is the only change required — page components and the theme boundary contract stay the same.
 
-## 11. AppLayout as a React Router v6 layout route
+## 11. AppLayout as a React Router layout route
 
 `AppLayout` wraps all pages via `<Route element={<AppLayout />}>` and renders `<Outlet />`. This means the persistent header renders once and pages slot in without re-mounting the header on navigation. The layout reads `useTenant()` to show the active brand in the header and generates nav links that preserve the `?search` string.
 

@@ -1,0 +1,44 @@
+.swatchCard {
+  margin-top: 20px;
+}
+
+.swatchGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.swatchItem {
+  width: 146px;
+}
+
+.swatchColor {
+  border: 1px solid rgb(0 0 0 / 40%);
+  border-radius: 8px;
+  box-shadow: var(--shadow-elev-1);
+  height: 84px;
+}
+
+.swatchLabel {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.swatchName {
+  color: var(--text);
+}
+
+.swatchVar {
+  font-size: 12px;
+}
+
+.componentsCard {
+  margin-top: 16px;
+}
+
+.buttonRow {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}

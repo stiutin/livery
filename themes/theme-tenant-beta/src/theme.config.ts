@@ -1,4 +1,4 @@
-import type { ThemeConfig } from './themeTypes'
+import type {ThemeConfig} from './themeTypes';
 
 export const themeConfig: ThemeConfig = {
   name: 'tenant-beta',
@@ -9,6 +9,6 @@ export const themeConfig: ThemeConfig = {
     '--card-border': 'rgba(20, 184, 166, 0.24)',
     '--text': '#064e3b',
   },
-}
+};
 
-export default themeConfig
+export default themeConfig;

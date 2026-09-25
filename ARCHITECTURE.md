@@ -4,7 +4,7 @@
 
 ```
 monorepo/
-├── apps/player-shell        # shell application (routing, business logic, API)
+├── apps/shell        # shell application (routing, business logic, API)
 ├── themes/theme-tenant-alpha  # primary visual package (tokens + branded components)
 └── themes/theme-tenant-beta   # additional visual package showing multi-brand scale
 ```
@@ -13,26 +13,26 @@ The packages are intentionally kept separate. The shell owns all runtime behavio
 
 ---
 
-## apps/player-shell
+## apps/shell
 
 ### Responsibilities
 
-| Concern                 | Location                       |
-| ----------------------- | ------------------------------ |
-| Routing                 | `src/routes/App.tsx`           |
-| Layout / persistent nav | `src/components/AppLayout.tsx` |
-| Feature pages           | `src/routes/`                  |
-| Tenant context          | `src/tenant/`                  |
-| API adapters            | `src/services/`                |
-| Theme loading boundary  | `src/theme/`                   |
+| Concern                 | Location                                 |
+| ----------------------- | ---------------------------------------- |
+| Routing                 | `src/routes/App.tsx`                     |
+| Layout / persistent nav | `src/components/AppLayout/AppLayout.tsx` |
+| Feature pages           | `src/routes/`                            |
+| Tenant context          | `src/tenant/`                            |
+| API adapters            | `src/services/`                          |
+| Theme loading boundary  | `src/theme/`                             |
 
 ### Pages
 
-| Route              | Component      | Notes                                                |
-| ------------------ | -------------- | ---------------------------------------------------- |
-| `/`                | `HomePage`     | Tenant selector, branded-component demo              |
-| `/auth/login`      | `LoginPage`    | Email + password, `react-hook-form` validation       |
-| `/account/billing` | `BillingPage`  | Amount form, full loading/error/empty/success states |
+| Route              | Component      | Notes                                                           |
+| ------------------ | -------------- | --------------------------------------------------------------- |
+| `/`                | `HomePage`     | Tenant selector, branded-component demo                         |
+| `/auth/login`      | `LoginPage`    | Email + password, `react-hook-form` validation                  |
+| `/account/billing` | `BillingPage`  | Amount form, full loading/error/empty/success states            |
 | `/theme/preview`   | `ThemePreview` | Live colour swatches and component preview for the active brand |
 
 ### Tenant system
@@ -90,11 +90,11 @@ Mirrors the `theme-tenant-alpha` structure exactly (same file names, same export
 ```ts
 // tokens
 export default themeConfig; // { name, tokens: Record<string, string> }
-export { themeConfig };
+export {themeConfig};
 
 // components
-export { BrandButton };
-export { BrandCard };
+export {BrandButton};
+export {BrandCard};
 ```
 
 The shell imports only from this surface. It never imports `tokens.css` directly.

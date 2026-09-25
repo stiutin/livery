@@ -1,12 +1,13 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { BrandButton } from "./BrandButton";
+import type {Meta, StoryObj} from '@storybook/react';
+
+import {BrandButton} from './BrandButton';
 
 const meta: Meta<typeof BrandButton> = {
-  title: "Brand/BrandButton",
+  title: 'Brand/BrandButton',
   component: BrandButton,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 };
 
@@ -14,21 +15,21 @@ export default meta;
 type Story = StoryObj<typeof BrandButton>;
 
 export const Primary: Story = {
-  args: { children: "Sign in" },
+  args: {children: 'Sign in'},
 };
 
 export const Disabled: Story = {
-  args: { children: "Unavailable", disabled: true },
+  args: {children: 'Unavailable', disabled: true},
 };
 
 export const Loading: Story = {
-  args: { children: "Creating invoice…", disabled: true },
+  args: {children: 'Creating invoice…', disabled: true},
 };
 
 export const WithIcon: Story = {
-  args: { children: "→ Continue" },
+  args: {children: '→ Continue'},
 };
 
 export const FullWidth: Story = {
-  args: { children: "Create invoice", style: { width: "280px" } },
+  args: {children: 'Create invoice', style: {width: '280px'}},
 };

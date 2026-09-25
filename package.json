@@ -1,26 +1,68 @@
 {
-  "name": "white-label-multi-tenant",
-  "version": "1.0.0",
+  "name": "livery",
+  "version": "0.1.0",
+  "description": "A white-label React app where a brand is data: design tokens, one component library and many tenants.",
+  "license": "MIT",
+  "author": "Serge Tiutin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stiutin/livery.git"
+  },
+  "homepage": "https://stiutin.github.io/livery/",
+  "keywords": [
+    "react",
+    "typescript",
+    "vite",
+    "design-tokens",
+    "design-system",
+    "white-label",
+    "multi-tenant",
+    "portfolio"
+  ],
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.22.3"
+  },
   "workspaces": [
     "apps/*",
     "themes/*"
   ],
   "scripts": {
-    "dev": "npm -w apps/player-shell run dev",
-    "build": "npm run build:themes && npm -w apps/player-shell run build",
+    "start": "npm -w apps/shell run start",
+    "build": "npm run build:themes && npm -w apps/shell run build",
     "build:themes": "npm -w themes/theme-tenant-alpha run build && npm -w themes/theme-tenant-beta run build",
-    "test": "npm -w apps/player-shell run test",
-    "lint": "eslint ."
+    "serve": "node scripts/serve.mjs",
+    "test": "npm -w apps/shell run test",
+    "test:watch": "npm -w apps/shell run test:watch",
+    "e2e": "npm run build && playwright test",
+    "e2e:run": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:install": "playwright install chromium",
+    "storybook": "npm -w themes/theme-tenant-alpha run storybook",
+    "lint": "eslint . && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\"",
+    "lint:fix": "eslint . --fix && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\" --fix",
+    "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
   },
   "devDependencies": {
-    "@eslint/js": "^9.29.0",
-    "eslint": "^9.29.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.2.0",
-    "typescript-eslint": "^8.34.1"
-  },
-  "license": "ISC"
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.13.6",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "stylelint": "^17.15.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.1.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1"
+  }
 }
