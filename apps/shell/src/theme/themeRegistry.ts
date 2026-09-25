@@ -1,30 +1,16 @@
-import type { ThemeConfig } from './themeTypes'
-import type { ThemeModule } from './themeContracts'
-import {
-  BrandCard as ShellBrandCard,
-  BrandButton as ShellBrandButton,
-} from './themeFallback'
-import themeConfigAlpha, {
-  BrandButton as AlphaBrandButton,
-  BrandCard as AlphaBrandCard,
-} from 'theme-tenant-alpha'
-import themeConfigBeta, {
-  BrandButton as BetaBrandButton,
-  BrandCard as BetaBrandCard,
-} from 'theme-tenant-beta'
+import type {ThemeConfig} from './themeTypes';
+import type {ThemeModule} from './themeContracts';
+import {BrandCard as ShellBrandCard, BrandButton as ShellBrandButton} from './themeFallback';
+import themeConfigAlpha, {BrandButton as AlphaBrandButton, BrandCard as AlphaBrandCard} from 'theme-tenant-alpha';
+import themeConfigBeta, {BrandButton as BetaBrandButton, BrandCard as BetaBrandCard} from 'theme-tenant-beta';
 
 export type ResolvedTheme = {
-  themeConfig: ThemeConfig
-  themeModule: ThemeModule
-}
+  themeConfig: ThemeConfig;
+  themeModule: ThemeModule;
+};
 
-export const SUPPORTED_BRANDS = [
-  'tenant-alpha',
-  'tenant-beta',
-  'tenant-empty',
-  'tenant-default',
-] as const
-export type BrandId = (typeof SUPPORTED_BRANDS)[number]
+export const SUPPORTED_BRANDS = ['tenant-alpha', 'tenant-beta', 'tenant-empty', 'tenant-default'] as const;
+export type BrandId = (typeof SUPPORTED_BRANDS)[number];
 
 const FALLBACK_THEME: ResolvedTheme = {
   themeConfig: {
@@ -41,7 +27,7 @@ const FALLBACK_THEME: ResolvedTheme = {
     BrandButton: ShellBrandButton,
     BrandCard: ShellBrandCard,
   },
-}
+};
 
 const THEME_REGISTRY: Readonly<Record<BrandId, ResolvedTheme>> = {
   'tenant-alpha': {
@@ -60,12 +46,12 @@ const THEME_REGISTRY: Readonly<Record<BrandId, ResolvedTheme>> = {
   },
   'tenant-empty': FALLBACK_THEME,
   'tenant-default': FALLBACK_THEME,
-}
+};
 
 export function resolveThemeForBrand(brandId: string): ResolvedTheme {
-  return THEME_REGISTRY[brandId as BrandId] ?? FALLBACK_THEME
+  return THEME_REGISTRY[brandId as BrandId] ?? FALLBACK_THEME;
 }
 
 export function getThemeConfigForBrand(brandId: string): ThemeConfig {
-  return resolveThemeForBrand(brandId).themeConfig
+  return resolveThemeForBrand(brandId).themeConfig;
 }

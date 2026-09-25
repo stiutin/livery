@@ -1,4 +1,3 @@
-export * from './ThemeLoader'
-export * from './themeRegistry'
-export * from './themeTypes'
-
+export * from './ThemeLoader';
+export * from './themeRegistry';
+export * from './themeTypes';

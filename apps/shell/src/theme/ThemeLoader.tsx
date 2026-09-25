@@ -1,10 +1,7 @@
-import { useEffect, useRef } from "react";
-import type { ThemeConfig } from "./themeTypes";
+import {useEffect, useRef} from 'react';
+import type {ThemeConfig} from './themeTypes';
 
-function applyTokens(
-  tokens: Record<string, string>,
-  prev: Record<string, string>,
-) {
+function applyTokens(tokens: Record<string, string>, prev: Record<string, string>) {
   const root = document.documentElement;
   for (const key of Object.keys(prev)) {
     if (!(key in tokens)) root.style.removeProperty(key);
@@ -15,7 +12,7 @@ function applyTokens(
   }
 }
 
-export function ThemeLoader({ themeConfig }: { themeConfig: ThemeConfig }) {
+export function ThemeLoader({themeConfig}: {themeConfig: ThemeConfig}) {
   const prevTokensRef = useRef<Record<string, string>>({});
 
   useEffect(() => {

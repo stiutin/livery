@@ -1,4 +1,4 @@
 export type ThemeConfig = {
-  name: string
-  tokens: Record<string, string>
-}
+  name: string;
+  tokens: Record<string, string>;
+};

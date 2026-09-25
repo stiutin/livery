@@ -1,25 +1,25 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
-import { useForm } from "react-hook-form";
-import { useTenant } from "../../tenant/useTenant";
-import { useThemeComponents } from "../../theme/useThemeComponents";
-import BackToHome from "../../components/BackToHome/BackToHome";
-import { identityApi } from "../../services/identityApi";
-import { isValidEmail } from "../../utils/formatters.utils";
-import type { LoginFormValues } from "../../types/loginForm";
-import { PASSWORD_MIN_LENGTH } from "../../constants/common.const";
+import {useState} from 'react';
+import {useLocation, useNavigate} from 'react-router';
+import {useForm} from 'react-hook-form';
+import {useTenant} from '../../tenant/useTenant';
+import {useThemeComponents} from '../../theme/useThemeComponents';
+import BackToHome from '../../components/BackToHome/BackToHome';
+import {identityApi} from '../../services/identityApi';
+import {isValidEmail} from '../../utils/formatters.utils';
+import type {LoginFormValues} from '../../types/loginForm';
+import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
 
 export default function LoginPage() {
-  const { brandId } = useTenant();
-  const { BrandButton } = useThemeComponents();
+  const {brandId} = useTenant();
+  const {BrandButton} = useThemeComponents();
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const {search} = useLocation();
   const [apiError, setApiError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ mode: "onTouched" });
+    formState: {errors, isSubmitting},
+  } = useForm<LoginFormValues>({mode: 'onTouched'});
 
   async function onSubmit(data: LoginFormValues) {
     setApiError(null);
@@ -32,7 +32,7 @@ export default function LoginPage() {
       });
       navigate(`/account/billing${search}`);
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : "Login unsuccessful.");
+      setApiError(err instanceof Error ? err.message : 'Login unsuccessful.');
     }
   }
 
@@ -44,12 +44,7 @@ export default function LoginPage() {
         Tenant-aware login for <strong>{brandId}</strong>
       </p>
 
-      <form
-        className="form"
-        onSubmit={handleSubmit(onSubmit)}
-        aria-busy={isSubmitting}
-        noValidate
-      >
+      <form className="form" onSubmit={handleSubmit(onSubmit)} aria-busy={isSubmitting} noValidate>
         <div className="field">
           <label htmlFor="email">Email address</label>
           <input
@@ -57,10 +52,10 @@ export default function LoginPage() {
             type="email"
             autoComplete="email"
             aria-invalid={!!errors.email}
-            aria-describedby={errors.email ? "email-error" : undefined}
-            {...register("email", {
-              required: "Email is required",
-              validate: (v) => isValidEmail(v) || "Enter a valid email address",
+            aria-describedby={errors.email ? 'email-error' : undefined}
+            {...register('email', {
+              required: 'Email is required',
+              validate: (v) => isValidEmail(v) || 'Enter a valid email address',
             })}
           />
           {errors.email && (
@@ -77,9 +72,9 @@ export default function LoginPage() {
             type="password"
             autoComplete="current-password"
             aria-invalid={!!errors.password}
-            aria-describedby={errors.password ? "password-error" : undefined}
-            {...register("password", {
-              required: "Password is required",
+            aria-describedby={errors.password ? 'password-error' : undefined}
+            {...register('password', {
+              required: 'Password is required',
               minLength: {
                 value: PASSWORD_MIN_LENGTH,
                 message: `Password must have at least ${PASSWORD_MIN_LENGTH} characters`,
@@ -99,12 +94,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        <BrandButton
-          type="submit"
-          disabled={isSubmitting}
-          style={{ width: "100%" }}
-        >
-          {isSubmitting ? "Processing…" : "Login"}
+        <BrandButton type="submit" disabled={isSubmitting} style={{width: '100%'}}>
+          {isSubmitting ? 'Processing…' : 'Login'}
         </BrandButton>
 
         <BackToHome />

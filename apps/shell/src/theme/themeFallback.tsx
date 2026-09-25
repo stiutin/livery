@@ -1,5 +1,5 @@
-import React from 'react'
-import type { BrandButtonProps, BrandCardProps } from './themeContracts'
+import React from 'react';
+import type {BrandButtonProps, BrandCardProps} from './themeContracts';
 
 export function BrandButton({
   children,
@@ -12,18 +12,30 @@ export function BrandButton({
   onBlur,
   ...props
 }: BrandButtonProps) {
-  const [hovered, setHovered] = React.useState(false)
-  const [focused, setFocused] = React.useState(false)
+  const [hovered, setHovered] = React.useState(false);
+  const [focused, setFocused] = React.useState(false);
 
   return (
     <button
       {...props}
       disabled={disabled}
       className={className}
-      onMouseEnter={(e) => { setHovered(true); onMouseEnter?.(e) }}
-      onMouseLeave={(e) => { setHovered(false); onMouseLeave?.(e) }}
-      onFocus={(e) => { setFocused(true); onFocus?.(e) }}
-      onBlur={(e) => { setFocused(false); onBlur?.(e) }}
+      onMouseEnter={(e) => {
+        setHovered(true);
+        onMouseEnter?.(e);
+      }}
+      onMouseLeave={(e) => {
+        setHovered(false);
+        onMouseLeave?.(e);
+      }}
+      onFocus={(e) => {
+        setFocused(true);
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        onBlur?.(e);
+      }}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -48,15 +60,10 @@ export function BrandButton({
     >
       {children}
     </button>
-  )
+  );
 }
 
-export function BrandCard({
-  children,
-  className,
-  style,
-  ...props
-}: BrandCardProps) {
+export function BrandCard({children, className, style, ...props}: BrandCardProps) {
   return (
     <div
       {...props}
@@ -72,5 +79,5 @@ export function BrandCard({
     >
       {children}
     </div>
-  )
+  );
 }

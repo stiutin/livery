@@ -1,6 +1,6 @@
-import React from "react";
-import type { BrandId } from "../theme/themeRegistry";
-import type { Currency, Locale } from "../constants/common.const";
+import React from 'react';
+import type {BrandId} from '../theme/themeRegistry';
+import type {Currency, Locale} from '../constants/common.const';
 
 export type TenantContextValue = {
   brandId: BrandId;

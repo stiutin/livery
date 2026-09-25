@@ -28,11 +28,11 @@ The packages are intentionally kept separate. The shell owns all runtime behavio
 
 ### Pages
 
-| Route              | Component      | Notes                                                |
-| ------------------ | -------------- | ---------------------------------------------------- |
-| `/`                | `HomePage`     | Tenant selector, branded-component demo              |
-| `/auth/login`      | `LoginPage`    | Email + password, `react-hook-form` validation       |
-| `/account/billing` | `BillingPage`  | Amount form, full loading/error/empty/success states |
+| Route              | Component      | Notes                                                           |
+| ------------------ | -------------- | --------------------------------------------------------------- |
+| `/`                | `HomePage`     | Tenant selector, branded-component demo                         |
+| `/auth/login`      | `LoginPage`    | Email + password, `react-hook-form` validation                  |
+| `/account/billing` | `BillingPage`  | Amount form, full loading/error/empty/success states            |
 | `/theme/preview`   | `ThemePreview` | Live colour swatches and component preview for the active brand |
 
 ### Tenant system
@@ -90,11 +90,11 @@ Mirrors the `theme-tenant-alpha` structure exactly (same file names, same export
 ```ts
 // tokens
 export default themeConfig; // { name, tokens: Record<string, string> }
-export { themeConfig };
+export {themeConfig};
 
 // components
-export { BrandButton };
-export { BrandCard };
+export {BrandButton};
+export {BrandCard};
 ```
 
 The shell imports only from this surface. It never imports `tokens.css` directly.

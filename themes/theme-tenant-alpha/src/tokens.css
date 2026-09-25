@@ -6,17 +6,17 @@
  */
 :root {
   /* Primary branding */
-  --brand-primary: #5B21B6; /* deep violet */
-  --brand-primary-variant: #7C3AED; /* vibrant purple */
+  --brand-primary: #5b21b6; /* deep violet */
+  --brand-primary-variant: #7c3aed; /* vibrant purple */
 
   /* Accents */
-  --brand-accent: #06B6D4; /* teal/cyan accent */
-  --brand-accent-2: #F472B6; /* warm pink accent */
+  --brand-accent: #06b6d4; /* teal/cyan accent */
+  --brand-accent-2: #f472b6; /* warm pink accent */
   --brand-gradient: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
 
   /* Surfaces */
-  --card-bg: #FFFFFF; 
-  --card-bg-soft: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,246,255,0.98));
+  --card-bg: #ffffff;
+  --card-bg-soft: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 246, 255, 0.98));
   --card-border: rgba(91, 33, 182, 0.14);
 
   /* Text */
@@ -24,10 +24,10 @@
   --muted: #6b7280;
 
   /* Semantic */
-  --success: #10B981;
-  --info: #06B6D4;
-  --danger: #EF4444;
+  --success: #10b981;
+  --info: #06b6d4;
+  --danger: #ef4444;
 
   /* Shadows / elevation */
-  --shadow-elev-1: 0 6px 18px rgba(16,24,40,0.08);
+  --shadow-elev-1: 0 6px 18px rgba(16, 24, 40, 0.08);
 }
