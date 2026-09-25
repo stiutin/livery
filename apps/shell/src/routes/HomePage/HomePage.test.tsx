@@ -1,10 +1,11 @@
 /* @vitest-environment jsdom */
-import {render, screen, cleanup} from '@testing-library/react';
+import {cleanup, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {describe, test, expect, afterEach} from 'vitest';
 import {MemoryRouter, Route, Routes, useLocation} from 'react-router';
-import HomePage from './HomePage';
+import {afterEach, describe, expect, test} from 'vitest';
+
 import {TenantProvider} from '../../tenant/TenantContext';
+import HomePage from './HomePage';
 
 function HomePageWithLocation() {
   const location = useLocation();

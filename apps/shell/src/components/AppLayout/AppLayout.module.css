@@ -6,7 +6,7 @@
 
 .shellHeader {
   background: var(--brand-primary);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
   color: white;
   position: sticky;
   top: 0;
@@ -50,8 +50,8 @@
 }
 
 .shellTenantBadge {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgb(255 255 255 / 20%);
+  border: 1px solid rgb(255 255 255 / 25%);
   border-radius: 32px;
   color: #fff;
   font-size: 0.75rem;
@@ -60,7 +60,7 @@
 }
 
 .shellTenantMeta {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgb(255 255 255 / 65%);
   font-size: 0.75rem;
 }
 

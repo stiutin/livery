@@ -1,10 +1,12 @@
-export type LoginInput = {
+export interface LoginInput {
   brandId: string;
   email: string;
   password: string;
-};
+}
 
-export type LoginResult = {ok: true};
+export interface LoginResult {
+  ok: true;
+}
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));

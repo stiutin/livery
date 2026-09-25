@@ -1,10 +1,10 @@
 declare module 'theme-tenant-alpha' {
   import type React from 'react';
 
-  export type ThemeConfig = {
+  export interface ThemeConfig {
     name: string;
     tokens: Record<string, string>;
-  };
+  }
 
   export type BrandButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     children: React.ReactNode;

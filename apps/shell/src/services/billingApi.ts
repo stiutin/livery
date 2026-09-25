@@ -1,12 +1,15 @@
 import {MAX_AMOUNT} from '../constants/common.const';
 
-export type CreateInvoiceInput = {
+export interface CreateInvoiceInput {
   brandId: string;
   amount: number;
   currency: string;
-};
+}
 
-export type CreateInvoiceResult = {invoiceId: string; amount: number};
+export interface CreateInvoiceResult {
+  invoiceId: string;
+  amount: number;
+}
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));

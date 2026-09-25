@@ -1,6 +1,7 @@
 import React from 'react';
-import {TenantContext, type TenantContextValue} from './context';
+
 import {DEFAULT_TENANT} from '../constants/common.const';
+import {TenantContext, type TenantContextValue} from './context';
 
 export type {TenantContextValue} from './context';
 

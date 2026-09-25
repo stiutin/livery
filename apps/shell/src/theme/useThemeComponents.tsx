@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {useTenant} from '../tenant/useTenant';
 import {resolveThemeForBrand} from './themeRegistry';
 

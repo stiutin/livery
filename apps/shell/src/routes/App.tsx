@@ -1,9 +1,10 @@
 import {Navigate, Route, Routes} from 'react-router';
-import {ThemeBoot} from '../theme/ThemeBoot';
+
 import {AppLayout} from '../components/AppLayout/AppLayout';
+import {ThemeBoot} from '../theme/ThemeBoot';
+import BillingPage from './BillingPage/BillingPage';
 import HomePage from './HomePage/HomePage';
 import LoginPage from './LoginPage/LoginPage';
-import BillingPage from './BillingPage/BillingPage';
 import ThemePreview from './ThemePreview/ThemePreview';
 
 export default function App() {

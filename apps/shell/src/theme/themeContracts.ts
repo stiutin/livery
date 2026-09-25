@@ -8,7 +8,7 @@ export type BrandCardProps = React.HTMLAttributes<HTMLDivElement> & {
   children: React.ReactNode;
 };
 
-export type ThemeModule = {
+export interface ThemeModule {
   BrandButton: React.ComponentType<BrandButtonProps>;
   BrandCard: React.ComponentType<BrandCardProps>;
-};
+}

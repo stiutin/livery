@@ -1,10 +1,11 @@
-import {render, screen, fireEvent, waitFor, cleanup} from '@testing-library/react';
-import {describe, test, expect, afterEach, vi} from 'vitest';
+import {cleanup, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {MemoryRouter} from 'react-router';
-import BillingPage from './BillingPage';
-import {TenantProvider} from '../../tenant/TenantContext';
-import * as billingApiModule from '../../services/billingApi';
+import {afterEach, describe, expect, test, vi} from 'vitest';
+
 import {MAX_AMOUNT} from '../../constants/common.const';
+import * as billingApiModule from '../../services/billingApi';
+import {TenantProvider} from '../../tenant/TenantContext';
+import BillingPage from './BillingPage';
 
 function renderBillingPage() {
   return render(

@@ -1,11 +1,12 @@
 import {useState} from 'react';
+
+import BackToHome from '../../components/BackToHome/BackToHome';
+import {MAX_AMOUNT} from '../../constants/common.const';
+import {billingApi} from '../../services/billingApi';
 import {useTenant} from '../../tenant/useTenant';
 import {useThemeComponents} from '../../theme/useThemeComponents';
 import type {BillingState} from '../../types/billingState';
 import {formatCurrency, parseAmount} from '../../utils/formatters.utils';
-import {MAX_AMOUNT} from '../../constants/common.const';
-import {billingApi} from '../../services/billingApi';
-import BackToHome from '../../components/BackToHome/BackToHome';
 
 export default function BillingPage() {
   const {brandId, currency, locale} = useTenant();
@@ -94,7 +95,14 @@ export default function BillingPage() {
           </BrandButton>
         </div>
       ) : (
-        <form className="form" onSubmit={onSubmit} aria-busy={state.status === 'loading'} noValidate>
+        <form
+          className="form"
+          onSubmit={(event) => {
+            void onSubmit(event);
+          }}
+          aria-busy={state.status === 'loading'}
+          noValidate
+        >
           <div className="field">
             <label htmlFor="amount">Billing amount ({currency})</label>
             <input
@@ -104,7 +112,9 @@ export default function BillingPage() {
               inputMode="decimal"
               placeholder="e.g. 49.99"
               value={amountText}
-              onChange={(e) => setAmountText(e.target.value)}
+              onChange={(e) => {
+                setAmountText(e.target.value);
+              }}
               aria-describedby={state.status === 'error' ? 'billing-error' : undefined}
               aria-invalid={state.status === 'error'}
             />

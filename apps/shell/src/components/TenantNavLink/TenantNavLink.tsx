@@ -1,4 +1,5 @@
 import {NavLink, useLocation} from 'react-router';
+
 import styles from './TenantNavLink.module.css';
 
 export default function TenantNavLink({to, children}: {to: string; children: React.ReactNode}) {

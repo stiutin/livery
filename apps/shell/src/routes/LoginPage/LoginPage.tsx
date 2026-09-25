@@ -1,13 +1,14 @@
 import {useState} from 'react';
-import {useLocation, useNavigate} from 'react-router';
 import {useForm} from 'react-hook-form';
+import {useLocation, useNavigate} from 'react-router';
+
+import BackToHome from '../../components/BackToHome/BackToHome';
+import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
+import {identityApi} from '../../services/identityApi';
 import {useTenant} from '../../tenant/useTenant';
 import {useThemeComponents} from '../../theme/useThemeComponents';
-import BackToHome from '../../components/BackToHome/BackToHome';
-import {identityApi} from '../../services/identityApi';
-import {isValidEmail} from '../../utils/formatters.utils';
 import type {LoginFormValues} from '../../types/loginForm';
-import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
+import {isValidEmail} from '../../utils/formatters.utils';
 
 export default function LoginPage() {
   const {brandId} = useTenant();
@@ -30,7 +31,7 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       });
-      navigate(`/account/billing${search}`);
+      await navigate(`/account/billing${search}`);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Login unsuccessful.');
     }
@@ -44,7 +45,14 @@ export default function LoginPage() {
         Tenant-aware login for <strong>{brandId}</strong>
       </p>
 
-      <form className="form" onSubmit={handleSubmit(onSubmit)} aria-busy={isSubmitting} noValidate>
+      <form
+        className="form"
+        onSubmit={(event) => {
+          void handleSubmit(onSubmit)(event);
+        }}
+        aria-busy={isSubmitting}
+        noValidate
+      >
         <div className="field">
           <label htmlFor="email">Email address</label>
           <input

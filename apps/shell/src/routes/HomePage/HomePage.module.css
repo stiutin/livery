@@ -16,6 +16,6 @@
 
 .buttonGroup {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }

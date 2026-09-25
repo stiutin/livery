@@ -1,13 +1,14 @@
-import type {ThemeConfig} from './themeTypes';
-import type {ThemeModule} from './themeContracts';
-import {BrandCard as ShellBrandCard, BrandButton as ShellBrandButton} from './themeFallback';
 import themeConfigAlpha, {BrandButton as AlphaBrandButton, BrandCard as AlphaBrandCard} from 'theme-tenant-alpha';
 import themeConfigBeta, {BrandButton as BetaBrandButton, BrandCard as BetaBrandCard} from 'theme-tenant-beta';
 
-export type ResolvedTheme = {
+import type {ThemeModule} from './themeContracts';
+import {BrandButton as ShellBrandButton, BrandCard as ShellBrandCard} from './themeFallback';
+import type {ThemeConfig} from './themeTypes';
+
+export interface ResolvedTheme {
   themeConfig: ThemeConfig;
   themeModule: ThemeModule;
-};
+}
 
 export const SUPPORTED_BRANDS = ['tenant-alpha', 'tenant-beta', 'tenant-empty', 'tenant-default'] as const;
 export type BrandId = (typeof SUPPORTED_BRANDS)[number];
@@ -49,7 +50,8 @@ const THEME_REGISTRY: Readonly<Record<BrandId, ResolvedTheme>> = {
 };
 
 export function resolveThemeForBrand(brandId: string): ResolvedTheme {
-  return THEME_REGISTRY[brandId as BrandId] ?? FALLBACK_THEME;
+  const brand = SUPPORTED_BRANDS.find((id) => id === brandId);
+  return brand ? THEME_REGISTRY[brand] : FALLBACK_THEME;
 }
 
 export function getThemeConfigForBrand(brandId: string): ThemeConfig {

@@ -1,11 +1,12 @@
 /* @vitest-environment jsdom */
-import {render, screen, waitFor, cleanup} from '@testing-library/react';
+import {cleanup, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {describe, test, expect, afterEach, vi} from 'vitest';
 import {MemoryRouter, Route, Routes} from 'react-router';
-import LoginPage from './LoginPage';
-import {TenantProvider} from '../../tenant/TenantContext';
+import {afterEach, describe, expect, test, vi} from 'vitest';
+
 import * as identityApiModule from '../../services/identityApi';
+import {TenantProvider} from '../../tenant/TenantContext';
+import LoginPage from './LoginPage';
 
 function renderLoginPage() {
   return render(
@@ -71,14 +72,14 @@ describe('LoginPage', () => {
     await userEvent.type(screen.getByLabelText(/password/i), 'password123');
     await userEvent.click(screen.getByRole('button', {name: /login/i}));
 
-    await waitFor(() =>
+    await waitFor(() => {
       expect(loginSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'user@example.com',
           password: 'password123',
         })
-      )
-    );
+      );
+    });
   });
 
   test('navigates to billing page after successful login', async () => {

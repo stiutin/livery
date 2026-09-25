@@ -1,6 +1,7 @@
 import type {Meta, StoryObj} from '@storybook/react';
-import {BrandCard} from './BrandCard';
+
 import {BrandButton} from './BrandButton';
+import {BrandCard} from './BrandCard';
 
 const meta: Meta<typeof BrandCard> = {
   title: 'Brand/BrandCard',

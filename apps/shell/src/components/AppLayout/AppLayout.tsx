@@ -1,4 +1,5 @@
 import {NavLink, Outlet, useLocation} from 'react-router';
+
 import {useTenant} from '../../tenant/useTenant';
 import TenantNavLink from '../TenantNavLink/TenantNavLink';
 import styles from './AppLayout.module.css';

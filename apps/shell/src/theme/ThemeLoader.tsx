@@ -1,4 +1,5 @@
 import {useEffect, useRef} from 'react';
+
 import type {ThemeConfig} from './themeTypes';
 
 function applyTokens(tokens: Record<string, string>, prev: Record<string, string>) {
