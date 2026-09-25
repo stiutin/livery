@@ -2,7 +2,7 @@
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, test, expect, afterEach, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import LoginPage from "./LoginPage";
 import { TenantProvider } from "../../tenant/TenantContext";
 import * as identityApiModule from "../../services/identityApi";

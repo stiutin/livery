@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import styles from "./BackToHome.module.css";
 
 export default function BackToHome() {

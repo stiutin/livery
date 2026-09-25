@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { useTenant } from "../../tenant/useTenant";
 import { useThemeComponents } from "../../theme/useThemeComponents";

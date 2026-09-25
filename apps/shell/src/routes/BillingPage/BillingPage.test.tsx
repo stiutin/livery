@@ -6,7 +6,7 @@ import {
   cleanup,
 } from "@testing-library/react";
 import { describe, test, expect, afterEach, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import BillingPage from "./BillingPage";
 import { TenantProvider } from "../../tenant/TenantContext";
 import * as billingApiModule from "../../services/billingApi";
