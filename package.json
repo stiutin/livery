@@ -29,11 +29,23 @@
     "themes/*"
   ],
   "scripts": {
-    "dev": "npm -w apps/shell run dev",
+    "start": "npm -w apps/shell run start",
     "build": "npm run build:themes && npm -w apps/shell run build",
     "build:themes": "npm -w themes/theme-tenant-alpha run build && npm -w themes/theme-tenant-beta run build",
+    "serve": "node scripts/serve.mjs",
     "test": "npm -w apps/shell run test",
-    "lint": "eslint ."
+    "test:watch": "npm -w apps/shell run test:watch",
+    "e2e": "npm run build && playwright test",
+    "e2e:run": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:install": "playwright install chromium",
+    "storybook": "npm -w themes/theme-tenant-alpha run storybook",
+    "lint": "eslint . && stylelint \"apps/**/*.css\" \"themes/**/*.css\"",
+    "lint:fix": "eslint . --fix && stylelint \"apps/**/*.css\" \"themes/**/*.css\" --fix",
+    "typecheck": "tsc -b apps/shell tsconfig.json && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
