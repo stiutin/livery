@@ -35,5 +35,4 @@ Thumbs.db
 # Project
 node_modules/
 **/dist/
-storybook-static/
 *.tsbuildinfo

@@ -23,7 +23,6 @@ The project is being rebuilt in phases (README, _Roadmap_). **Phase 0 is done:**
 | Vite         | 8                                                                                     | base `/livery/` for builds (`BASE_PATH` overrides), `/` for the dev server |
 | Tests        | Vitest 5 (jsdom), Testing Library, Playwright 1.63                                    |                                                                            |
 | Lint         | ESLint 10 (strict-type-checked + house rules + React hooks), Stylelint 17, Prettier 3 |                                                                            |
-| Storybook    | 10, in `themes/theme-tenant-alpha`                                                    | kept for now; the roadmap replaces it with Studio unless decided otherwise |
 
 npm workspaces: `apps/*` and `themes/*`. Install and run everything from the root.
 
@@ -36,7 +35,6 @@ npm run serve          # serve apps/shell/dist like GitHub Pages on :4173/livery
 npm test               # Vitest unit tests (apps/shell/src/**/*.test.tsx)
 npm run e2e            # build, then Playwright on desktop + Pixel 7; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
-npm run storybook      # theme-tenant-alpha components on :6006
 npm run lint           # ESLint + Stylelint (src CSS only)
 npm run typecheck      # the shell, the e2e suite and both themes
 npm run check          # format:check + lint + typecheck + test  ← before finishing
@@ -57,7 +55,7 @@ apps/shell/
   src/theme/               ThemeBoot, ThemeLoader, themeRegistry, fallback components, ambient .d.ts for themes
   src/services/            identityApi, billingApi: mocked adapters
   src/constants/ types/ utils/ styles/ test/
-themes/theme-tenant-alpha/ tokens (theme.config.ts + tokens.css), BrandButton, BrandCard, Storybook
+themes/theme-tenant-alpha/ tokens (theme.config.ts + tokens.css), BrandButton, BrandCard
 themes/theme-tenant-beta/  the same exports with other values
 e2e/                       Playwright specs and helpers
 scripts/serve.mjs          GitHub-Pages-like static server

@@ -119,9 +119,3 @@ The shell imports only from this surface. It never imports `tokens.css` directly
 4. `ThemeLoader` writes the new token values as inline CSS properties on `<html>`.
 5. `useThemeComponents()` returns the matching branded components.
 6. All CSS variables cascade instantly - buttons, cards, inputs, the header - without re-mounting any feature component.
-
----
-
-## Storybook
-
-Component documentation lives inside the theme package (`themes/theme-tenant-alpha/.storybook/`). Stories import `tokens.css` directly (acceptable - Storybook is the theme package's own dev tool, not the shell). Stories cover `BrandButton` and `BrandCard` with variants: Primary, Disabled, Loading, FullWidth, WithTitle, WithAction, NestedCards.

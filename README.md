@@ -15,12 +15,11 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 - Invoice creation with explicit loading, error, empty and success states
 - Currency and number formatting through `Intl`, for four locales and three currencies
 - A theme preview page with the active brand's colour swatches
-- Storybook for the branded components of the first theme
 - Deployed to GitHub Pages from CI after every green push
 
 ## Tech stack
 
-[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/), [react-hook-form](https://react-hook-form.com/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, npm workspaces, [Storybook](https://storybook.js.org/).
+[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/), [react-hook-form](https://react-hook-form.com/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, npm workspaces.
 Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/) and [Playwright](https://playwright.dev/).
 
 ## How it works
@@ -44,7 +43,7 @@ The end-to-end tests run against the production build, served by `scripts/serve.
 
 ```
 apps/shell/                 the app: routes, layout, tenant context, theme boundary, mocked API adapters
-themes/theme-tenant-alpha/  violet brand: tokens and branded components, with Storybook
+themes/theme-tenant-alpha/  violet brand: tokens and branded components
 themes/theme-tenant-beta/   teal brand: the same exports with different values
 e2e/                        Playwright tests
 scripts/                    a server that behaves like GitHub Pages
@@ -70,7 +69,6 @@ npm run build          # production build into apps/shell/dist, for /livery/
 npm run serve          # serve that build like GitHub Pages, on http://localhost:4173/livery/
 npm test               # unit tests
 npm run e2e            # build, then Playwright (run `npm run e2e:install` once)
-npm run storybook      # the first theme's components, on http://localhost:6006
 npm run lint           # ESLint and Stylelint
 npm run typecheck      # TypeScript for the app, the themes and the end-to-end suite
 npm run check          # formatting, lint, types and unit tests, as in CI

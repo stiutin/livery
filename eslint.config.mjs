@@ -34,7 +34,7 @@ const HOUSE_TS_RULES = {
 };
 
 export default defineConfig(
-  globalIgnores(['**/dist/', 'coverage/', 'playwright-report/', 'test-results/', '**/storybook-static/']),
+  globalIgnores(['**/dist/', 'coverage/', 'playwright-report/', 'test-results/']),
   {
     languageOptions: {globals: globals.browser},
     plugins: {'simple-import-sort': simpleImportSort, 'unused-imports': unusedImports},
@@ -46,10 +46,7 @@ export default defineConfig(
     extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
     languageOptions: {
       parserOptions: {
-        projectService: {
-          // Storybook's own config sits outside the theme package's tsconfig on purpose: it is not shipped.
-          allowDefaultProject: ['themes/*/.storybook/*.ts'],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

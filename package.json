@@ -39,7 +39,6 @@
     "e2e:run": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:install": "playwright install chromium",
-    "storybook": "npm -w themes/theme-tenant-alpha run storybook",
     "lint": "eslint . && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\"",
     "lint:fix": "eslint . --fix && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\" --fix",
     "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
