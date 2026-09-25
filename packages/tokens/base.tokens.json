@@ -1,0 +1,143 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "$description": "Shared by every tenant: component tokens mapped to semantic ones, and defaults a tenant may override.",
+  "semantic": {
+    "font": {
+      "family": {
+        "body": {
+          "$value": [
+            "ui-sans-serif",
+            "system-ui",
+            "-apple-system",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "$type": "fontFamily"
+        }
+      }
+    },
+    "radius": {
+      "$type": "dimension",
+      "small": {
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "medium": {
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "large": {
+        "$value": {
+          "value": 16,
+          "unit": "px"
+        }
+      }
+    },
+    "shadow": {
+      "raised": {
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [0.0627, 0.0941, 0.1569],
+            "alpha": 0.08,
+            "hex": "#101828"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": {
+            "value": 6,
+            "unit": "px"
+          },
+          "blur": {
+            "value": 18,
+            "unit": "px"
+          },
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        },
+        "$type": "shadow"
+      }
+    },
+    "duration": {
+      "fast": {
+        "$value": {
+          "value": 120,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      }
+    }
+  },
+  "component": {
+    "button": {
+      "primary": {
+        "$type": "color",
+        "background": {
+          "$value": "{semantic.color.brand.default}"
+        },
+        "background-hover": {
+          "$value": "{semantic.color.brand.hover}"
+        },
+        "text": {
+          "$value": "{semantic.color.brand.on}"
+        }
+      },
+      "radius": {
+        "$value": "{semantic.radius.medium}",
+        "$type": "dimension"
+      }
+    },
+    "card": {
+      "background": {
+        "$value": "{semantic.color.surface.default}",
+        "$type": "color"
+      },
+      "border": {
+        "$value": "{semantic.color.border.default}",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "{semantic.radius.large}",
+        "$type": "dimension"
+      }
+    },
+    "header": {
+      "$type": "color",
+      "background": {
+        "$value": "{semantic.color.brand.default}"
+      },
+      "text": {
+        "$value": "{semantic.color.brand.on}"
+      }
+    },
+    "input": {
+      "background": {
+        "$value": "{semantic.color.surface.default}",
+        "$type": "color"
+      },
+      "border": {
+        "$value": "{semantic.color.border.strong}",
+        "$type": "color"
+      },
+      "border-focus": {
+        "$value": "{semantic.color.brand.default}",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "{semantic.radius.small}",
+        "$type": "dimension"
+      }
+    }
+  }
+}

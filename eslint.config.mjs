@@ -62,7 +62,7 @@ export default defineConfig(
   },
   {
     // Command-line tools report progress on stdout.
-    files: ['scripts/**'],
+    files: ['scripts/**', 'packages/*/src/cli.ts'],
     languageOptions: {globals: globals.node},
     rules: {'no-console': 'off'},
   },

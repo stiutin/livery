@@ -26,22 +26,23 @@
   },
   "workspaces": [
     "apps/*",
+    "packages/*",
     "themes/*"
   ],
   "scripts": {
     "start": "npm -w apps/shell run start",
-    "build": "npm run build:themes && npm -w apps/shell run build",
-    "build:themes": "npm -w themes/theme-tenant-alpha run build && npm -w themes/theme-tenant-beta run build",
+    "build": "npm -w apps/shell run build",
     "serve": "node scripts/serve.mjs",
-    "test": "npm -w apps/shell run test",
+    "test": "npm -w packages/tokens run test && npm -w apps/shell run test",
     "test:watch": "npm -w apps/shell run test:watch",
+    "tokens": "node packages/tokens/src/cli.ts",
     "e2e": "npm run build && playwright test",
     "e2e:run": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:install": "playwright install chromium",
     "lint": "eslint . && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\"",
     "lint:fix": "eslint . --fix && stylelint \"apps/*/src/**/*.css\" \"themes/*/src/**/*.css\" --fix",
-    "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
+    "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p packages/tokens && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
