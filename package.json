@@ -42,7 +42,7 @@
     "storybook": "npm -w themes/theme-tenant-alpha run storybook",
     "lint": "eslint . && stylelint \"apps/**/*.css\" \"themes/**/*.css\"",
     "lint:fix": "eslint . --fix && stylelint \"apps/**/*.css\" \"themes/**/*.css\" --fix",
-    "typecheck": "tsc -b apps/shell tsconfig.json && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
+    "typecheck": "tsc -b apps/shell && tsc -p themes/theme-tenant-alpha --noEmit && tsc -p themes/theme-tenant-beta --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
