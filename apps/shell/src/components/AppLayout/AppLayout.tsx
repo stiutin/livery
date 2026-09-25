@@ -16,7 +16,7 @@ export function AppLayout() {
             className={styles.shellLogo}
             aria-label="Home"
           >
-            Player Shell
+            Livery
           </NavLink>
           <nav className={styles.shellNav} aria-label="Main navigation">
             <TenantNavLink to="/auth/login">Login</TenantNavLink>

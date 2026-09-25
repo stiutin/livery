@@ -8,7 +8,7 @@ Next.js would add SSR complexity that a white-label shell doesn't need in the MV
 
 A single repo with three workspace members:
 
-- `apps/player-shell`
+- `apps/shell`
 - `themes/theme-tenant-alpha`
 - `themes/theme-tenant-beta`
 

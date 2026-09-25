@@ -3,7 +3,7 @@
 Monorepo demonstrating a minimal multi-tenant shell architecture with brand theming.
 
 ```
-apps/player-shell          - shell app (routing, tenant context, API adapters)
+apps/shell          - shell app (routing, tenant context, API adapters)
 themes/theme-tenant-alpha  - primary theme package (tokens + branded components)
 themes/theme-tenant-beta   - additional theme package (alternative brand look)
 ```
@@ -23,7 +23,7 @@ npm install
 ```bash
 npm run dev
 # or directly:
-npm -w apps/player-shell run dev
+npm -w apps/shell run dev
 ```
 
 Open: http://localhost:5173
@@ -54,7 +54,7 @@ For billing, amounts above 1,000,000 trigger a mock approval error.
 ## Run tests
 
 ```bash
-npm -w apps/player-shell run test
+npm -w apps/shell run test
 ```
 
 Covers:
@@ -83,7 +83,7 @@ npm run build
 npm run build:themes
 
 # Build shell only (requires themes already built)
-npm -w apps/player-shell run build
+npm -w apps/shell run build
 ```
 
 > Theme packages must be compiled (`npm run build:themes`) before a shell-only build, because the production bundle resolves from `dist/`. In dev mode this is not required — Vite resolves themes directly from source.
@@ -91,7 +91,7 @@ npm -w apps/player-shell run build
 ## Project structure
 
 ```
-apps/player-shell/
+apps/shell/
 ├── src/
 │   ├── components/
 │   │   ├── AppLayout/

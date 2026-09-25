@@ -4,7 +4,7 @@
 
 ```
 monorepo/
-├── apps/player-shell        # shell application (routing, business logic, API)
+├── apps/shell        # shell application (routing, business logic, API)
 ├── themes/theme-tenant-alpha  # primary visual package (tokens + branded components)
 └── themes/theme-tenant-beta   # additional visual package showing multi-brand scale
 ```
@@ -13,7 +13,7 @@ The packages are intentionally kept separate. The shell owns all runtime behavio
 
 ---
 
-## apps/player-shell
+## apps/shell
 
 ### Responsibilities
 

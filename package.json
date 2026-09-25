@@ -1,17 +1,38 @@
 {
-  "name": "white-label-multi-tenant",
-  "version": "1.0.0",
+  "name": "livery",
+  "version": "0.1.0",
+  "description": "A white-label React app where a brand is data: design tokens, one component library and many tenants.",
+  "license": "MIT",
+  "author": "Serge Tiutin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stiutin/livery.git"
+  },
+  "homepage": "https://stiutin.github.io/livery/",
+  "keywords": [
+    "react",
+    "typescript",
+    "vite",
+    "design-tokens",
+    "design-system",
+    "white-label",
+    "multi-tenant",
+    "portfolio"
+  ],
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.22.3"
+  },
   "workspaces": [
     "apps/*",
     "themes/*"
   ],
   "scripts": {
-    "dev": "npm -w apps/player-shell run dev",
-    "build": "npm run build:themes && npm -w apps/player-shell run build",
+    "dev": "npm -w apps/shell run dev",
+    "build": "npm run build:themes && npm -w apps/shell run build",
     "build:themes": "npm -w themes/theme-tenant-alpha run build && npm -w themes/theme-tenant-beta run build",
-    "test": "npm -w apps/player-shell run test",
+    "test": "npm -w apps/shell run test",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -21,6 +42,5 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
     "typescript-eslint": "^8.34.1"
-  },
-  "license": "ISC"
+  }
 }
