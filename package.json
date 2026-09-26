@@ -26,8 +26,7 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "themes/*"
+    "packages/*"
   ],
   "scripts": {
     "start": "npm -w apps/shell run start",
@@ -42,7 +41,7 @@
     "e2e:install": "playwright install chromium",
     "lint": "eslint . && stylelint \"apps/*/src/**/*.css\" \"packages/*/src/**/*.css\"",
     "lint:fix": "eslint . --fix && stylelint \"apps/*/src/**/*.css\" \"packages/*/src/**/*.css\" --fix",
-    "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p packages/tokens && tsc -p packages/ui && tsc -p themes/theme-tenant-alpha && tsc -p themes/theme-tenant-beta",
+    "typecheck": "tsc -b apps/shell && tsc -p tsconfig.json && tsc -p packages/tokens && tsc -p packages/ui",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test"

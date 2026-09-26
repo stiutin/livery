@@ -57,7 +57,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['apps/**/*.tsx', 'packages/**/*.tsx', 'themes/**/*.tsx'],
+    files: ['apps/**/*.tsx', 'packages/**/*.tsx'],
     extends: [reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
   },
   {

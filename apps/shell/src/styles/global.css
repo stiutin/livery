@@ -87,53 +87,6 @@ li {
   padding: 24px;
 }
 
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-label {
-  color: var(--color-text-default);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-input {
-  background: var(--input-background);
-  border: 2px solid var(--input-border);
-  border-radius: var(--input-radius);
-  color: var(--color-text-default);
-  font-size: 0.95rem;
-  padding: 8px 12px;
-  transition: border-color var(--duration-fast) ease;
-  width: 100%;
-}
-
-/* A solid ring in the focus colour: the contract holds it to 3:1 against the page and surfaces. */
-input:focus,
-select:focus {
-  border-color: var(--input-border-focus);
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
-}
-
-input[aria-invalid='true'] {
-  border-color: var(--color-danger-text);
-}
-
-input[aria-invalid='true']:focus {
-  outline-color: var(--color-danger-text);
-}
-
-/* ── Inline field validation error ── */
-.field-error {
-  align-items: center;
-  color: var(--color-danger-text);
-  display: flex;
-  font-size: 0.8125rem;
-  gap: 8px;
-}
-
 /* ── Alert-level error ── */
 .error {
   background: var(--color-danger-surface);
@@ -191,37 +144,12 @@ input[aria-invalid='true']:focus {
   text-transform: uppercase;
 }
 
+.success-card__action {
+  margin-top: 8px;
+}
+
 .success-card__value {
   font-size: 0.95rem;
-}
-
-/* ── Loading spinner ── */
-.spinner {
-  animation: spin 0.7s linear infinite;
-  border: 2px solid color-mix(in srgb, currentcolor 40%, transparent);
-  border-radius: 50%;
-  border-top-color: currentcolor;
-  display: inline-block;
-  flex-shrink: 0;
-  height: 14px;
-  width: 14px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-select {
-  background: var(--input-background);
-  border: 2px solid var(--input-border);
-  border-radius: var(--input-radius);
-  color: var(--color-text-default);
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 8px 12px;
-  width: 100%;
 }
 
 /* ── Links ── */

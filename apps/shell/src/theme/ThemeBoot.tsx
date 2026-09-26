@@ -4,7 +4,7 @@ import {useLocation} from 'react-router';
 import {DEFAULT_TENANT, SUPPORTED_CURRENCIES, SUPPORTED_LOCALES} from '../constants/common.const';
 import {type TenantContextValue, TenantProvider} from '../tenant/TenantContext';
 import {ThemeLoader} from './ThemeLoader';
-import {resolveThemeForBrand, SUPPORTED_BRANDS} from './themeRegistry';
+import {SUPPORTED_BRANDS, tokenSetForBrand} from './themeRegistry';
 
 function ensureSupported<T extends readonly string[]>(
   value: string | null,
@@ -26,7 +26,7 @@ export function ThemeBoot({children}: {children: React.ReactNode}) {
   const currency = ensureSupported(params.get('currency'), SUPPORTED_CURRENCIES, DEFAULT_TENANT.currency);
 
   const tenant: TenantContextValue = React.useMemo(() => ({brandId, locale, currency}), [brandId, locale, currency]);
-  const {tokenSet} = resolveThemeForBrand(tenant.brandId);
+  const tokenSet = tokenSetForBrand(tenant.brandId);
 
   return (
     <TenantProvider value={tenant}>
