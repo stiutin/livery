@@ -16,7 +16,7 @@
 .panel {
   display: grid;
   gap: 16px;
-  padding: 20px 24px 24px;
+  padding: calc(20px * var(--density)) calc(24px * var(--density)) calc(24px * var(--density));
 }
 
 .header {

@@ -29,7 +29,7 @@
   color: var(--color-text-default);
   font: inherit;
   font-size: 0.95rem;
-  padding: 8px 12px;
+  padding: calc(8px * var(--density)) calc(12px * var(--density));
   transition: border-color var(--duration-fast) ease;
   width: 100%;
 }
