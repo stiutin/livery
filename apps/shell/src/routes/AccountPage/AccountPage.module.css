@@ -2,27 +2,24 @@
   margin-top: 16px;
 }
 
-.settings {
+.facts {
   display: grid;
   gap: 8px 16px;
   grid-template-columns: max-content 1fr;
-  margin: 0;
+  margin: 12px 0 0;
 }
 
-.settings dt {
+.facts dt {
   color: var(--color-text-muted);
   font-weight: 600;
 }
 
-.settings dd {
+.facts dd {
   margin: 0;
 }
 
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  list-style: none;
+.amount {
+  font-size: 1.25rem;
 }
 
 .more {

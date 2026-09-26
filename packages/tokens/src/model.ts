@@ -111,6 +111,7 @@ export interface LoadedTenant {
   readonly currency: string;
   /** The folder whose tokens style this tenant. */
   readonly tokenSet: string;
+  readonly features: Readonly<Record<'payments', boolean>>;
   /** Every custom property of the token set on `:root`, minified. */
   readonly css: string;
   readonly tokens: readonly CompiledToken[];

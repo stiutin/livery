@@ -10,7 +10,7 @@ import {compileTenantsFromDisk} from './node.ts';
 
 const root = resolve(import.meta.dirname, '..', '..', '..');
 const all = process.argv.includes('--all');
-const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'tenant-default'});
+const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'harbour'});
 
 for (const tenant of result.tokenSets) {
   const failing = tenant.contrast.filter((pair) => !pair.passes).length;

@@ -7,6 +7,7 @@ export interface TenantContextValue {
   name: string;
   locale: string;
   currency: string;
+  features: {payments: boolean};
 }
 
 export const TenantContext = React.createContext<TenantContextValue | null>(null);

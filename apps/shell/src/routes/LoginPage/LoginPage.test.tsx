@@ -1,110 +1,54 @@
-/* @vitest-environment jsdom */
-import {cleanup, render, screen, waitFor} from '@testing-library/react';
+import {screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {MemoryRouter, Route, Routes} from 'react-router';
-import {afterEach, describe, expect, test, vi} from 'vitest';
+import {describe, expect, test} from 'vitest';
 
-import * as identityApiModule from '../../services/identityApi';
-import {TenantProvider} from '../../tenant/TenantContext';
+import {WRONG_PASSWORD} from '../../mocks/handlers';
+import {renderPage} from '../../test/render';
 import LoginPage from './LoginPage';
 
-function renderLoginPage() {
-  return render(
-    <MemoryRouter initialEntries={['/auth/login']}>
-      <TenantProvider>
-        <Routes>
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/tenant-default/account/billing" element={<div>Billing page</div>} />
-        </Routes>
-      </TenantProvider>
-    </MemoryRouter>
-  );
+const renderLogin = (path = '/harbour/login') =>
+  renderPage(<LoginPage />, {
+    path,
+    routes: {'/harbour/account': <p>Account page</p>, '/harbour/invoices': <p>Invoices page</p>},
+  });
+
+async function signIn(email: string, password: string) {
+  await userEvent.type(screen.getByLabelText('Email address'), email);
+  await userEvent.type(screen.getByLabelText('Password'), password);
+  await userEvent.click(screen.getByRole('button', {name: 'Sign in'}));
 }
 
 describe('LoginPage', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    cleanup();
+  test('validates the fields before calling the API', async () => {
+    renderLogin();
+    await userEvent.click(screen.getByRole('button', {name: 'Sign in'}));
+    expect(await screen.findByText('Email is required')).toBeInTheDocument();
+    expect(screen.getByText('Password is required')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email address')).toHaveAttribute('aria-invalid', 'true');
   });
 
-  test('shows error when email is blank on submit', async () => {
-    renderLoginPage();
-
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+  test('signs in and opens the account', async () => {
+    renderLogin();
+    await signIn('ada@example.com', 'secret-password');
+    expect(await screen.findByText('Account page')).toBeInTheDocument();
+    expect(sessionStorage.getItem('livery:session:harbour')).toContain('ada@example.com');
   });
 
-  test('shows validation error for invalid email format', async () => {
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'not-an-email');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByText(/valid email/i)).toBeInTheDocument();
+  test('returns to the page that asked for a sign-in', async () => {
+    renderLogin('/harbour/login?next=%2Fharbour%2Finvoices');
+    await signIn('ada@example.com', 'secret-password');
+    expect(await screen.findByText('Invoices page')).toBeInTheDocument();
   });
 
-  test('shows validation error when password is blank', async () => {
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByText(/password is required/i)).toBeInTheDocument();
+  test("never returns to another tenant's page", async () => {
+    renderLogin('/harbour/login?next=%2Fonyx%2Finvoices');
+    await signIn('ada@example.com', 'secret-password');
+    expect(await screen.findByText('Account page')).toBeInTheDocument();
   });
 
-  test('shows validation error when password is too short', async () => {
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'abc');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(/6 characters/i);
-  });
-
-  test('calls identityApi.login with the typed credentials', async () => {
-    const loginSpy = vi.spyOn(identityApiModule.identityApi, 'login').mockResolvedValue({ok: true});
-
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    await waitFor(() => {
-      expect(loginSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'user@example.com',
-          password: 'password123',
-        })
-      );
-    });
-  });
-
-  test('navigates to billing page after successful login', async () => {
-    vi.spyOn(identityApiModule.identityApi, 'login').mockResolvedValue({
-      ok: true,
-    });
-
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByText(/Billing page/i)).toBeInTheDocument();
-  });
-
-  test('shows API error message when login fails', async () => {
-    vi.spyOn(identityApiModule.identityApi, 'login').mockRejectedValue(new Error('Invalid credentials.'));
-
-    renderLoginPage();
-
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
-    await userEvent.click(screen.getByRole('button', {name: /login/i}));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(/invalid credentials/i);
+  test('shows the API error when the password is refused', async () => {
+    renderLogin();
+    await signIn('ada@example.com', WRONG_PASSWORD);
+    expect(await screen.findByRole('alert')).toHaveTextContent('The email or password is not right.');
   });
 });

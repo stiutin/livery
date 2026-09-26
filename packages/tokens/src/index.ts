@@ -18,5 +18,5 @@ export type {
 } from './model.ts';
 export {TOKEN_TYPES} from './model.ts';
 export {parseTokens} from './parse.ts';
-export type {TenantConfig} from './tenant.ts';
-export {parseTenantConfig, TENANT_ID} from './tenant.ts';
+export type {Feature, TenantConfig} from './tenant.ts';
+export {FEATURES, parseTenantConfig, TENANT_ID} from './tenant.ts';

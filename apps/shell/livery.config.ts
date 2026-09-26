@@ -8,5 +8,5 @@ export const REPOSITORY = resolve(import.meta.dirname, '../..');
 export const TENANT_OPTIONS = {
   root: REPOSITORY,
   tenantsDir: join(REPOSITORY, 'tenants'),
-  defaultTenant: 'tenant-default',
+  defaultTenant: 'harbour',
 };

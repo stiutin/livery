@@ -59,9 +59,12 @@
   border: 1px solid color-mix(in srgb, var(--header-text) 25%, transparent);
   border-radius: 32px;
   color: var(--header-text);
+  cursor: pointer;
+  font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 4px 8px;
+  text-decoration: none;
 }
 
 .shellTenantMeta {
@@ -71,4 +74,10 @@
 
 .shellMain {
   flex: 1;
+}
+
+.shellTenantBadge:focus-visible,
+.shellTenantMeta:focus-visible {
+  outline: 2px solid var(--header-text);
+  outline-offset: 2px;
 }

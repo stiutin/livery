@@ -1,18 +1,26 @@
 import {Button, Field, Input} from '@livery/ui';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
-import {useNavigate} from 'react-router';
+import {useNavigate, useSearchParams} from 'react-router';
 
+import {api} from '../../api/client';
 import BackToHome from '../../components/BackToHome/BackToHome';
 import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
-import {identityApi} from '../../services/identityApi';
+import {WRONG_PASSWORD} from '../../mocks/handlers';
+import {useSession} from '../../session/useSession';
 import {useTenant} from '../../tenant/useTenant';
-import type {LoginFormValues} from '../../types/loginForm';
 import {isValidEmail} from '../../utils/formatters.utils';
 
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
+
 export default function LoginPage() {
-  const {brandId} = useTenant();
+  const {brandId, name} = useTenant();
+  const {signIn} = useSession();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [apiError, setApiError] = useState<string | null>(null);
   const {
     register,
@@ -20,27 +28,28 @@ export default function LoginPage() {
     formState: {errors, isSubmitting},
   } = useForm<LoginFormValues>({mode: 'onTouched'});
 
+  // Only ever return to a page of this tenant.
+  const next = searchParams.get('next');
+  const destination = next?.startsWith(`/${brandId}/`) ? next : `/${brandId}/account`;
+
   async function onSubmit(data: LoginFormValues) {
     setApiError(null);
-
     try {
-      await identityApi.login({
-        brandId,
-        email: data.email,
-        password: data.password,
-      });
-      await navigate(`/${brandId}/account/billing`);
+      signIn(await api.signIn(brandId, data.email, data.password));
+      await navigate(destination);
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : 'Login unsuccessful.');
+      setApiError(err instanceof Error ? err.message : 'Sign-in failed.');
     }
   }
 
   return (
     <div className="page">
-      <h1 className="h1">Login</h1>
+      <h1 className="h1">Sign in to {name}</h1>
 
       <p className="notice">
-        Tenant-aware login for <strong>{brandId}</strong>
+        This is a demo with a mocked API: any email and a password of {PASSWORD_MIN_LENGTH} characters or more signs in.
+        The password <code>{WRONG_PASSWORD}</code> is refused, and an email starting with <code>new</code> has no
+        invoices.
       </p>
 
       <form
@@ -89,7 +98,7 @@ export default function LoginPage() {
         )}
 
         <Button type="submit" loading={isSubmitting} fullWidth>
-          {isSubmitting ? 'Processing…' : 'Login'}
+          {isSubmitting ? 'Signing in…' : 'Sign in'}
         </Button>
 
         <BackToHome />

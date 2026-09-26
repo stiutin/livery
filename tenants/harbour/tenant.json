@@ -1,0 +1,9 @@
+{
+  "$schema": "../tenant.schema.json",
+  "name": "Harbour",
+  "locale": "en-GB",
+  "currency": "GBP",
+  "features": {
+    "payments": true
+  }
+}

@@ -8,11 +8,11 @@ import {compileTenantsFromDisk} from './node.ts';
 const root = resolve(import.meta.dirname, '../../..');
 
 describe('the tenants in this repository', () => {
-  const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'tenant-default'});
+  const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'harbour'});
 
   it('compile without problems', () => {
     expect(result.report).toBe('');
-    expect(result.tokenSets.map((set) => set.id)).toEqual(['tenant-alpha', 'tenant-beta', 'tenant-default']);
+    expect(result.tokenSets.map((set) => set.id)).toEqual(['harbour', 'meadow', 'onyx']);
   });
 
   it('each define the whole contract', () => {
@@ -22,15 +22,14 @@ describe('the tenants in this repository', () => {
   });
 
   it('are listed with their settings and the CSS of their token set', () => {
-    expect(result.tenants.map(({id, tokenSet}) => [id, tokenSet])).toEqual([
-      ['tenant-alpha', 'tenant-alpha'],
-      ['tenant-beta', 'tenant-beta'],
-      ['tenant-default', 'tenant-default'],
-      ['tenant-empty', 'tenant-default'],
+    expect(result.tenants.map(({id, tokenSet, features}) => [id, tokenSet, features.payments])).toEqual([
+      ['harbour', 'harbour', true],
+      ['meadow', 'meadow', false],
+      ['onyx', 'onyx', true],
     ]);
-    const alpha = result.tenants.find((tenant) => tenant.id === 'tenant-alpha');
-    expect(alpha).toMatchObject({name: 'Alpha', locale: 'en-GB', currency: 'GBP'});
-    expect(alpha?.css).toContain('--color-brand-default:#5b21b6;');
+    const onyx = result.tenants.find((tenant) => tenant.id === 'onyx');
+    expect(onyx).toMatchObject({name: 'Onyx', locale: 'en-US', currency: 'USD'});
+    expect(onyx?.css).toContain('--color-canvas:#0c0c10;');
   });
 });
 

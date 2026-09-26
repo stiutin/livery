@@ -4,7 +4,7 @@
   "description": "Settings of one tenant. The folder name is the tenant id and the first segment of its URLs. @livery/tokens validates the same rules at build time.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "locale", "currency"],
+  "required": ["name", "locale", "currency", "features"],
   "properties": {
     "$schema": {
       "type": "string"
@@ -27,6 +27,18 @@
       "type": "string",
       "pattern": "^[A-Z]{3}$",
       "description": "ISO 4217 currency code, such as GBP."
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["payments"],
+      "description": "What this tenant's customers can do. Pages and the prerender list read these flags.",
+      "properties": {
+        "payments": {
+          "type": "boolean",
+          "description": "Customers pay invoices by card in the app. Without it they see bank-transfer details instead, and the payment code is never downloaded."
+        }
+      }
     }
   }
 }
