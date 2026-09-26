@@ -1,5 +1,6 @@
 # Updates the visual regression baselines. Run it by hand (Actions → Screenshots → Run workflow) on a branch
-# whose screenshots should change, or once to create them; it commits the new images to that branch.
+# whose screenshots should change, or once to create them. It commits the new images to that branch and starts
+# CI on it: a push made with GITHUB_TOKEN does not start workflows by itself, but a workflow_dispatch does.
 name: Screenshots
 
 on:
@@ -7,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   BASE_PATH: /${{ github.event.repository.name }}/
@@ -29,6 +31,7 @@ jobs:
       - run: npm run build
       - run: npm run e2e:visual:update
       - name: Commit the screenshots
+        id: commit
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
@@ -39,4 +42,21 @@ jobs:
           else
             git commit -m "test: update the visual baselines"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Start CI on the new screenshots
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e '
+            const {GITHUB_API_URL, GITHUB_REPOSITORY, GITHUB_REF_NAME, GITHUB_TOKEN} = process.env;
+            fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/dispatches`, {
+              method: "POST",
+              headers: {authorization: `Bearer ${GITHUB_TOKEN}`, accept: "application/vnd.github+json"},
+              body: JSON.stringify({ref: GITHUB_REF_NAME}),
+            }).then((response) => {
+              if (!response.ok) throw new Error(`CI was not started: ${response.status}`);
+              console.log(`Started CI on ${GITHUB_REF_NAME}.`);
+            });
+          '
