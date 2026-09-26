@@ -1,7 +1,7 @@
 import {delay, http, HttpResponse} from 'msw';
 import {tenants} from 'virtual:livery/tenants';
 
-import type {Card, PaymentOutcome, Session} from '../api/types';
+import type {ApiErrorCode, Card, PaymentOutcome, Session} from '../api/types';
 import {isCardNumber, isCvc, isExpiry, normaliseCardNumber} from '../payment/card';
 import {customer, markPaid, startPayment, takePayment} from './db';
 
@@ -18,7 +18,7 @@ export const WRONG_PASSWORD = 'wrong-password';
 const API = '*/api/:tenant';
 const LATENCY = 400;
 
-const error = (status: number, message: string) => HttpResponse.json({message}, {status});
+const error = (status: number, code: ApiErrorCode) => HttpResponse.json({code}, {status});
 
 /** The signed-in customer from the bearer token, or undefined. Tokens are plain JSON: this is a mock. */
 function who(request: Request, tenant: string): string | undefined {
@@ -41,11 +41,11 @@ export const handlers = [
   http.post<{tenant: string}>(`${API}/session`, async ({request, params}) => {
     await delay(LATENCY);
     if (!knownTenant(params.tenant)) {
-      return error(404, 'Unknown tenant.');
+      return error(404, 'not_found');
     }
     const {email, password} = (await request.json()) as {email?: string; password?: string};
     if (!email || !password || password === WRONG_PASSWORD) {
-      return error(401, 'The email or password is not right.');
+      return error(401, 'invalid_credentials');
     }
     const {account} = customer(params.tenant, email);
     const session: Session = {token: btoa(JSON.stringify({tenant: params.tenant, email})), name: account.name, email};
@@ -55,32 +55,32 @@ export const handlers = [
   http.get<{tenant: string}>(`${API}/account`, async ({request, params}) => {
     await delay(LATENCY);
     const email = who(request, params.tenant);
-    return email ? HttpResponse.json(customer(params.tenant, email).account) : error(401, 'Please sign in again.');
+    return email ? HttpResponse.json(customer(params.tenant, email).account) : error(401, 'session_expired');
   }),
 
   http.get<{tenant: string}>(`${API}/invoices`, async ({request, params}) => {
     await delay(LATENCY);
     const email = who(request, params.tenant);
-    return email ? HttpResponse.json(customer(params.tenant, email).invoices) : error(401, 'Please sign in again.');
+    return email ? HttpResponse.json(customer(params.tenant, email).invoices) : error(401, 'session_expired');
   }),
 
   http.post<{tenant: string; invoiceId: string}>(`${API}/invoices/:invoiceId/payments`, async ({request, params}) => {
     await delay(LATENCY * 2);
     const email = who(request, params.tenant);
     if (!email) {
-      return error(401, 'Please sign in again.');
+      return error(401, 'session_expired');
     }
     const invoice = customer(params.tenant, email).invoices.find(({id}) => id === params.invoiceId);
     if (!invoice || invoice.status === 'paid') {
-      return error(409, 'This invoice is already paid.');
+      return error(409, 'already_paid');
     }
     const card = (await request.json()) as Partial<Card>;
     const number = normaliseCardNumber(card.number ?? '');
     if (!isCardNumber(number) || !isExpiry(card.expiry ?? '') || !isCvc(card.cvc ?? '')) {
-      return error(400, 'Check the card details.');
+      return error(400, 'invalid_card');
     }
     if (number === normaliseCardNumber(TEST_CARDS.declined)) {
-      return error(402, 'Your card was declined. Try another card.');
+      return error(402, 'card_declined');
     }
     if (number === normaliseCardNumber(TEST_CARDS.confirm)) {
       const outcome: PaymentOutcome = {
@@ -92,7 +92,7 @@ export const handlers = [
     const paid = markPaid(params.tenant, email, invoice.id);
     return paid
       ? HttpResponse.json({status: 'succeeded', invoice: paid} satisfies PaymentOutcome)
-      : error(404, 'No such invoice.');
+      : error(404, 'not_found');
   }),
 
   http.post<{tenant: string; paymentId: string}>(`${API}/payments/:paymentId/confirm`, async ({request, params}) => {
@@ -100,15 +100,15 @@ export const handlers = [
     const email = who(request, params.tenant);
     const payment = takePayment(params.paymentId);
     if (!email || payment?.email !== email) {
-      return error(404, 'This payment has expired. Start again.');
+      return error(404, 'payment_expired');
     }
     const {approved} = (await request.json()) as {approved?: boolean};
     if (!approved) {
-      return error(402, 'You did not confirm the payment, so nothing was charged.');
+      return error(402, 'payment_not_confirmed');
     }
     const paid = markPaid(params.tenant, email, payment.invoiceId);
     return paid
       ? HttpResponse.json({status: 'succeeded', invoice: paid} satisfies PaymentOutcome)
-      : error(404, 'No such invoice.');
+      : error(404, 'not_found');
   }),
 ];

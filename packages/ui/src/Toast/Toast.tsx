@@ -19,7 +19,17 @@ const DEFAULT_DURATION = 6000;
  * the pointer or keyboard focus is inside the region, and errors never leave on their own, so nobody is rushed
  * (WCAG 2.2.1).
  */
-export function ToastProvider({children, label = 'Notifications'}: {children: ReactNode; label?: string}) {
+export function ToastProvider({
+  children,
+  label = 'Notifications',
+  dismissLabel = 'Dismiss notification',
+}: {
+  children: ReactNode;
+  /** The name of the notification region. */
+  label?: string;
+  /** The name of each toast's close button. */
+  dismissLabel?: string;
+}) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [paused, setPaused] = useState(false);
   const nextId = useRef(0);
@@ -57,7 +67,7 @@ export function ToastProvider({children, label = 'Notifications'}: {children: Re
       >
         <ol className={styles.list} role="status" aria-live="polite">
           {toasts.map((toast) => (
-            <Toast key={toast.id} toast={toast} paused={paused} onDismiss={dismiss} />
+            <Toast key={toast.id} toast={toast} paused={paused} onDismiss={dismiss} dismissLabel={dismissLabel} />
           ))}
         </ol>
       </section>
@@ -65,7 +75,17 @@ export function ToastProvider({children, label = 'Notifications'}: {children: Re
   );
 }
 
-function Toast({toast, paused, onDismiss}: {toast: ToastItem; paused: boolean; onDismiss: (id: number) => void}) {
+function Toast({
+  toast,
+  paused,
+  onDismiss,
+  dismissLabel,
+}: {
+  toast: ToastItem;
+  paused: boolean;
+  onDismiss: (id: number) => void;
+  dismissLabel: string;
+}) {
   const {id, duration} = toast;
 
   // A pause restarts the full duration afterwards: simpler than tracking the time left, and never shorter.
@@ -90,7 +110,7 @@ function Toast({toast, paused, onDismiss}: {toast: ToastItem; paused: boolean; o
         onClick={() => {
           onDismiss(id);
         }}
-        aria-label="Dismiss notification"
+        aria-label={dismissLabel}
       >
         <span aria-hidden="true">×</span>
       </button>

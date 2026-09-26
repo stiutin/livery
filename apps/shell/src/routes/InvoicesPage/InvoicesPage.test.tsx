@@ -8,10 +8,10 @@ import InvoicesPage from './InvoicesPage';
 
 const renderInvoices = (email = 'ada@example.com', payments = true) =>
   renderPage(<InvoicesPage />, {
-    path: '/harbour/invoices',
+    path: '/harbour/en/invoices',
     tenant: {features: {payments}},
     session: sessionFor(email),
-    routes: {'/harbour/login': <p>Login page</p>},
+    routes: {'/harbour/en/login': <p>Login page</p>},
   });
 
 async function openFirstPayment() {
@@ -33,7 +33,7 @@ async function payWith(number: string) {
 
 describe('InvoicesPage', () => {
   test('sends signed-out visitors to the login page', async () => {
-    renderPage(<InvoicesPage />, {path: '/harbour/invoices', routes: {'/harbour/login': <p>Login page</p>}});
+    renderPage(<InvoicesPage />, {path: '/harbour/en/invoices', routes: {'/harbour/en/login': <p>Login page</p>}});
     expect(await screen.findByText('Login page')).toBeInTheDocument();
   });
 
@@ -89,5 +89,28 @@ describe('InvoicesPage', () => {
     renderInvoices('ada@example.com', false);
     expect(await screen.findByRole('heading', {name: 'Pay by bank transfer'})).toBeInTheDocument();
     expect(screen.queryByRole('button', {name: /^Pay /})).not.toBeInTheDocument();
+  });
+});
+
+describe('InvoicesPage in other languages', () => {
+  test('writes the summary with German plurals and money', async () => {
+    renderPage(<InvoicesPage />, {
+      path: '/meadow/de/invoices',
+      tenant: {brandId: 'meadow', name: 'Meadow', locale: 'de-DE', currency: 'EUR', features: {payments: false}},
+      session: sessionFor('ada@example.com', 'meadow'),
+      language: 'de',
+    });
+    expect(await screen.findByText('4 Rechnungen, 2 offen.')).toBeInTheDocument();
+    expect(screen.getByRole('table', {name: 'Deine Rechnungen, neueste zuerst'})).toHaveTextContent(/\d+,\d{2}\s€/);
+    expect(screen.getByRole('heading', {name: 'Per Überweisung bezahlen'})).toBeInTheDocument();
+  });
+
+  test('shows API errors in the page language', async () => {
+    renderPage(<InvoicesPage />, {
+      path: '/harbour/es/invoices',
+      session: {token: 'not-a-token', name: 'Ada', email: 'ada@example.com'},
+      language: 'es',
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Vuelve a iniciar sesión.');
   });
 });

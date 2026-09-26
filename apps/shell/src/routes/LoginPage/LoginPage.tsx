@@ -6,8 +6,12 @@ import {useNavigate, useSearchParams} from 'react-router';
 import {api} from '../../api/client';
 import BackToHome from '../../components/BackToHome/BackToHome';
 import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
+import {errorKey} from '../../i18n/errors';
+import type {MessageKey} from '../../i18n/messages';
+import {useI18n} from '../../i18n/useI18n';
 import {WRONG_PASSWORD} from '../../mocks/handlers';
 import {useSession} from '../../session/useSession';
+import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';
 import {isValidEmail} from '../../utils/formatters.utils';
 
@@ -18,10 +22,12 @@ interface LoginFormValues {
 
 export default function LoginPage() {
   const {brandId, name} = useTenant();
+  const {t, rich} = useI18n();
+  const {page} = usePaths();
   const {signIn} = useSession();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<MessageKey | null>(null);
   const {
     register,
     handleSubmit,
@@ -30,26 +36,24 @@ export default function LoginPage() {
 
   // Only ever return to a page of this tenant.
   const next = searchParams.get('next');
-  const destination = next?.startsWith(`/${brandId}/`) ? next : `/${brandId}/account`;
+  const destination = next?.startsWith(`/${brandId}/`) ? next : page('account');
 
   async function onSubmit(data: LoginFormValues) {
     setApiError(null);
     try {
       signIn(await api.signIn(brandId, data.email, data.password));
       await navigate(destination);
-    } catch (err) {
-      setApiError(err instanceof Error ? err.message : 'Sign-in failed.');
+    } catch (error) {
+      setApiError(errorKey(error));
     }
   }
 
   return (
     <div className="page">
-      <h1 className="h1">Sign in to {name}</h1>
+      <h1 className="h1">{t('login.title', {name})}</h1>
 
       <p className="notice">
-        This is a demo with a mocked API: any email and a password of {PASSWORD_MIN_LENGTH} characters or more signs in.
-        The password <code>{WRONG_PASSWORD}</code> is refused, and an email starting with <code>new</code> has no
-        invoices.
+        {rich('login.demo', {min: PASSWORD_MIN_LENGTH, wrong: WRONG_PASSWORD, code: (chunks) => <code>{chunks}</code>})}
       </p>
 
       <form
@@ -60,32 +64,29 @@ export default function LoginPage() {
         aria-busy={isSubmitting}
         noValidate
       >
-        <Field label="Email address" error={errors.email?.message}>
+        <Field label={t('login.email')} error={errors.email?.message}>
           {(control) => (
             <Input
               {...control}
               type="email"
               autoComplete="email"
               {...register('email', {
-                required: 'Email is required',
-                validate: (v) => isValidEmail(v) || 'Enter a valid email address',
+                required: t('login.emailRequired'),
+                validate: (v) => isValidEmail(v) || t('login.emailInvalid'),
               })}
             />
           )}
         </Field>
 
-        <Field label="Password" error={errors.password?.message}>
+        <Field label={t('login.password')} error={errors.password?.message}>
           {(control) => (
             <Input
               {...control}
               type="password"
               autoComplete="current-password"
               {...register('password', {
-                required: 'Password is required',
-                minLength: {
-                  value: PASSWORD_MIN_LENGTH,
-                  message: `Password must have at least ${PASSWORD_MIN_LENGTH} characters`,
-                },
+                required: t('login.passwordRequired'),
+                minLength: {value: PASSWORD_MIN_LENGTH, message: t('login.passwordShort', {min: PASSWORD_MIN_LENGTH})},
               })}
             />
           )}
@@ -93,12 +94,12 @@ export default function LoginPage() {
 
         {apiError && (
           <div className="error" role="alert">
-            {apiError}
+            {t(apiError)}
           </div>
         )}
 
         <Button type="submit" loading={isSubmitting} fullWidth>
-          {isSubmitting ? 'Signing in…' : 'Sign in'}
+          {isSubmitting ? t('login.submitting') : t('login.submit')}
         </Button>
 
         <BackToHome />

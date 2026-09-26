@@ -9,11 +9,11 @@ const TENANTS = [
 ] as const;
 
 async function signIn(page: Page, tenant: string, email = 'ada@example.com') {
-  await page.goto(`./${tenant}/login`);
+  await page.goto(`./${tenant}/en/login`);
   await page.getByLabel('Email address').fill(email);
   await page.getByLabel('Password').fill('secret-password');
   await page.getByRole('button', {name: 'Sign in'}).click();
-  await expect(page).toHaveURL(new RegExp(`/${tenant}/account$`));
+  await expect(page).toHaveURL(new RegExp(`/${tenant}/en/account$`));
 }
 
 async function payFirstInvoice(page: Page, card: string) {
@@ -48,7 +48,7 @@ for (const tenant of TENANTS) {
     if (tenant.payments) {
       test('an invoice is paid by card', async ({page}) => {
         await signIn(page, tenant.id);
-        await page.goto(`./${tenant.id}/invoices`);
+        await page.goto(`./${tenant.id}/en/invoices`);
 
         const dialog = await payFirstInvoice(page, '4242 4242 4242 4242');
         await expect(dialog.getByText(/is paid/)).toBeVisible();
@@ -60,7 +60,7 @@ for (const tenant of TENANTS) {
     } else {
       test('invoices show bank-transfer details instead of card payments', async ({page}) => {
         await signIn(page, tenant.id);
-        await page.goto(`./${tenant.id}/invoices`);
+        await page.goto(`./${tenant.id}/en/invoices`);
 
         await expect(page.getByRole('heading', {name: 'Pay by bank transfer'})).toBeVisible();
         await expect(page.getByRole('table')).toBeVisible();
@@ -72,7 +72,7 @@ for (const tenant of TENANTS) {
 
 test('a declined card keeps the form open, and another card goes through', async ({page}) => {
   await signIn(page, 'harbour');
-  await page.goto('./harbour/invoices');
+  await page.goto('./harbour/en/invoices');
 
   const dialog = await payFirstInvoice(page, '4000 0000 0000 0002');
   await expect(dialog.getByRole('alert')).toContainText('Your card was declined.');
@@ -84,7 +84,7 @@ test('a declined card keeps the form open, and another card goes through', async
 
 test('the bank can ask for a confirmation before the payment goes through', async ({page}) => {
   await signIn(page, 'onyx');
-  await page.goto('./onyx/invoices');
+  await page.goto('./onyx/en/invoices');
 
   const dialog = await payFirstInvoice(page, '4000 0027 6000 3184');
   await expect(dialog.getByText('Your bank asks you to confirm')).toBeVisible();
@@ -94,7 +94,7 @@ test('the bank can ask for a confirmation before the payment goes through', asyn
 
 test('a paid invoice stays paid after a reload', async ({page}) => {
   await signIn(page, 'onyx');
-  await page.goto('./onyx/invoices');
+  await page.goto('./onyx/en/invoices');
   const dialog = await payFirstInvoice(page, '4242 4242 4242 4242');
   await dialog.getByRole('button', {name: 'Done'}).click();
 
@@ -106,18 +106,18 @@ test('a new customer has no invoices', async ({page}) => {
   await signIn(page, 'meadow', 'new.customer@example.com');
 
   await expect(page.getByText('Nothing to pay. You are all settled.')).toBeVisible();
-  await page.goto('./meadow/invoices');
+  await page.goto('./meadow/en/invoices');
   await expect(page.getByRole('cell', {name: 'No invoices yet.'})).toBeVisible();
 });
 
 test('signed-out visitors are sent to the login page and back', async ({page}) => {
-  await page.goto('./onyx/account');
-  await expect(page).toHaveURL(/\/onyx\/login\?next=%2Fonyx%2Faccount$/);
+  await page.goto('./onyx/en/account');
+  await expect(page).toHaveURL(/\/onyx\/en\/login\?next=%2Fonyx%2Fen%2Faccount$/);
 
   await page.getByLabel('Email address').fill('ada@example.com');
   await page.getByLabel('Password').fill('secret-password');
   await page.getByRole('button', {name: 'Sign in'}).click();
-  await expect(page).toHaveURL(/\/onyx\/account$/);
+  await expect(page).toHaveURL(/\/onyx\/en\/account$/);
 });
 
 test('signing out ends the session', async ({page}) => {
@@ -125,12 +125,12 @@ test('signing out ends the session', async ({page}) => {
   await page.getByRole('button', {name: 'Sign out'}).click();
 
   await expect(page.getByRole('link', {name: 'Sign in'}).first()).toBeVisible();
-  await page.goto('./harbour/invoices');
-  await expect(page).toHaveURL(/\/harbour\/login/);
+  await page.goto('./harbour/en/invoices');
+  await expect(page).toHaveURL(/\/harbour\/en\/login/);
 });
 
 test('a refused password is explained', async ({page}) => {
-  await page.goto('./harbour/login');
+  await page.goto('./harbour/en/login');
   await page.getByLabel('Email address').fill('ada@example.com');
   await page.getByLabel('Password').fill('wrong-password');
   await page.getByRole('button', {name: 'Sign in'}).click();

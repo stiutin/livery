@@ -1,9 +1,9 @@
 import {useCallback, useEffect, useEffectEvent, useState} from 'react';
 
 export type ApiState<T> =
-  {status: 'loading'} | {status: 'error'; message: string} | {status: 'ready'; data: T; reload: () => void};
+  {status: 'loading'} | {status: 'error'; error: unknown} | {status: 'ready'; data: T; reload: () => void};
 
-type Result<T> = {key: string; status: 'error'; message: string} | {key: string; status: 'ready'; data: T};
+type Result<T> = {key: string; status: 'error'; error: unknown} | {key: string; status: 'ready'; data: T};
 
 /**
  * Runs a request after render, again whenever `key` changes, and on `reload()`. Answers for an older key are
@@ -28,11 +28,7 @@ export function useApi<T>(key: string, load: () => Promise<T>): ApiState<T> {
       },
       (error: unknown) => {
         if (current) {
-          setResult({
-            key: request,
-            status: 'error',
-            message: error instanceof Error ? error.message : 'Something went wrong.',
-          });
+          setResult({key: request, status: 'error', error});
         }
       }
     );

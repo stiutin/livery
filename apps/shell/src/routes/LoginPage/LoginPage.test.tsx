@@ -6,10 +6,10 @@ import {WRONG_PASSWORD} from '../../mocks/handlers';
 import {renderPage} from '../../test/render';
 import LoginPage from './LoginPage';
 
-const renderLogin = (path = '/harbour/login') =>
+const renderLogin = (path = '/harbour/en/login') =>
   renderPage(<LoginPage />, {
     path,
-    routes: {'/harbour/account': <p>Account page</p>, '/harbour/invoices': <p>Invoices page</p>},
+    routes: {'/harbour/en/account': <p>Account page</p>, '/harbour/en/invoices': <p>Invoices page</p>},
   });
 
 async function signIn(email: string, password: string) {
@@ -35,13 +35,13 @@ describe('LoginPage', () => {
   });
 
   test('returns to the page that asked for a sign-in', async () => {
-    renderLogin('/harbour/login?next=%2Fharbour%2Finvoices');
+    renderLogin('/harbour/en/login?next=%2Fharbour%2Fen%2Finvoices');
     await signIn('ada@example.com', 'secret-password');
     expect(await screen.findByText('Invoices page')).toBeInTheDocument();
   });
 
   test("never returns to another tenant's page", async () => {
-    renderLogin('/harbour/login?next=%2Fonyx%2Finvoices');
+    renderLogin('/harbour/en/login?next=%2Fonyx%2Fen%2Finvoices');
     await signIn('ada@example.com', 'secret-password');
     expect(await screen.findByText('Account page')).toBeInTheDocument();
   });

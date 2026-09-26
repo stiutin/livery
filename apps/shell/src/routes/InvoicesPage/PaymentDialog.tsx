@@ -4,6 +4,8 @@ import {useForm} from 'react-hook-form';
 
 import {api} from '../../api/client';
 import type {Card, Invoice, PaymentOutcome, Session} from '../../api/types';
+import {errorKey} from '../../i18n/errors';
+import {useI18n} from '../../i18n/useI18n';
 import {TEST_CARDS} from '../../mocks/handlers';
 import {isCardNumber, isCvc, isExpiry} from '../../payment/card';
 import {initialPayment, paymentReducer} from '../../payment/machine';
@@ -21,6 +23,7 @@ interface Props {
 /** The card payment of one invoice, driven by the payment state machine. */
 export default function PaymentDialog({invoice, session, onClose}: Props) {
   const {brandId, locale, currency} = useTenant();
+  const {t, rich} = useI18n();
   const [state, dispatch] = useReducer(paymentReducer, initialPayment);
   const {
     register,
@@ -40,7 +43,7 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
     );
   };
   const fail = (error: unknown) => {
-    dispatch({type: 'failed', message: error instanceof Error ? error.message : 'The payment failed.'});
+    dispatch({type: 'failed', message: t(errorKey(error))});
   };
 
   const pay = (card: Card) => {
@@ -69,20 +72,19 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
     <Dialog
       open={state.status !== 'closed'}
       onClose={close}
-      title={state.status === 'succeeded' ? 'Payment received' : `Pay ${invoice.number}`}
+      title={state.status === 'succeeded' ? t('payment.received') : t('payment.title', {number: invoice.number})}
+      closeLabel={t('ui.close')}
     >
       {state.status === 'succeeded' && (
         <div className={styles.flow}>
-          <p role="status">
-            {amount} is paid. A receipt is on its way to {session.email}.
-          </p>
-          <Button onClick={close}>Done</Button>
+          <p role="status">{t('payment.paid', {amount, email: session.email})}</p>
+          <Button onClick={close}>{t('payment.done')}</Button>
         </div>
       )}
 
       {state.status === 'confirming' && (
         <div className={styles.flow}>
-          <p role="status">Your bank asks you to confirm this payment of {amount}.</p>
+          <p role="status">{t('payment.confirmPrompt', {amount})}</p>
           <div className={styles.actions}>
             <Button
               variant="secondary"
@@ -90,14 +92,14 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
                 answer(false);
               }}
             >
-              Decline
+              {t('payment.decline')}
             </Button>
             <Button
               onClick={() => {
                 answer(true);
               }}
             >
-              Confirm payment
+              {t('payment.confirm')}
             </Button>
           </div>
         </div>
@@ -112,12 +114,10 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
             void handleSubmit(pay)(event);
           }}
         >
-          <p>
-            Amount due: <strong>{amount}</strong>
-          </p>
+          <p>{rich('payment.amountDue', {amount, b: (chunks) => <strong>{chunks}</strong>})}</p>
           <Field
-            label="Card number"
-            hint={`Test cards: ${TEST_CARDS.success} pays, ${TEST_CARDS.declined} is declined, ${TEST_CARDS.confirm} asks your bank.`}
+            label={t('payment.cardNumber')}
+            hint={t('payment.cardHint', {...TEST_CARDS})}
             error={errors.number?.message}
           >
             {(control) => (
@@ -125,27 +125,27 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
                 {...control}
                 inputMode="numeric"
                 autoComplete="cc-number"
-                {...register('number', {validate: (v) => isCardNumber(v) || 'Enter a valid card number'})}
+                {...register('number', {validate: (v) => isCardNumber(v) || t('payment.cardInvalid')})}
               />
             )}
           </Field>
           <div className={styles.pair}>
-            <Field label="Expiry (MM/YY)" error={errors.expiry?.message}>
+            <Field label={t('payment.expiry')} error={errors.expiry?.message}>
               {(control) => (
                 <Input
                   {...control}
                   autoComplete="cc-exp"
-                  {...register('expiry', {validate: (v) => isExpiry(v) || 'Enter a future date as MM/YY'})}
+                  {...register('expiry', {validate: (v) => isExpiry(v) || t('payment.expiryInvalid')})}
                 />
               )}
             </Field>
-            <Field label="Security code" error={errors.cvc?.message}>
+            <Field label={t('payment.cvc')} error={errors.cvc?.message}>
               {(control) => (
                 <Input
                   {...control}
                   inputMode="numeric"
                   autoComplete="cc-csc"
-                  {...register('cvc', {validate: (v) => isCvc(v) || 'Enter the 3 or 4 digits'})}
+                  {...register('cvc', {validate: (v) => isCvc(v) || t('payment.cvcInvalid')})}
                 />
               )}
             </Field>
@@ -156,7 +156,7 @@ export default function PaymentDialog({invoice, session, onClose}: Props) {
             </div>
           )}
           <Button type="submit" loading={busy} fullWidth>
-            {busy ? 'Paying…' : `Pay ${amount}`}
+            {busy ? t('payment.submitting') : t('payment.submit', {amount})}
           </Button>
         </form>
       )}

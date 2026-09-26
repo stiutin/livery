@@ -59,7 +59,7 @@ function rememberPaid(key: string, ids: string[]): void {
   }
 }
 
-const PLANS = ['Essential', 'Plus', 'Business'];
+const PLANS = ['essential', 'plus', 'business'] as const;
 
 export function customer(tenant: string, email: string): Customer {
   const seed = hash(`${tenant}:${email.toLowerCase()}`);
@@ -88,7 +88,7 @@ export function customer(tenant: string, email: string): Customer {
     account: {
       name,
       email,
-      plan: PLANS[seed % PLANS.length] ?? 'Essential',
+      plan: PLANS[seed % PLANS.length] ?? 'essential',
       memberSince: daysFromToday(-400 - (seed % 300)),
     },
     invoices,
