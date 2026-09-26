@@ -2,8 +2,8 @@ import {expect, type Page, test} from '@playwright/test';
 
 /**
  * Visual regression: every tenant × page, compared with committed screenshots. The clock is fixed so the mock
- * invoices always have the same dates; the baselines are made in the Playwright container that CI uses (see
- * .github/workflows/screenshots.yml), since fonts and anti-aliasing differ from machine to machine.
+ * invoices always have the same dates; the baselines are made in the Playwright container that CI uses (CI's Visual regression
+ * job, run by hand with “Update the visual baselines”), since fonts and anti-aliasing differ from machine to machine.
  */
 const TENANTS = ['harbour', 'onyx', 'meadow'];
 const NOW = new Date('2026-09-26T10:00:00Z');

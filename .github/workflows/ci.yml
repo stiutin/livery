@@ -10,6 +10,11 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+    inputs:
+      update-screenshots:
+        description: Update the visual baselines and commit them to this branch
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -91,12 +96,15 @@ jobs:
           path: playwright-report/
 
   # Screenshots of every tenant × page, compared with the baselines in e2e/visual/__screenshots__. They are only
-  # valid in this container, so both this job and the screenshots workflow that updates them run in it. Keep the
-  # image tag equal to the @playwright/test version in package.json.
+  # valid in this container, so they are made here too, from the same build: run CI by hand (Actions → CI → Run
+  # workflow) with "Update the visual baselines" ticked, and this job commits new ones instead of comparing.
+  # Keep the image tag equal to the @playwright/test version in package.json.
   visual:
     name: Visual regression
     runs-on: ubuntu-24.04
     needs: build
+    permissions:
+      contents: write
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
     steps:
@@ -106,17 +114,36 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Check that the baselines exist
-        run: |
-          if [ ! -d e2e/visual/__screenshots__ ]; then
-            echo "::error title=No visual baselines::This branch has no screenshots to compare with. Run Actions → Screenshots on it; it commits them and starts CI again."
-            exit 1
-          fi
       - uses: actions/download-artifact@v8
         with:
           name: build
           path: apps/shell/build/client/
-      - run: npm run e2e:visual
+      - name: Check that the baselines exist
+        if: ${{ !inputs.update-screenshots }}
+        run: |
+          if [ ! -d e2e/visual/__screenshots__ ]; then
+            echo "::error title=No visual baselines::This branch has no screenshots to compare with. Run CI by hand on it (Actions → CI → Run workflow) with 'Update the visual baselines' ticked."
+            exit 1
+          fi
+      - name: Compare with the baselines
+        if: ${{ !inputs.update-screenshots }}
+        run: npm run e2e:visual
+      - name: Update the baselines
+        if: ${{ inputs.update-screenshots }}
+        run: npm run e2e:visual:update
+      - name: Commit the baselines
+        if: ${{ inputs.update-screenshots }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/__screenshots__
+          if git diff --cached --quiet; then
+            echo "The screenshots have not changed."
+          else
+            git commit -m "test: update the visual baselines"
+            git push
+          fi
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
