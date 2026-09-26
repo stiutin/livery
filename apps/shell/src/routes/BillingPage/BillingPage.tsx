@@ -1,16 +1,15 @@
+import {Button, Field, Input} from '@livery/ui';
 import {useState} from 'react';
 
 import BackToHome from '../../components/BackToHome/BackToHome';
 import {MAX_AMOUNT} from '../../constants/common.const';
 import {billingApi} from '../../services/billingApi';
 import {useTenant} from '../../tenant/useTenant';
-import {useThemeComponents} from '../../theme/useThemeComponents';
 import type {BillingState} from '../../types/billingState';
 import {formatCurrency, parseAmount} from '../../utils/formatters.utils';
 
 export default function BillingPage() {
   const {brandId, currency, locale} = useTenant();
-  const {BrandButton} = useThemeComponents();
   const [amountText, setAmountText] = useState('');
   const [state, setState] = useState<BillingState>({status: 'idle'});
 
@@ -90,9 +89,9 @@ export default function BillingPage() {
             <span className="success-card__label">Amount</span>
             <strong className="success-card__value">{formatCurrency(state.result.amount, currency, locale)}</strong>
           </p>
-          <BrandButton onClick={handleReset} style={{marginTop: 8}}>
+          <Button variant="secondary" onClick={handleReset} className="success-card__action">
             Create another invoice
-          </BrandButton>
+          </Button>
         </div>
       ) : (
         <form
@@ -103,28 +102,24 @@ export default function BillingPage() {
           aria-busy={state.status === 'loading'}
           noValidate
         >
-          <div className="field">
-            <label htmlFor="amount">Billing amount ({currency})</label>
-            <input
-              id="amount"
-              name="amount"
-              type="text"
-              inputMode="decimal"
-              placeholder="e.g. 49.99"
-              value={amountText}
-              onChange={(e) => {
-                setAmountText(e.target.value);
-              }}
-              aria-describedby={state.status === 'error' ? 'billing-error' : undefined}
-              aria-invalid={state.status === 'error'}
-            />
-          </div>
-
-          {state.status === 'error' && (
-            <div id="billing-error" className="error" role="alert">
-              {state.message}
-            </div>
-          )}
+          <Field
+            label={`Billing amount (${currency})`}
+            hint="For example 49.99"
+            error={state.status === 'error' ? state.message : undefined}
+          >
+            {(control) => (
+              <Input
+                {...control}
+                name="amount"
+                type="text"
+                inputMode="decimal"
+                value={amountText}
+                onChange={(e) => {
+                  setAmountText(e.target.value);
+                }}
+              />
+            )}
+          </Field>
 
           {state.status === 'empty' && (
             <div className="notice" role="status" aria-live="polite">
@@ -132,16 +127,9 @@ export default function BillingPage() {
             </div>
           )}
 
-          <BrandButton type="submit" disabled={state.status === 'loading'} style={{width: '100%'}}>
-            {state.status === 'loading' ? (
-              <>
-                <span className="spinner" aria-hidden="true" />
-                Creating invoice…
-              </>
-            ) : (
-              'Create invoice'
-            )}
-          </BrandButton>
+          <Button type="submit" loading={state.status === 'loading'} fullWidth>
+            {state.status === 'loading' ? 'Creating invoice…' : 'Create invoice'}
+          </Button>
 
           <BackToHome />
         </form>

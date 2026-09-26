@@ -44,9 +44,9 @@ test('the theme preview lists the colours compiled for the tenant', async ({page
   await page.goto('./theme/preview?brand=tenant-beta');
 
   await expect(page.locator('html')).toHaveAttribute('data-tenant', 'tenant-beta');
-  const swatches = page.getByRole('list', {name: 'Colour tokens'}).getByRole('listitem');
-  await expect(swatches).toHaveCount(18);
-  await expect(swatches.filter({hasText: 'brand.default'})).toContainText('#0f766e');
+  const table = page.getByRole('table', {name: 'Semantic colours of tenant-beta'});
+  await expect(table.getByRole('row')).toHaveCount(20);
+  await expect(table.getByRole('row', {name: /brand\.default/})).toContainText('#0f766e');
 });
 
 test('an unknown brand falls back to the default tenant', async ({page}) => {

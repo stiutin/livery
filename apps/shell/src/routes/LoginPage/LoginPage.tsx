@@ -1,3 +1,4 @@
+import {Button, Field, Input} from '@livery/ui';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {useLocation, useNavigate} from 'react-router';
@@ -6,13 +7,11 @@ import BackToHome from '../../components/BackToHome/BackToHome';
 import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
 import {identityApi} from '../../services/identityApi';
 import {useTenant} from '../../tenant/useTenant';
-import {useThemeComponents} from '../../theme/useThemeComponents';
 import type {LoginFormValues} from '../../types/loginForm';
 import {isValidEmail} from '../../utils/formatters.utils';
 
 export default function LoginPage() {
   const {brandId} = useTenant();
-  const {BrandButton} = useThemeComponents();
   const navigate = useNavigate();
   const {search} = useLocation();
   const [apiError, setApiError] = useState<string | null>(null);
@@ -53,48 +52,36 @@ export default function LoginPage() {
         aria-busy={isSubmitting}
         noValidate
       >
-        <div className="field">
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={!!errors.email}
-            aria-describedby={errors.email ? 'email-error' : undefined}
-            {...register('email', {
-              required: 'Email is required',
-              validate: (v) => isValidEmail(v) || 'Enter a valid email address',
-            })}
-          />
-          {errors.email && (
-            <span id="email-error" className="field-error" role="alert">
-              {errors.email.message}
-            </span>
+        <Field label="Email address" error={errors.email?.message}>
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              autoComplete="email"
+              {...register('email', {
+                required: 'Email is required',
+                validate: (v) => isValidEmail(v) || 'Enter a valid email address',
+              })}
+            />
           )}
-        </div>
+        </Field>
 
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={!!errors.password}
-            aria-describedby={errors.password ? 'password-error' : undefined}
-            {...register('password', {
-              required: 'Password is required',
-              minLength: {
-                value: PASSWORD_MIN_LENGTH,
-                message: `Password must have at least ${PASSWORD_MIN_LENGTH} characters`,
-              },
-            })}
-          />
-          {errors.password && (
-            <span id="password-error" className="field-error" role="alert">
-              {errors.password.message}
-            </span>
+        <Field label="Password" error={errors.password?.message}>
+          {(control) => (
+            <Input
+              {...control}
+              type="password"
+              autoComplete="current-password"
+              {...register('password', {
+                required: 'Password is required',
+                minLength: {
+                  value: PASSWORD_MIN_LENGTH,
+                  message: `Password must have at least ${PASSWORD_MIN_LENGTH} characters`,
+                },
+              })}
+            />
           )}
-        </div>
+        </Field>
 
         {apiError && (
           <div className="error" role="alert">
@@ -102,9 +89,9 @@ export default function LoginPage() {
           </div>
         )}
 
-        <BrandButton type="submit" disabled={isSubmitting} style={{width: '100%'}}>
+        <Button type="submit" loading={isSubmitting} fullWidth>
           {isSubmitting ? 'Processing…' : 'Login'}
-        </BrandButton>
+        </Button>
 
         <BackToHome />
       </form>

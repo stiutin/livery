@@ -20,7 +20,8 @@ test('billing creates an invoice', async ({page}) => {
   await page.getByLabel('Billing amount (GBP)').fill('49.99');
   await page.getByRole('button', {name: 'Create invoice'}).click();
 
-  const receipt = page.getByRole('status');
+  // Scoped to the page: the notification region is a status too.
+  const receipt = page.getByRole('main').getByRole('status');
   await expect(receipt.getByRole('heading', {name: 'Invoice created'})).toBeVisible();
   await expect(receipt).toContainText('£49.99');
 });
@@ -31,5 +32,5 @@ test('billing shows the empty state for a tenant without invoices', async ({page
   await page.getByLabel(/Billing amount/).fill('10');
   await page.getByRole('button', {name: 'Create invoice'}).click();
 
-  await expect(page.getByRole('status')).toHaveText('No invoice generated for this tenant');
+  await expect(page.getByRole('main').getByRole('status')).toHaveText('No invoice generated for this tenant');
 });

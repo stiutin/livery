@@ -60,9 +60,12 @@ describe('compileTenant', () => {
 
   it('holds focus rings and control borders to 3:1', () => {
     const {messages} = compileWith({semantic: {color: {border: {strong: {$type: 'color', $value: srgb('#cbd5e1')}}}}});
+    const where =
+      '#cbd5e1 (semantic.color.border.strong in edit.json) on #ffffff (primitive.color.white in tenant.json)';
+    // Both controls drawn with the strong border fail, each reported under its own pair.
     expect(messages).toEqual([
-      'input border: #cbd5e1 (semantic.color.border.strong in edit.json) on #ffffff (primitive.color.white in tenant.json) ' +
-        'is 1.48:1, WCAG AA needs 3:1',
+      `secondary button border: ${where} is 1.48:1, WCAG AA needs 3:1`,
+      `input border: ${where} is 1.48:1, WCAG AA needs 3:1`,
     ]);
   });
 
@@ -95,6 +98,7 @@ describe('compileTenant', () => {
     delete semantic.color.link;
     const {problems} = compileTenant('test', [base, {name: 'tenant.json', json: tenant}]);
     expect(problems.map((problem) => `${problem.path}: ${problem.message}`)).toEqual([
+      'component.button.secondary.text: refers to {semantic.color.link}, which does not exist',
       'semantic.color.link: is missing (links)',
     ]);
   });

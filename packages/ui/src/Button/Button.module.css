@@ -1,0 +1,78 @@
+.button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--button-radius);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: center;
+  line-height: 1.2;
+  padding: 12px 20px;
+  transition:
+    background-color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+  user-select: none;
+}
+
+.button[data-variant='primary'] {
+  background: var(--button-primary-background);
+  color: var(--button-primary-text);
+}
+
+.button[data-variant='primary']:hover:not(:disabled) {
+  background: var(--button-primary-background-hover);
+}
+
+.button[data-variant='secondary'] {
+  background: var(--button-secondary-background);
+  border-color: var(--button-secondary-border);
+  color: var(--button-secondary-text);
+}
+
+.button[data-variant='secondary']:hover:not(:disabled) {
+  background: var(--button-secondary-background-hover);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Disabled controls are exempt from contrast requirements; the cursor and the fade say it is inactive. */
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.spinner {
+  animation: spin 0.7s linear infinite;
+  border: 2px solid color-mix(in srgb, currentcolor 40%, transparent);
+  border-radius: 50%;
+  border-top-color: currentcolor;
+  flex-shrink: 0;
+  height: 14px;
+  width: 14px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}

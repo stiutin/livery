@@ -67,6 +67,33 @@
           }
         },
         "$type": "shadow"
+      },
+      "overlay": {
+        "$type": "shadow",
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [0.0627, 0.0941, 0.1569],
+            "alpha": 0.25,
+            "hex": "#101828"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": {
+            "value": 24,
+            "unit": "px"
+          },
+          "blur": {
+            "value": 48,
+            "unit": "px"
+          },
+          "spread": {
+            "value": -12,
+            "unit": "px"
+          }
+        }
       }
     },
     "duration": {
@@ -76,6 +103,18 @@
           "unit": "ms"
         },
         "$type": "duration"
+      }
+    },
+    "color": {
+      "$type": "color",
+      "overlay": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.0588, 0.0902, 0.1647],
+          "alpha": 0.5,
+          "hex": "#0f172a"
+        },
+        "$description": "Behind a modal dialog. Translucent, so it is never a contrast background."
       }
     }
   },
@@ -96,6 +135,21 @@
       "radius": {
         "$value": "{semantic.radius.medium}",
         "$type": "dimension"
+      },
+      "secondary": {
+        "$type": "color",
+        "background": {
+          "$value": "{semantic.color.surface.default}"
+        },
+        "background-hover": {
+          "$value": "{semantic.color.surface.subtle}"
+        },
+        "text": {
+          "$value": "{semantic.color.link}"
+        },
+        "border": {
+          "$value": "{semantic.color.border.strong}"
+        }
       }
     },
     "card": {
@@ -137,6 +191,33 @@
       "radius": {
         "$value": "{semantic.radius.small}",
         "$type": "dimension"
+      }
+    },
+    "dialog": {
+      "background": {
+        "$value": "{semantic.color.surface.default}",
+        "$type": "color"
+      },
+      "backdrop": {
+        "$value": "{semantic.color.overlay}",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "{semantic.radius.large}",
+        "$type": "dimension"
+      },
+      "shadow": {
+        "$value": "{semantic.shadow.overlay}",
+        "$type": "shadow"
+      }
+    },
+    "table": {
+      "$type": "color",
+      "header-background": {
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "border": {
+        "$value": "{semantic.color.border.default}"
       }
     }
   }
