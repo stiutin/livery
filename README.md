@@ -2,40 +2,49 @@
 
 A white-label React app where a brand is data: design tokens, one component library, many tenants.
 
-An airline's livery is the paint on the aircraft: the same plane in a different company's colours. Livery does the same for a web product. A customer account (sign-in, billing, invoices) is built once, and each tenant brings its own colours, type and tone. The project is being rebuilt in phases, listed in the roadmap below; today it is the starting point for that work: a shell app, two theme packages and the tenant switch between them, now on the portfolio's tooling, tests and CI.
+An airline's livery is the paint on the aircraft: the same plane in a different company's colours. Livery does the same for a web product. A customer account (sign-in, billing, invoices) is built once, and each tenant brings its own colours, type and tone. The project is being rebuilt in phases, listed in the roadmap below; so far every brand is a token file checked for contrast at build time, and the next step is one component library for all of them.
 
 **[Open the live demo](https://stiutin.github.io/livery/)**
 
 ## Features
 
 - Three tenants and a fallback brand, switched live without a reload
+- Each brand is a design token file in the W3C format: colours, type, radii and timing, nothing in code
+- The build fails if a brand's text or controls fall below WCAG AA contrast, and says which colour to change
 - The tenant, locale and currency live in the URL, so any state can be shared or bookmarked
 - Links carry the tenant across pages, and deep links open the right page with the right brand
 - Sign-in with per-field validation that is announced to screen readers
 - Invoice creation with explicit loading, error, empty and success states
 - Currency and number formatting through `Intl`, for four locales and three currencies
-- A theme preview page with the active brand's colour swatches
+- A theme preview page with the active brand's compiled colours
 - Deployed to GitHub Pages from CI after every green push
 
 ## Tech stack
 
-[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/), [react-hook-form](https://react-hook-form.com/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, npm workspaces.
+[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/), [react-hook-form](https://react-hook-form.com/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, [W3C Design Tokens](https://www.designtokens.org/tr/2025.10/format/), npm workspaces.
 Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/) and [Playwright](https://playwright.dev/).
 
 ## How it works
 
-The shell app owns routing, the tenant context and the API adapters; a theme package owns token values and branded components. `ThemeBoot` reads `?brand`, `?locale` and `?currency`, `themeRegistry.ts` maps the brand to its theme, `ThemeLoader` writes the tokens to `<html>` as CSS custom properties, and pages get their components from `useThemeComponents()`, never from a theme package directly. The API is mocked behind two adapters, so pages contain no network code.
+**Brands are token files.** Each tenant is `tenants/<id>/tokens.json`, written in the [Design Tokens Format Module 2025.10](https://www.designtokens.org/tr/2025.10/format/), on top of a shared `packages/tokens/base.tokens.json`. Tokens sit in three layers. _Primitives_ are the raw palette, free-form and never emitted. _Semantic_ tokens say what a value is for: the page, a surface, muted text, the brand colour, the focus ring. _Component_ tokens say what a button or an input uses, and the base file maps them to semantic ones, so a tenant usually writes only its palette and its semantic colours. Only the semantic and component layers become CSS custom properties, which keeps components away from raw palette values.
 
-This design has limits that the roadmap addresses: each theme forks its components, the tokens are applied after the first paint, and nothing checks a brand's colour contrast. The current boundaries are described in [ARCHITECTURE.md](ARCHITECTURE.md) and the reasoning behind them in [DECISIONS.md](DECISIONS.md); both will fold into this section as the rebuild lands.
+**The contract is closed.** Every tenant defines the same 37 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
+
+**Contrast is a build gate.** The contract also lists which colour sits on which: body text on the page, the button label on the button, the button label on its hover colour, and so on. `@livery/tokens` measures 16 such pairs per tenant with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops `vite build` and names where each colour is written, since that is where the fix goes. The original themes failed it: white on the violet theme's cyan hover colour was 2.4:1.
+
+**Compiled once, switched with an attribute.** A Vite plugin compiles every tenant into one stylesheet, `virtual:livery/tenants.css`, with a block per tenant under `[data-tenant='…']`, and the default tenant also on `:root`. `ThemeLoader` sets `<html data-tenant>` in a layout effect, so content never paints in another brand's colours, and switching brands swaps no JavaScript objects. The same plugin exposes the tokens as data (`virtual:livery/tenants`) for the theme preview. In development, saving a token file reloads the page, and a broken one shows in Vite's error overlay.
+
+The shell owns routing, the tenant context and the API adapters. `ThemeBoot` reads `?brand`, `?locale` and `?currency`, `themeRegistry.ts` maps the brand to its token set and its components, and pages get components from `useThemeComponents()`. Each theme package still has its own copy of the button and the card, now styled only by tokens; the next phase replaces them with one component library. The API is mocked behind two adapters, so pages contain no network code. [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md) describe the MVP this started from and will fold into this section.
 
 GitHub Pages serves the site under `/livery/`. Production builds use that base path, the router gets it as its basename, and `404.html` is a copy of `index.html`, so a deep link such as `/livery/account/billing?brand=tenant-beta` boots the app and the router takes over.
 
 ## Testing
 
-| Layer      | Tool                    | What it covers                                                                                              |
-| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Unit       | Vitest, Testing Library | the home, sign-in and billing pages: validation, every billing state, tenant parameters - 17 tests          |
-| End-to-end | Playwright              | the production build on desktop and a Pixel 7: tenant switching, deep links, sign-in, billing - 7 scenarios |
+| Layer      | Tool                    | What it covers                                                                                                                      |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Unit       | Vitest                  | the token compiler: parsing, aliases, colour maths, the contract, contrast, CSS output, a real Vite build that must fail - 33 tests |
+| Unit       | Vitest, Testing Library | the home, sign-in and billing pages: validation, every billing state, tenant parameters - 17 tests                                  |
+| End-to-end | Playwright              | the production build on desktop and a Pixel 7: tenant switching, compiled tokens, deep links, sign-in, billing - 9 scenarios        |
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
 
@@ -43,8 +52,9 @@ The end-to-end tests run against the production build, served by `scripts/serve.
 
 ```
 apps/shell/                 the app: routes, layout, tenant context, theme boundary, mocked API adapters
-themes/theme-tenant-alpha/  violet brand: tokens and branded components
-themes/theme-tenant-beta/   teal brand: the same exports with different values
+packages/tokens/            the token compiler, the contract, the base token file, the Vite plugin and a CLI
+tenants/<id>/tokens.json    one brand each: tenant-default, tenant-alpha, tenant-beta
+themes/theme-tenant-*/      the button and the card of each brand, until the component library replaces them
 e2e/                        Playwright tests
 scripts/                    a server that behaves like GitHub Pages
 ```
@@ -68,6 +78,7 @@ Other scripts:
 npm run build          # production build into apps/shell/dist, for /livery/
 npm run serve          # serve that build like GitHub Pages, on http://localhost:4173/livery/
 npm test               # unit tests
+npm run tokens         # every tenant's contrast report (`-- --all` lists every pair)
 npm run e2e            # build, then Playwright (run `npm run e2e:install` once)
 npm run lint           # ESLint and Stylelint
 npm run typecheck      # TypeScript for the app, the themes and the end-to-end suite
@@ -81,11 +92,11 @@ Pushing to `master` runs formatting, lint, type checks, unit tests and the end-t
 ## Roadmap
 
 - [x] The portfolio's tooling, strict TypeScript, Playwright, CI and deployment
-- [ ] Design tokens as data in the W3C format, compiled at build time, with WCAG AA contrast as a build gate
+- [x] Design tokens as data in the W3C format, compiled at build time, with WCAG AA contrast as a build gate
 - [ ] One accessible component library for every tenant, instead of a fork per theme
 - [ ] Tenants as validated configuration, tenant-based routes, and every page prerendered in its own brand
 - [ ] The product: sign-in, account, invoices and payment, with a mocked API and per-tenant features
-- [ ] English, Ukrainian and German
+- [ ] English, German and Spanish
 - [ ] Studio: create a brand in the browser, check its contrast live, export or share it
 - [ ] End-to-end, accessibility and visual regression tests for every tenant
 - [ ] Dark mode inside every brand

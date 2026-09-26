@@ -1,5 +1,7 @@
 # Architecture: Shell vs Theme Boundaries
 
+> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json` (see the README's _How it works_): the token objects in the theme packages, `ThemeLoader`'s inline properties, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
+
 ## Overview
 
 ```
