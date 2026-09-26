@@ -5,7 +5,7 @@ import base from './playwright.config';
 /**
  * Screenshot comparison, run apart from the functional suite because the baselines are only valid in the
  * Playwright container (fonts and rendering differ between machines). CI runs it in that container, and
- * `npm run e2e:visual:update` is meant to run there too (see .github/workflows/screenshots.yml).
+ * `npm run e2e:visual:update` runs there too, in the same CI job (see .github/workflows/ci.yml).
  */
 export default defineConfig({
   ...base,

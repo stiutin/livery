@@ -38,7 +38,7 @@ npm run tokens         # contrast summary per tenant and every problem; `-- --al
 npm run e2e            # build, then Playwright on desktop + Pixel 7, axe included; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
 npm run e2e:visual     # screenshots vs e2e/visual/__screenshots__ (playwright.visual.config.ts); container only
-npm run e2e:visual:update  # new baselines; run it through the Screenshots workflow, not locally
+npm run e2e:visual:update  # new baselines; CI runs it (see section 9), not your machine
 npm run lighthouse     # lhci autorun on the existing build (lighthouserc.json)
 npm run lint           # ESLint + Stylelint (src CSS only)
 npm run typecheck      # the shell, the e2e suite and both packages
@@ -146,7 +146,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): `renderPage()` from `src/test/render.tsx` wraps a page in a `MemoryRouter`, `TenantProvider`, `SessionProvider` and `ToastProvider`, without the framework plugin; `sessionFor(email)` signs in beforehand. The mock API runs through `msw/node`, so pages are tested against the same handlers as the browser; `onUnhandledRequest: 'error'` catches any call outside them, and every test starts with an empty mock database and session. The payment machine and card checks are tested as plain functions.
 - **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after moving to another tenant. The prerendering scenarios read raw HTML with `request.get()` and run a page with JavaScript disabled. The notification region is always a `status`, so scope page statuses to `getByRole('main')` and toasts to the `Notifications` region. Keyboard-only scenarios skip the mobile project.
 - **Accessibility** (`e2e/accessibility.spec.ts`): `@axe-core/playwright` with the WCAG 2.2 A/AA tags on every tenant's pages and states (login errors, signed in, payment dialog), German and Spanish pages, landing, Studio and 404, on both viewports. A violation fails with its rule id and elements. Fix the page, never exclude a rule.
-- **Visual** (`e2e/visual/`, `playwright.visual.config.ts`): `toHaveScreenshot` per tenant × page, full page, clock fixed at 2026-09-26 so mock dates hold, animations disabled. The main config ignores this folder. Baselines come only from the Screenshots workflow in `mcr.microsoft.com/playwright:v<version>-noble`; a local run compares against images from another renderer and will differ.
+- **Visual** (`e2e/visual/`, `playwright.visual.config.ts`): `toHaveScreenshot` per tenant × page, full page, clock fixed at 2026-09-26 so mock dates hold, animations disabled. The main config ignores this folder. Baselines come only from CI's _Visual regression_ job in `mcr.microsoft.com/playwright:v<version>-noble`, run by hand with “Update the visual baselines”; a local run compares against images from another renderer and will differ.
 - **Lighthouse** (`lighthouserc.json`): five URLs, three runs each, served by `scripts/serve.mjs`. Locally, `CHROME_PATH` points it at a browser.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
@@ -155,7 +155,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Add a tenant:** a folder in `tenants/` with a `tenant.json` (name, locale, currency) and either a `tokens.json` (copy one, change the palette and semantic colours, run `npm run tokens` until every pair passes) or `"tokens": "<other tenant>"`. No code changes: the router, the prerender list and the landing page pick it up.
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
 - **Add a feature flag:** add it to `FEATURES` in `packages/tokens/src/tenant.ts`, to `features` in `tenants/tenant.schema.json` and `LoadedTenant`, set it in every tenant.json, and read it with `useTenant().features`.
-- **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test, an end-to-end scenario, an axe check and a screenshot (then run the Screenshots workflow).
+- **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test, an end-to-end scenario, an axe check and a screenshot (then run CI by hand with “Update the visual baselines”).
 - **Add a message:** add the key to `messages/en.json`, `de.json` and `es.json` with the same ICU arguments (the catalogue tests fail otherwise), then use `t('key', {…})` or `rich()` for tags.
 - **Add a language:** an entry in `LANGUAGES`, a catalogue in `messages/`, and the test's catalogue map; the router, the prerender list and the switcher pick it up.
 - **Change what Studio generates:** edit `brandFromSettings` in `packages/tokens/src/studio.ts`; the sweep test in `studio.test.ts` rebuilds brands all round the colour wheel and fails if any exported one does not build.
@@ -164,7 +164,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 
 ## 9. CI/CD
 
-The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. `.github/workflows/screenshots.yml` (manual) builds, updates the visual baselines in the same container, commits them and starts CI on the branch with a workflow_dispatch, since its own push cannot. A dispatched run on any branch other than `master` skips the deploy. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
+The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. Run by hand (Actions → CI → Run workflow) with “Update the visual baselines” ticked, the _Visual regression_ job updates the screenshots from the same build artifact and commits them to the branch instead of comparing; the commit starts no new run. A dispatched run deploys only on `master`. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
 
 ## 10. Troubleshooting
 
@@ -179,8 +179,8 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 | E2E hits the wrong app                                           | another project's server is on port 4173 (`reuseExistingServer`); stop it                                        |
 | Playwright: "Executable doesn't exist"                           | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                                                        |
 | The live site shows a blank page after renaming the repository   | the build's base path is the old name; re-run the workflow, which reads the new name                             |
-| _Visual regression_ fails at "Check that the baselines exist"    | the baselines were never made for this branch: run the Screenshots workflow on it; it starts CI again            |
-| _Visual regression_ fails with "A snapshot doesn't exist"        | a new page or state has no baseline yet: run the Screenshots workflow                                            |
+| _Visual regression_ fails at "Check that the baselines exist"    | the baselines were never made for this branch: run CI by hand on it with “Update the visual baselines”           |
+| _Visual regression_ fails with "A snapshot doesn't exist"        | a new page or state has no baseline yet: run CI by hand with “Update the visual baselines”                       |
 | _Visual regression_ fails after a Playwright upgrade             | the container tag no longer matches the version; update both, then remake the baselines                          |
 | _Lighthouse_ performance dips below 0.9 on one run               | check the uploaded report; variance on shared runners is a few points, a real regression shows in all three runs |
 | Deploy rejected: "branch not allowed to deploy to github-pages"  | Settings → Environments → github-pages → allow `master`                                                          |

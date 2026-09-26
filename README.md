@@ -77,7 +77,7 @@ The whole site lives under `/livery/`, in development too, so local URLs match t
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
 
-The visual baselines live in `e2e/visual/__screenshots__` and are only valid in the Playwright container, since fonts and anti-aliasing differ from machine to machine. CI compares against them in that container; the _Screenshots_ workflow, started by hand from the Actions tab, makes new ones there, commits them to the branch it ran on and starts CI on it again. Axe found real problems when it was added: links in running text told apart by colour alone, a header badge and menu items on a tint that lowered the contrast in Meadow, and a header whose German labels overflowed on a phone. They are fixed, and the test keeps them fixed.
+The visual baselines live in `e2e/visual/__screenshots__` and are only valid in the Playwright container, since fonts and anti-aliasing differ from machine to machine. CI compares against them in that container; to make new ones, run CI by hand (Actions → CI → Run workflow) with “Update the visual baselines” ticked: the Visual regression job then takes the screenshots from the same build in the same container and commits them to that branch. Axe found real problems when it was added: links in running text told apart by colour alone, a header badge and menu items on a tint that lowered the contrast in Meadow, and a header whose German labels overflowed on a phone. They are fixed, and the test keeps them fixed.
 
 ## Project structure
 
