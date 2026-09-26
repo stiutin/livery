@@ -65,11 +65,16 @@ export function ToastProvider({
           }
         }}
       >
-        <ol className={styles.list} role="status" aria-live="polite">
-          {toasts.map((toast) => (
-            <Toast key={toast.id} toast={toast} paused={paused} onDismiss={dismiss} dismissLabel={dismissLabel} />
-          ))}
-        </ol>
+        {/* The live region is a plain element: a list cannot carry the status role. */}
+        <div role="status" aria-live="polite">
+          {toasts.length > 0 && (
+            <ol className={styles.list}>
+              {toasts.map((toast) => (
+                <Toast key={toast.id} toast={toast} paused={paused} onDismiss={dismiss} dismissLabel={dismissLabel} />
+              ))}
+            </ol>
+          )}
+        </div>
       </section>
     </ToastContext>
   );
