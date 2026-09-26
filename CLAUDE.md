@@ -6,11 +6,9 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 **Livery** is a white-label React app: one product (a customer account with sign-in, invoices and card payments) shown in three brands, Harbour (light, the default), Onyx (dark) and Meadow (bright, card payments off). The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 7 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; the product on a mocked API; English, German and Spanish; Studio; and the full test matrix: axe on every tenant, visual regression and Lighthouse in CI. Section 11 lists what later phases address.
-
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
-- `ARCHITECTURE.md` and `DECISIONS.md` describe the MVP and say where they no longer hold. They stay until the rebuild folds them into the README's _How it works_ and this file (house style has no ADR folder).
+- The README's _How it works_ explains the design for readers; this file holds what a change must respect. There is no ADR folder: decisions live in those two places.
 
 ## 2. Toolchain
 
@@ -40,6 +38,7 @@ npm run e2e:run        # the tests only, against the existing build
 npm run e2e:visual     # screenshots vs e2e/visual/__screenshots__ (playwright.visual.config.ts); container only
 npm run e2e:visual:update  # new baselines; CI runs it (see section 9), not your machine
 npm run lighthouse     # lhci autorun on the existing build (lighthouserc.json)
+npm run screenshots    # .github/screenshots/*.png and .github/social-preview.png from a fresh build
 npm run lint           # ESLint + Stylelint (src CSS only)
 npm run typecheck      # the shell, the e2e suite and both packages
 npm run check          # format:check + lint + typecheck + test  ← before finishing
@@ -100,6 +99,7 @@ apps/shell/
   src/constants/ types/ utils/ styles/ test/
 e2e/                       Playwright specs and helpers
 scripts/serve.mjs          GitHub-Pages-like static server
+scripts/screenshots.mjs    README screenshots (three brands, Studio) and the social preview, with a fixed clock
 ```
 
 ## 5. Architecture
@@ -187,13 +187,12 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 
 ## 11. Known limitations
 
-These are what later phases address, or trade-offs worth knowing:
+Trade-offs worth knowing, and what the roadmap in the README addresses:
 
 - The landing page, the 404 page and Studio's own controls are outside any tenant and only in English; the Studio preview itself switches language. Mock data such as customer names and IBANs is not translated.
 - Studio keeps the chosen brand colour exactly, so a muddy mid-tone (such as #957350) can fail contrast for both white and near-black text; Studio then refuses the export and names the colour, rather than changing it silently.
 - `StudioPreview` relies on React Router's UNSAFE_ contexts; a React Router upgrade may need it adjusted, and the Studio end-to-end tests will say so.
 - The mock API forgets pending bank confirmations on reload, and paid invoices only last for the browser session.
-- The output layout assumes GitHub Pages serves `x.html` for `/x` even when a folder `x/` exists; `scripts/serve.mjs` does the same. Check the live site after the first deploy.
 - A tenant page loads about 132 kB of JavaScript (gzipped) and Studio adds about 18 kB; Lighthouse still scores 0.93 to 0.97 on performance, since the HTML is complete and paint does not wait for scripts.
 - Only the token types Livery uses are supported; gradients, borders, typography and transitions report "unsupported $type".
 
