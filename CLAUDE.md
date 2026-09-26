@@ -164,7 +164,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 
 ## 9. CI/CD
 
-The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. `.github/workflows/screenshots.yml` (manual) builds, updates the visual baselines in the same container and commits them; a commit made by GitHub Actions does not start CI, so re-run it afterwards. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
+The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. `.github/workflows/screenshots.yml` (manual) builds, updates the visual baselines in the same container, commits them and starts CI on the branch with a workflow_dispatch, since its own push cannot. A dispatched run on any branch other than `master` skips the deploy. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
 
 ## 10. Troubleshooting
 
@@ -179,7 +179,8 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 | E2E hits the wrong app                                           | another project's server is on port 4173 (`reuseExistingServer`); stop it                                        |
 | Playwright: "Executable doesn't exist"                           | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                                                        |
 | The live site shows a blank page after renaming the repository   | the build's base path is the old name; re-run the workflow, which reads the new name                             |
-| _Visual regression_ fails with "A snapshot doesn't exist"        | the baselines were never made for this branch: run the Screenshots workflow, then re-run CI                      |
+| _Visual regression_ fails at "Check that the baselines exist"    | the baselines were never made for this branch: run the Screenshots workflow on it; it starts CI again            |
+| _Visual regression_ fails with "A snapshot doesn't exist"        | a new page or state has no baseline yet: run the Screenshots workflow                                            |
 | _Visual regression_ fails after a Playwright upgrade             | the container tag no longer matches the version; update both, then remake the baselines                          |
 | _Lighthouse_ performance dips below 0.9 on one run               | check the uploaded report; variance on shared runners is a few points, a real regression shows in all three runs |
 | Deploy rejected: "branch not allowed to deploy to github-pages"  | Settings → Environments → github-pages → allow `master`                                                          |
