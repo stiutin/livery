@@ -11,3 +11,7 @@ test-results
 # Generated or vendored
 package-lock.json
 *.min.js
+
+# Project
+build
+.react-router

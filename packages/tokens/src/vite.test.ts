@@ -1,4 +1,4 @@
-import {cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 
@@ -18,7 +18,7 @@ function fixture(): string {
   writeFileSync(join(root, 'index.html'), '<script type="module" src="./main.js"></script>');
   writeFileSync(
     join(root, 'main.js'),
-    "import 'virtual:livery/tenants.css';\nimport tenants from 'virtual:livery/tenants';\nconsole.log(tenants.defaultTenant);\n"
+    "import {loadTenant} from 'virtual:livery/tenants';\nconst tenant = await loadTenant('tenant-alpha');\nconsole.log(tenant?.css);\n"
   );
   return root;
 }
@@ -29,7 +29,7 @@ function buildApp(root: string) {
     logLevel: 'silent',
     configFile: false,
     plugins: [liveryTokens({root, tenantsDir: join(root, 'tenants'), defaultTenant: 'tenant-default'})],
-    build: {outDir: join(root, 'dist')},
+    build: {outDir: join(root, 'dist'), target: 'es2022'},
   });
 }
 
@@ -40,16 +40,18 @@ afterEach(() => {
 });
 
 describe('liveryTokens', () => {
-  it('builds every tenant into the stylesheet and the manifest', async () => {
+  it('builds one chunk per tenant, each with its own CSS', async () => {
     const root = fixture();
     await buildApp(root);
 
-    const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
-    const cssFile = /href="\/(assets\/[^"]+\.css)"/.exec(html)?.[1];
-    expect(cssFile).toBeDefined();
-    const css = readFileSync(join(root, 'dist', cssFile ?? ''), 'utf8');
-    expect(css).toContain('[data-tenant=tenant-alpha]');
-    expect(css).toContain('--color-brand-default:#5b21b6');
+    const chunks = readdirSync(join(root, 'dist', 'assets')).map((file) =>
+      readFileSync(join(root, 'dist', 'assets', file), 'utf8')
+    );
+    const withBrand = (hex: string) => chunks.filter((chunk) => chunk.includes(`--color-brand-default:${hex};`));
+    expect(withBrand('#5b21b6')).toHaveLength(1);
+    expect(withBrand('#0f766e')).toHaveLength(1);
+    // The alpha chunk carries only alpha's tokens.
+    expect(withBrand('#5b21b6')[0]).not.toContain('#0f766e');
   });
 
   it('fails the build when a tenant falls below WCAG AA', async () => {

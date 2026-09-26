@@ -14,7 +14,7 @@ function renderLoginPage() {
       <TenantProvider>
         <Routes>
           <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/account/billing" element={<div>Billing page</div>} />
+          <Route path="/tenant-default/account/billing" element={<div>Billing page</div>} />
         </Routes>
       </TenantProvider>
     </MemoryRouter>

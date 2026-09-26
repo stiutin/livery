@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Livery tenant",
+  "description": "Settings of one tenant. The folder name is the tenant id and the first segment of its URLs. @livery/tokens validates the same rules at build time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "locale", "currency"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The brand name people read."
+    },
+    "tokens": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "The tenant folder whose tokens.json styles this tenant. Defaults to its own."
+    },
+    "locale": {
+      "type": "string",
+      "description": "Canonical BCP 47 locale for numbers and dates, such as en-GB."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code, such as GBP."
+    }
+  }
+}

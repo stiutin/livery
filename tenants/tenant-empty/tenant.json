@@ -1,0 +1,7 @@
+{
+  "$schema": "../tenant.schema.json",
+  "name": "Empty billing (demo)",
+  "tokens": "tenant-default",
+  "locale": "en-US",
+  "currency": "USD"
+}

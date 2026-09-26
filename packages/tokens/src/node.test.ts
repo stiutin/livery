@@ -12,24 +12,32 @@ describe('the tenants in this repository', () => {
 
   it('compile without problems', () => {
     expect(result.report).toBe('');
-    expect(result.tenants.map((tenant) => tenant.id)).toEqual(['tenant-alpha', 'tenant-beta', 'tenant-default']);
+    expect(result.tokenSets.map((set) => set.id)).toEqual(['tenant-alpha', 'tenant-beta', 'tenant-default']);
   });
 
   it('each define the whole contract', () => {
-    for (const tenant of result.tenants) {
+    for (const tenant of result.tokenSets) {
       expect(tenant.tokens.map((token) => token.path)).toEqual(CONTRACT.map((entry) => entry.path));
     }
   });
 
-  it('name the default tenant in the manifest', () => {
-    expect(result.manifest.defaultTenant).toBe('tenant-default');
+  it('are listed with their settings and the CSS of their token set', () => {
+    expect(result.tenants.map(({id, tokenSet}) => [id, tokenSet])).toEqual([
+      ['tenant-alpha', 'tenant-alpha'],
+      ['tenant-beta', 'tenant-beta'],
+      ['tenant-default', 'tenant-default'],
+      ['tenant-empty', 'tenant-default'],
+    ]);
+    const alpha = result.tenants.find((tenant) => tenant.id === 'tenant-alpha');
+    expect(alpha).toMatchObject({name: 'Alpha', locale: 'en-GB', currency: 'GBP'});
+    expect(alpha?.css).toContain('--color-brand-default:#5b21b6;');
   });
 });
 
 describe('compileTenantsFromDisk', () => {
   it('refuses a default tenant that does not exist', () => {
     expect(() => compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'nobody'})).toThrow(
-      'the default tenant "nobody" has no tenants/nobody/tokens.json'
+      'the default tenant "nobody" has no tenants/nobody/tenant.json'
     );
   });
 });

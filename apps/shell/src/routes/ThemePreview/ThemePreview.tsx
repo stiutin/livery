@@ -1,12 +1,11 @@
+import type {CompiledToken, LoadedTenant} from '@livery/tokens';
 import {Button, Card, Dialog, Field, Input, Select, Table, type TableColumn, useToast} from '@livery/ui';
 import {useState} from 'react';
-import tenants from 'virtual:livery/tenants';
+import {useRouteLoaderData} from 'react-router';
 
-import {useTenant} from '../../tenant/useTenant';
-import {tokenSetForBrand} from '../../theme/themeRegistry';
 import styles from './ThemePreview.module.css';
 
-type Token = (typeof tenants.tenants)[number]['tokens'][number];
+type Token = CompiledToken;
 
 const COLUMNS: readonly TableColumn<Token>[] = [
   {
@@ -20,14 +19,11 @@ const COLUMNS: readonly TableColumn<Token>[] = [
 
 /** Every component of @livery/ui in the active brand, with the brand's compiled colours. */
 export default function ThemePreview() {
-  const {brandId} = useTenant();
+  const tenant = useRouteLoaderData<LoadedTenant>('tenant');
   const toast = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const tokenSet = tokenSetForBrand(brandId);
-  const colours =
-    tenants.tenants
-      .find((tenant) => tenant.id === tokenSet)
-      ?.tokens.filter((token) => token.type === 'color' && token.path.startsWith('semantic.')) ?? [];
+  const tokenSet = tenant?.tokenSet ?? '';
+  const colours = tenant?.tokens.filter((token) => token.type === 'color' && token.path.startsWith('semantic.')) ?? [];
 
   return (
     <div className="page">

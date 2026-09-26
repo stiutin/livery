@@ -103,10 +103,23 @@ export interface CompiledTenant {
   readonly problems: readonly Problem[];
 }
 
-/** What the app imports from `virtual:livery/tenants`. */
-export interface TenantManifest {
-  readonly defaultTenant: string;
-  readonly tenants: readonly {readonly id: string; readonly tokens: readonly CompiledToken[]}[];
+/** A tenant as the app loads it: its settings, the CSS of its token set, and the tokens as data. */
+export interface LoadedTenant {
+  readonly id: string;
+  readonly name: string;
+  readonly locale: string;
+  readonly currency: string;
+  /** The folder whose tokens style this tenant. */
+  readonly tokenSet: string;
+  /** Every custom property of the token set on `:root`, minified. */
+  readonly css: string;
+  readonly tokens: readonly CompiledToken[];
+}
+
+/** A tenant in the list every page can read: enough to link to it. */
+export interface TenantSummary {
+  readonly id: string;
+  readonly name: string;
 }
 
 /** A token file with the name it is reported under. */

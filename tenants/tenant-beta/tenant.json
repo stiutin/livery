@@ -1,0 +1,6 @@
+{
+  "$schema": "../tenant.schema.json",
+  "name": "Beta",
+  "locale": "de-DE",
+  "currency": "EUR"
+}

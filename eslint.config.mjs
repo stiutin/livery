@@ -34,7 +34,7 @@ const HOUSE_TS_RULES = {
 };
 
 export default defineConfig(
-  globalIgnores(['**/dist/', 'coverage/', 'playwright-report/', 'test-results/']),
+  globalIgnores(['**/dist/', '**/build/', '**/.react-router/', 'coverage/', 'playwright-report/', 'test-results/']),
   {
     languageOptions: {globals: globals.browser},
     plugins: {'simple-import-sort': simpleImportSort, 'unused-imports': unusedImports},
@@ -59,6 +59,21 @@ export default defineConfig(
   {
     files: ['apps/**/*.tsx', 'packages/**/*.tsx'],
     extends: [reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
+  },
+  {
+    // React Router route modules export these next to the component; Fast Refresh handles them.
+    files: ['apps/shell/src/root.tsx', 'apps/shell/src/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        {allowExportNames: ['loader', 'clientLoader', 'meta', 'links', 'Layout', 'ErrorBoundary', 'HydrateFallback']},
+      ],
+      // Loaders throw data(null, {status: 404}) to reach the error boundary; that is how React Router signals it.
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        {allow: [{from: 'package', package: 'react-router', name: 'DataWithResponseInit'}]},
+      ],
+    },
   },
   {
     // Command-line tools report progress on stdout.

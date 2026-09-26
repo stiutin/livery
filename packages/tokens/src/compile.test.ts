@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 
 import {describe, expect, it} from 'vitest';
 
-import {compileTenant, tenantsToCss} from './compile.ts';
+import {compileTenant, tokenSetToCss} from './compile.ts';
 import type {TokenSource} from './model.ts';
 import {BASE_TOKENS_FILE} from './node.ts';
 
@@ -104,30 +104,11 @@ describe('compileTenant', () => {
   });
 });
 
-describe('tenantsToCss', () => {
-  it('puts the default tenant first, so a data-tenant block of equal specificity overrides :root', () => {
-    const one = compileWith({});
-    const css = tenantsToCss(
-      [
-        {...one, id: 'a'},
-        {...one, id: 'z'},
-      ],
-      'z'
-    );
-    expect(css.indexOf(':root')).toBeGreaterThan(0);
-    expect(css.indexOf(':root')).toBeLessThan(css.indexOf("[data-tenant='a']"));
-  });
-
-  it('gives the default tenant :root and every tenant its data-tenant selector', () => {
-    const one = compileWith({});
-    const css = tenantsToCss(
-      [
-        {...one, id: 'a'},
-        {...one, id: 'b'},
-      ],
-      'b'
-    );
-    expect(css).toContain("[data-tenant='a'] {\n  --color-canvas: #ebedf0;");
-    expect(css).toContain(":root,\n[data-tenant='b'] {");
+describe('tokenSetToCss', () => {
+  it('puts every emitted token on :root, keeping aliases as var()', () => {
+    const css = tokenSetToCss(compileWith({}));
+    expect(css.startsWith(':root{--color-canvas:#ebedf0;')).toBe(true);
+    expect(css).toContain('--button-primary-background:var(--color-brand-default);');
+    expect(css).not.toContain('primitive');
   });
 });
