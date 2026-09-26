@@ -153,11 +153,14 @@ li {
 }
 
 /* ── Links ── */
+
+/* Links in running text are underlined: colour alone does not tell them apart (WCAG 1.4.1). */
 a {
   color: var(--color-link);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
