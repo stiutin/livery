@@ -1,25 +1,31 @@
-import type {CompiledToken, LoadedTenant} from '@livery/tokens';
+import type {CompiledToken} from '@livery/tokens';
 import {Button, Card, Dialog, Field, Input, Select, Table, type TableColumn, useToast} from '@livery/ui';
 import {useState} from 'react';
 import {useRouteLoaderData} from 'react-router';
 
+import {useI18n} from '../../i18n/useI18n';
+import type {TenantRouteData} from '../tenant';
 import styles from './ThemePreview.module.css';
 
 type Token = CompiledToken;
 
-const COLUMNS: readonly TableColumn<Token>[] = [
-  {
-    key: 'swatch',
-    header: <span className={styles.visuallyHidden}>Swatch</span>,
-    cell: (token) => <span className={styles.swatch} style={{background: `var(${token.cssVariable})`}} />,
-  },
-  {key: 'name', header: 'Token', cell: (token) => <code>{token.path.replace('semantic.color.', '')}</code>},
-  {key: 'value', header: 'Value', cell: (token) => <code>{token.resolvedCss}</code>},
-];
-
 /** Every component of @livery/ui in the active brand, with the brand's compiled colours. */
 export default function ThemePreview() {
-  const tenant = useRouteLoaderData<LoadedTenant>('tenant');
+  const tenant = useRouteLoaderData<TenantRouteData>('tenant')?.tenant;
+  const {t} = useI18n();
+  const columns: readonly TableColumn<Token>[] = [
+    {
+      key: 'swatch',
+      header: <span className={styles.visuallyHidden}>{t('preview.swatch')}</span>,
+      cell: (token) => <span className={styles.swatch} style={{background: `var(${token.cssVariable})`}} />,
+    },
+    {
+      key: 'name',
+      header: t('preview.token'),
+      cell: (token) => <code>{token.path.replace('semantic.color.', '')}</code>,
+    },
+    {key: 'value', header: t('preview.value'), cell: (token) => <code>{token.resolvedCss}</code>},
+  ];
   const toast = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const tokenSet = tenant?.tokenSet ?? '';
@@ -27,35 +33,35 @@ export default function ThemePreview() {
 
   return (
     <div className="page">
-      <h1 className="h1">Theme preview</h1>
+      <h1 className="h1">{t('preview.title')}</h1>
 
-      <p className="description">Every component in the {tokenSet} brand, and the colours compiled from its tokens.</p>
+      <p className="description">{t('preview.intro', {tokenSet})}</p>
 
       <Card className={styles.section}>
-        <h2 className="h3">Buttons</h2>
+        <h2 className="h3">{t('preview.buttons')}</h2>
         <div className={styles.row}>
-          <Button>Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button loading>Saving…</Button>
-          <Button disabled>Disabled</Button>
+          <Button>{t('preview.primary')}</Button>
+          <Button variant="secondary">{t('preview.secondary')}</Button>
+          <Button loading>{t('preview.saving')}</Button>
+          <Button disabled>{t('preview.disabled')}</Button>
         </div>
       </Card>
 
       <Card className={styles.section}>
-        <h2 className="h3">Fields</h2>
+        <h2 className="h3">{t('preview.fields')}</h2>
         <div className={styles.stack}>
-          <Field label="Full name" hint="As it appears on your card.">
+          <Field label={t('preview.fullName')} hint={t('preview.fullNameHint')}>
             {(control) => <Input {...control} autoComplete="off" />}
           </Field>
-          <Field label="Email address" error="Enter a valid email address">
+          <Field label={t('login.email')} error={t('login.emailInvalid')}>
             {(control) => <Input {...control} defaultValue="ada@" autoComplete="off" />}
           </Field>
-          <Field label="Plan">
+          <Field label={t('preview.plan')}>
             {(control) => (
-              <Select {...control} defaultValue="team">
-                <option value="solo">Solo</option>
-                <option value="team">Team</option>
-                <option value="enterprise">Enterprise</option>
+              <Select {...control} defaultValue="plus">
+                <option value="essential">{t('plan.essential')}</option>
+                <option value="plus">{t('plan.plus')}</option>
+                <option value="business">{t('plan.business')}</option>
               </Select>
             )}
           </Field>
@@ -63,7 +69,7 @@ export default function ThemePreview() {
       </Card>
 
       <Card className={styles.section}>
-        <h2 className="h3">Dialog and notifications</h2>
+        <h2 className="h3">{t('preview.dialogs')}</h2>
         <div className={styles.row}>
           <Button
             variant="secondary"
@@ -71,23 +77,23 @@ export default function ThemePreview() {
               setDialogOpen(true);
             }}
           >
-            Open dialog
+            {t('preview.openDialog')}
           </Button>
           <Button
             variant="secondary"
             onClick={() => {
-              toast('Invoice sent', {tone: 'success'});
+              toast(t('preview.invoiceSent'), {tone: 'success'});
             }}
           >
-            Show a notification
+            {t('preview.showNotification')}
           </Button>
           <Button
             variant="secondary"
             onClick={() => {
-              toast('The payment was declined', {tone: 'danger'});
+              toast(t('preview.declined'), {tone: 'danger'});
             }}
           >
-            Show an error
+            {t('preview.showError')}
           </Button>
         </div>
       </Card>
@@ -97,7 +103,8 @@ export default function ThemePreview() {
         onClose={() => {
           setDialogOpen(false);
         }}
-        title="Cancel the subscription?"
+        title={t('preview.dialogTitle')}
+        closeLabel={t('ui.close')}
         footer={
           <>
             <Button
@@ -106,26 +113,26 @@ export default function ThemePreview() {
                 setDialogOpen(false);
               }}
             >
-              Keep it
+              {t('preview.keep')}
             </Button>
             <Button
               onClick={() => {
                 setDialogOpen(false);
-                toast('Subscription cancelled');
+                toast(t('preview.cancelled'));
               }}
             >
-              Cancel subscription
+              {t('preview.cancel')}
             </Button>
           </>
         }
       >
-        You keep access until the end of the billing period.
+        {t('preview.dialogBody')}
       </Dialog>
 
       <Table
         className={styles.section}
-        caption={`Semantic colours of ${tokenSet}`}
-        columns={COLUMNS}
+        caption={t('preview.colours', {tokenSet})}
+        columns={columns}
         rows={colours}
         rowKey={(token) => token.cssVariable}
       />

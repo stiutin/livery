@@ -1,5 +1,13 @@
 import {startMocks} from '../mocks/start';
-import {type Account, ApiError, type Card, type Invoice, type PaymentOutcome, type Session} from './types';
+import {
+  type Account,
+  API_ERROR_CODES,
+  ApiError,
+  type Card,
+  type Invoice,
+  type PaymentOutcome,
+  type Session,
+} from './types';
 
 /** API URLs live under the app's base path, so the mock service worker's scope covers them. */
 export function apiUrl(tenant: string, path: string): URL {
@@ -19,11 +27,8 @@ async function request<T>(tenant: string, path: string, init: {token?: string; b
   });
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const message =
-      typeof payload === 'object' && payload !== null && 'message' in payload && typeof payload.message === 'string'
-        ? payload.message
-        : 'Something went wrong. Please try again.';
-    throw new ApiError(response.status, message);
+    const code: unknown = typeof payload === 'object' && payload !== null ? Reflect.get(payload, 'code') : undefined;
+    throw new ApiError(response.status, API_ERROR_CODES.find((known) => known === code) ?? 'unknown');
   }
   // The mock API is ours and typed by the same module; a real one would be validated here.
   return payload as T;

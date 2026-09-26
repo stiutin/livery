@@ -1,10 +1,11 @@
-import {readdir, rename, rm} from 'node:fs/promises';
+import {readdir, readFile, rename, rm, writeFile} from 'node:fs/promises';
 import {dirname, join, relative, resolve} from 'node:path';
 
 import {compileTenantsFromDisk} from '@livery/tokens/node';
 import type {Config} from '@react-router/dev/config';
 
 import {PAGES_BASE, TENANT_OPTIONS} from './livery.config';
+import {LANGUAGE_CODES} from './src/i18n/languages';
 import {prerenderPaths} from './src/tenantPaths';
 
 async function removeEmptyDirectories(directory: string): Promise<void> {
@@ -38,7 +39,11 @@ export default {
   basename: PAGES_BASE,
   // No server: every known URL is rendered to HTML at build time, anything else gets the client-side 404.
   ssr: false,
-  prerender: () => prerenderPaths(compileTenantsFromDisk(TENANT_OPTIONS).tenants.map((tenant) => tenant.id)),
+  prerender: () =>
+    prerenderPaths(
+      compileTenantsFromDisk(TENANT_OPTIONS).tenants.map((tenant) => tenant.id),
+      LANGUAGE_CODES
+    ),
 
   /**
    * Shapes build/client into what GitHub Pages serves under the base path:
@@ -47,8 +52,9 @@ export default {
    *    it becomes 404.html, which Pages returns, with status 404, for any unknown path.
    * 2. Prerendered pages and their .data files are written below the basename (livery/…); they move up, since
    *    the deployed folder already is /livery/.
-   * 3. Pages answers /tenant-alpha/auth/login with tenant-alpha/auth/login.html directly, but with a redirect
-   *    when only tenant-alpha/auth/login/index.html exists, so nested index files become <path>.html.
+   * 3. Pages answers /harbour/en/invoices with harbour/en/invoices.html directly, but with a redirect
+   *    when only harbour/en/invoices/index.html exists, so nested index files become <path>.html.
+   * 4. Tenant roots are redirect pages to the tenant's default language; they redirect at once.
    */
   async buildEnd({reactRouterConfig}) {
     const client = resolve(reactRouterConfig.buildDirectory, 'client');
@@ -66,5 +72,16 @@ export default {
       await rename(join(client, file), `${join(client, dirname(file))}.html`);
     }
     await removeEmptyDirectories(client);
+
+    // A tenant's bare address redirects to its default language; React Router's redirect page waits two seconds.
+    for (const name of await readdir(client)) {
+      if (name.endsWith('.html')) {
+        const file = join(client, name);
+        const html = await readFile(file, 'utf8');
+        if (html.includes('http-equiv="refresh"')) {
+          await writeFile(file, html.replace(/content="\d+;url=/, 'content="0;url='));
+        }
+      }
+    }
   },
 } satisfies Config;

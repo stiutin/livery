@@ -2,61 +2,63 @@ import {Card} from '@livery/ui';
 import {Link} from 'react-router';
 import {tenants} from 'virtual:livery/tenants';
 
+import {useI18n} from '../../i18n/useI18n';
 import {useSession} from '../../session/useSession';
+import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';
 import styles from './HomePage.module.css';
 
 export default function HomePage() {
   const {brandId, name, locale, currency, features} = useTenant();
+  const {language, t, rich} = useI18n();
+  const {page} = usePaths();
   const {session} = useSession();
   const others = tenants.filter((tenant) => tenant.id !== brandId);
 
   return (
     <div className="page">
-      <h1 className="h1">Welcome to {name}</h1>
+      <h1 className="h1">{t('home.title', {name})}</h1>
 
-      <p className="description">
-        Your account, your invoices and {features.payments ? 'card payments' : 'bank transfer details'} in one place.
-      </p>
+      <p className="description">{t('home.intro', {payments: String(features.payments)})}</p>
 
       <Card className={styles.card}>
-        {session ? (
-          <p>
-            Signed in as <strong>{session.name}</strong>. <Link to={`/${brandId}/account`}>Open your account</Link>
-          </p>
-        ) : (
-          <p>
-            <Link to={`/${brandId}/login`}>Sign in</Link> to see your account and invoices.
-          </p>
-        )}
+        <p>
+          {session
+            ? rich('home.signedIn', {
+                name: session.name,
+                b: (chunks) => <strong>{chunks}</strong>,
+                link: (chunks) => <Link to={page('account')}>{chunks}</Link>,
+              })
+            : rich('home.signInPrompt', {link: (chunks) => <Link to={page('login')}>{chunks}</Link>})}
+        </p>
       </Card>
 
       <Card className={styles.card}>
-        <h2 className="h3">This tenant</h2>
+        <h2 className="h3">{t('home.tenant')}</h2>
         <dl className={styles.settings}>
-          <dt>Address</dt>
+          <dt>{t('home.address')}</dt>
           <dd>
             <code>/{brandId}</code>
           </dd>
-          <dt>Locale</dt>
+          <dt>{t('home.locale')}</dt>
           <dd>{locale}</dd>
-          <dt>Currency</dt>
+          <dt>{t('home.currency')}</dt>
           <dd>{currency}</dd>
-          <dt>Card payments</dt>
-          <dd>{features.payments ? 'On' : 'Off'}</dd>
+          <dt>{t('home.cardPayments')}</dt>
+          <dd>{features.payments ? t('home.on') : t('home.off')}</dd>
         </dl>
         <p className={styles.more}>
-          <Link to={`/${brandId}/theme/preview`}>See every component in {name}&apos;s look</Link>
+          <Link to={page('theme/preview')}>{t('home.preview', {name})}</Link>
         </p>
       </Card>
 
       {others.length > 0 && (
         <Card className={styles.card}>
-          <h2 className="h3">Other tenants</h2>
+          <h2 className="h3">{t('home.others')}</h2>
           <ul className={styles.links}>
             {others.map((tenant) => (
               <li key={tenant.id}>
-                <Link to={`/${tenant.id}`}>{tenant.name}</Link>
+                <Link to={`/${tenant.id}/${language}`}>{tenant.name}</Link>
               </li>
             ))}
           </ul>
