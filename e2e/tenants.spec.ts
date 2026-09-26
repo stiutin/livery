@@ -45,7 +45,7 @@ test('links stay inside the tenant', async ({page}) => {
 
   await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name: 'Invoices'}).click();
   // Signed out, so the invoices page hands over to the login page and remembers where to return.
-  await expect(page).toHaveURL(/\/onyx\/en\/login\?next=%2Fonyx%2Fen%2Finvoices$/);
+  await expect(page).toHaveURL(/\/onyx\/en\/login\?next=invoices$/);
   await expect(page.getByRole('heading', {level: 1, name: 'Sign in to Onyx'})).toBeVisible();
   expect(await brandToken(page, '--color-brand-default')).toBe('#d4a94a');
   expect(errors).toEqual([]);

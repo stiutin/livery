@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {Navigate, useLocation} from 'react-router';
+import {Navigate} from 'react-router';
 
 import type {Session} from '../api/types';
 import {useI18n} from '../i18n/useI18n';
@@ -10,8 +10,7 @@ import {useSession} from './useSession';
 export function RequireSession({children}: {children: (session: Session) => ReactNode}) {
   const {session} = useSession();
   const {t} = useI18n();
-  const {page} = usePaths();
-  const {pathname} = useLocation();
+  const {page, current} = usePaths();
 
   if (session === undefined) {
     return (
@@ -21,7 +20,9 @@ export function RequireSession({children}: {children: (session: Session) => Reac
     );
   }
   if (session === null) {
-    return <Navigate to={`${page('login')}?next=${encodeURIComponent(pathname)}`} replace />;
+    // The page to return to, as the tenant's own page name (`account`), not a path: short, and it cannot leave
+    // the tenant or keep an old language.
+    return <Navigate to={`${page('login')}?next=${current}`} replace />;
   }
   return children(session);
 }

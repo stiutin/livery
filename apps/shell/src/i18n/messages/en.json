@@ -118,5 +118,6 @@
   "preview.colours": "Semantic colours of {tokenSet}",
   "preview.swatch": "Swatch",
   "preview.token": "Token",
-  "preview.value": "Value"
+  "preview.value": "Value",
+  "login.required": "Sign in to open {page, select, account {your account} invoices {your invoices} other {this page}}."
 }

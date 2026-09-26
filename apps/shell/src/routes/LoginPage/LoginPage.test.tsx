@@ -35,13 +35,18 @@ describe('LoginPage', () => {
   });
 
   test('returns to the page that asked for a sign-in', async () => {
-    renderLogin('/harbour/en/login?next=%2Fharbour%2Fen%2Finvoices');
+    renderLogin('/harbour/en/login?next=invoices');
     await signIn('ada@example.com', 'secret-password');
     expect(await screen.findByText('Invoices page')).toBeInTheDocument();
   });
 
-  test("never returns to another tenant's page", async () => {
-    renderLogin('/harbour/en/login?next=%2Fonyx%2Fen%2Finvoices');
+  test('explains why a sign-in is needed', () => {
+    renderLogin('/harbour/en/login?next=invoices');
+    expect(screen.getByText('Sign in to open your invoices.')).toHaveAttribute('role', 'status');
+  });
+
+  test("ignores a next that is not one of the tenant's pages", async () => {
+    renderLogin('/harbour/en/login?next=%2F%2Fevil.example%2F');
     await signIn('ada@example.com', 'secret-password');
     expect(await screen.findByText('Account page')).toBeInTheDocument();
   });

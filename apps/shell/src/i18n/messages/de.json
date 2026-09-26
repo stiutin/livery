@@ -118,5 +118,6 @@
   "preview.colours": "Semantische Farben von {tokenSet}",
   "preview.swatch": "Farbmuster",
   "preview.token": "Token",
-  "preview.value": "Wert"
+  "preview.value": "Wert",
+  "login.required": "Melde dich an, um {page, select, account {dein Konto} invoices {deine Rechnungen} other {diese Seite}} zu öffnen."
 }

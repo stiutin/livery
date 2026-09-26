@@ -118,5 +118,6 @@
   "preview.colours": "Colores semánticos de {tokenSet}",
   "preview.swatch": "Muestra",
   "preview.token": "Token",
-  "preview.value": "Valor"
+  "preview.value": "Valor",
+  "login.required": "Inicia sesión para abrir {page, select, account {tu cuenta} invoices {tus facturas} other {esta página}}."
 }
