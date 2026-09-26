@@ -1,0 +1,42 @@
+# Updates the visual regression baselines. Run it by hand (Actions → Screenshots → Run workflow) on a branch
+# whose screenshots should change, or once to create them; it commits the new images to that branch.
+name: Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BASE_PATH: /${{ github.event.repository.name }}/
+  SITE_ORIGIN: https://${{ github.repository_owner }}.github.io
+
+jobs:
+  update:
+    name: Update visual baselines
+    runs-on: ubuntu-24.04
+    # The same container as the Visual regression job in ci.yml, so the images match what CI compares.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run e2e:visual:update
+      - name: Commit the screenshots
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/__screenshots__
+          if git diff --cached --quiet; then
+            echo "The screenshots have not changed."
+          else
+            git commit -m "test: update the visual baselines"
+            git push
+          fi

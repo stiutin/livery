@@ -13,6 +13,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', {open: 'never'}]] : 'list',
   retries: process.env.CI ? 1 : 0,
   testDir: 'e2e',
+  // Screenshots have their own config and CI job: playwright.visual.config.ts.
+  testIgnore: ['visual/**'],
   use: {
     baseURL: `http://localhost:${APP_PORT}${BASE_PATH}`,
     trace: 'retain-on-failure',
