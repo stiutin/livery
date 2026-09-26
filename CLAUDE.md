@@ -6,7 +6,7 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 **Livery** is a white-label React app: one product (a customer account with sign-in and billing) shown in the brand of each tenant. The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 and 1 are done:** the portfolio's tooling, tests and CI, and design tokens as W3C files with a closed contract and WCAG AA contrast as a build gate. Pages, the tenant context and the per-theme components are still the MVP's; section 11 lists what the next phases replace, so do not build on those parts more than a change needs.
+The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 2 are done:** the portfolio's tooling, tests and CI; design tokens as W3C files with a closed contract and WCAG AA contrast as a build gate; and one component library for every brand. The tenant model (query parameters), the pages' content and the mocked API are still the MVP's; section 11 lists what the next phases replace, so do not build on those parts more than a change needs.
 
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
@@ -25,7 +25,7 @@ The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 and 1 are
 | Tests         | Vitest 5 (node for tokens, jsdom for the app), Testing Library, Playwright 1.63       |                                                                                                      |
 | Lint          | ESLint 10 (strict-type-checked + house rules + React hooks), Stylelint 17, Prettier 3 |                                                                                                      |
 
-npm workspaces: `apps/*`, `packages/*` and `themes/*`. Install and run everything from the root. Workspace packages are consumed from their TypeScript sources (`exports` point at `src/`); nothing is prebuilt.
+npm workspaces: `apps/*` and `packages/*`. Install and run everything from the root. Workspace packages are consumed from their TypeScript sources (`exports` point at `src/`); nothing is prebuilt.
 
 ## 3. Commands
 
@@ -33,12 +33,12 @@ npm workspaces: `apps/*`, `packages/*` and `themes/*`. Install and run everythin
 npm start              # Vite dev server on :5173 (base /); saving a token file reloads the page
 npm run build          # tsc -b + vite build into apps/shell/dist (base /livery/); fails on any token problem
 npm run serve          # serve apps/shell/dist like GitHub Pages on :4173/livery/ (scripts/serve.mjs)
-npm test               # Vitest: packages/tokens, then the shell
+npm test               # Vitest: packages/tokens, packages/ui, then the shell
 npm run tokens         # contrast summary per tenant and every problem; `-- --all` lists every pair
 npm run e2e            # build, then Playwright on desktop + Pixel 7; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
 npm run lint           # ESLint + Stylelint (src CSS only)
-npm run typecheck      # the shell, the e2e suite, the tokens package and both themes
+npm run typecheck      # the shell, the e2e suite and both packages
 npm run check          # format:check + lint + typecheck + test  ← before finishing
 ```
 
@@ -50,7 +50,7 @@ npm run check          # format:check + lint + typecheck + test  ← before fini
 tenants/<id>/tokens.json   one brand each (tenant-default, tenant-alpha, tenant-beta): palette + semantic tokens
 packages/tokens/
   base.tokens.json         shared by every tenant: component → semantic mappings, font, radii, shadow, duration
-  src/contract.ts          the closed list of semantic and component tokens, and the 16 contrast pairs
+  src/contract.ts          the closed list of 49 semantic and component tokens, and the 21 contrast pairs
   src/parse.ts             file → flat tokens (dot paths, inherited $type), structural problems
   src/resolve.ts           aliases (whole values and inside shadows), cycles, value validation
   src/color.ts             sRGB/OKLCH conversion, compositing, WCAG luminance and contrast, CSS colours
@@ -58,16 +58,20 @@ packages/tokens/
   src/css.ts               token → CSS custom property name and value
   src/node.ts              reads the files from disk; src/vite.ts the plugin; src/cli.ts the report
   src/virtual.d.ts         types of virtual:livery/tenants(.css), referenced from the shell's tsconfig
+packages/ui/src/
+  Button/ Card/ Field/ (Field + Input) Select/ Dialog/ Toast/ (ToastProvider, useToast) Table/
+                           one folder per component: .tsx, .module.css, .test.tsx; index.ts is the public API
+  test/setup.ts            jest-dom, cleanup, and a stand-in for the <dialog> modal API that jsdom lacks
 apps/shell/
   vite.config.ts           base path, the 404.html copy (spaFallback), the tokens plugin
   src/main.tsx             tenants.css, global.css, BrowserRouter with basename = import.meta.env.BASE_URL
+  src/routes/App.tsx       ThemeBoot → ToastProvider → routes
   src/routes/              App.tsx (route tree) and one folder per page, with its test
   src/components/          AppLayout (header + nav), TenantNavLink, BackToHome
   src/tenant/              TenantContext: {brandId, locale, currency}
-  src/theme/               ThemeBoot, ThemeLoader (data-tenant), themeRegistry, fallback components
+  src/theme/               ThemeBoot, ThemeLoader (data-tenant), themeRegistry (brand → token set)
   src/services/            identityApi, billingApi: mocked adapters
   src/constants/ types/ utils/ styles/ test/
-themes/theme-tenant-*/     BrandButton and BrandCard per brand, styled only by tokens (removed in Phase 2)
 e2e/                       Playwright specs and helpers
 scripts/serve.mjs          GitHub-Pages-like static server
 ```
@@ -79,34 +83,38 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Contrast.** `CONTRAST_PAIRS` lists what the app draws on what. Ratios follow WCAG 2.2; a translucent foreground is composited over its background first, and backgrounds must be opaque. Text needs 4.5:1, control borders and focus rings 3:1. A failure names where each colour of the pair is finally written.
 - **Delivery.** The Vite plugin compiles all tenants in `buildStart` and fails the build on any problem. It serves `virtual:livery/tenants.css` (the default tenant's block first, on `:root` and its `[data-tenant]`, then one block per tenant) and `virtual:livery/tenants` (the manifest: every token's name, CSS and resolved value). In the dev server a token file change invalidates both and reloads the page.
 - **Tenant state is the URL.** `ThemeBoot` reads `?brand`, `?locale` and `?currency`, falls back to `DEFAULT_TENANT` for unknown values, and provides a memoised context. Links keep `location.search`, so the tenant survives navigation.
-- **Theme boundary.** `themeRegistry.ts` maps each brand to a token set (a folder in `tenants/`) and its components. `ThemeLoader` sets `<html data-tenant>` in a layout effect; pages get `BrandButton`/`BrandCard` from `useThemeComponents()` and never import a theme package.
+- **Brands.** `themeRegistry.ts` maps each brand to a token set (a folder in `tenants/`); `ThemeLoader` sets `<html data-tenant>` in a layout effect. Nothing else differs between brands.
+- **Component library.** `@livery/ui` components use CSS Modules and read only semantic and component custom properties. States are CSS (`:hover:not(:disabled)`, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`), variants are `data-variant` attributes. `Field` takes a render function and hands the control its `id`, `aria-describedby` (hint, then error) and `aria-invalid`; its error has `role="alert"`. `Dialog` wraps the native `<dialog>` (`showModal`, `close`, the `close` event) and treats a click on the element itself as a click on the backdrop. `ToastProvider` owns one always-present region (`role="status"`, polite); `useToast()` lives in its own file so Fast Refresh keeps working. `Table` is generic over its row type.
 - **API adapters** return typed results; pages hold no network code. `BillingPage` is a discriminated-union state machine (`idle | loading | error | empty | success`).
 - **Base path.** Builds are made for `BASE_PATH` (default `/livery/`; CI passes `/<repository>/`). The router's basename is `import.meta.env.BASE_URL`, and the build copies `index.html` to `404.html`, so GitHub Pages boots the app on any deep link (with status 404; prerendering is on the roadmap).
 
 ## 6. Invariants - do not break
 
-1. **No literal colours, radii or durations in app or theme CSS.** Use the semantic or component custom properties; if one is missing, add it to the contract (recipe below), never a one-off value.
+1. **No literal colours, radii or durations in app or library CSS.** Use the semantic or component custom properties; if one is missing, add it to the contract (recipe below), never a one-off value.
 2. **Components never read primitives.** Only semantic and component tokens are emitted; keep it that way.
 3. **Every contrast pair passes for every tenant.** Do not lower a minimum or drop a pair to make a brand build; change the brand's colours.
 4. **The default tenant's CSS block comes first.** `:root` and `[data-tenant]` have equal specificity; the order is what lets a tenant override the default.
-5. **Pages never import from a theme package.** Components come from `useThemeComponents()`, tokens from the stylesheet.
+5. **Pages build UI from `@livery/ui`.** No page-level buttons, inputs or dialogs; if a component is missing, add it to the library with its tests.
 6. **Links keep the tenant.** Internal navigation carries `location.search` (`TenantNavLink`, `BackToHome`, `navigate(\`…${search}\`)`).
 7. **No absolute URLs in app code.** The router adds the base path; assets go through Vite. A hard-coded `/…` breaks under `/livery/`.
 8. **Build and serve with the same `BASE_PATH`.** `scripts/serve.mjs` refuses a build made for another base.
 9. **Promises are handled.** `navigate()` and `handleSubmit()` return promises; event handlers wrap them in a block with `void` (lint-enforced).
 10. **`tenant-empty` exists only for the billing mock's empty state.** It uses the default token set; the product phase removes it.
+11. **Component states stay in CSS.** No hover or focus state in React; focus rings use `:focus-visible` and the focus token.
 
 ## 7. Testing guide
 
 - **Tokens** (`packages/tokens/src/*.test.ts`, Vitest, node): colour maths against known values, parsing and resolution problems with their exact messages, the contract and contrast on the real default tenant plus a small edit file, CSS order, the repository's tenants compiling clean, and a real `vite build` of a throwaway app that must fail when a tenant drops below AA.
+- **Components** (`packages/ui/src/**/*.test.tsx`, Vitest, jsdom): what a user or a screen reader gets. Query by role, name and description; assert attributes (`aria-busy`, `aria-invalid`, `data-variant`), not class names. Toast timing uses fake timers.
 - **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): pages are rendered inside a `MemoryRouter`; the adapters are stubbed with `vi.spyOn`. Use role and label queries. The tokens plugin runs here too, so a broken tenant fails these tests as well.
-- **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after a tenant change.
+- **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after a tenant change. The notification region is always a `status`, so scope page statuses to `getByRole('main')` and toasts to the `Notifications` region. Keyboard-only scenarios skip the mobile project.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
 ## 8. Recipes
 
-- **Add a tenant:** copy a folder in `tenants/`, change its palette and semantic colours, run `npm run tokens` until every pair passes, then add the brand to `SUPPORTED_BRANDS` and `THEME_REGISTRY` (until Phase 3 makes tenants configuration).
+- **Add a tenant:** copy a folder in `tenants/`, change its palette and semantic colours, run `npm run tokens` until every pair passes, then add the brand to `SUPPORTED_BRANDS` and `TOKEN_SETS` (until Phase 3 makes tenants configuration).
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
+- **Add a component:** a folder in `packages/ui/src/` with the component, a CSS Module that uses only custom properties, and tests; export it from `index.ts`. If it needs a value no token covers, add a component token first (next recipe).
 - **Add a token to the contract:** add it to `CONTRACT` (and to `CONTRAST_PAIRS` if something is drawn on it), give it a value in `base.tokens.json` or in every tenant, then use its custom property in CSS.
 
 ## 9. CI/CD
@@ -130,7 +138,6 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (uploads `apps/shell/dist`)
 
 These are what the roadmap phases replace:
 
-- Each theme forks `BrandButton` and `BrandCard`; hover and focus are JavaScript state with inline styles (Phase 2).
 - Before the JavaScript runs, the page has the default tenant's colours; prerendering each tenant fixes it (Phase 3).
 - Beta's card lost its teal shadow: the contract has no card shadow, and adding one for a single brand was not worth it.
 - The token manifest (about 1 kB gzipped) is in the main bundle, for the theme preview only. The initial bundle is about 98 kB gzipped; React Router 8 added about 15 kB over 6. Per-tenant chunks come with the tenant model.
