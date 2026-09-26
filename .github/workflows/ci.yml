@@ -18,9 +18,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Pages serves the site under /<repository>/; the build, the test server and the router all read this.
+# Pages serves the site under /<repository>/ on the owner's github.io; the build, the test server and the
+# router read the path, and absolute links (hreflang, canonical) the origin.
 env:
   BASE_PATH: /${{ github.event.repository.name }}/
+  SITE_ORIGIN: https://${{ github.repository_owner }}.github.io
 
 jobs:
   quality:
@@ -88,11 +90,62 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
+  # Screenshots of every tenant × page, compared with the baselines in e2e/visual/__screenshots__. They are only
+  # valid in this container, so both this job and the screenshots workflow that updates them run in it. Keep the
+  # image tag equal to the @playwright/test version in package.json.
+  visual:
+    name: Visual regression
+    runs-on: ubuntu-24.04
+    needs: build
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: apps/shell/build/client/
+      - run: npm run e2e:visual
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: visual-report
+          path: playwright-report/
+
+  # Accessibility, best practices, SEO and layout shift are hard gates; performance fails below 90
+  # (see lighthouserc.json).
+  lighthouse:
+    name: Lighthouse
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: apps/shell/build/client/
+      - run: npm run lighthouse
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lighthouse
+          path: lighthouse-report/
+
   # Deploys to GitHub Pages after every green push to the default branch: the same build the tests ran against.
   deploy:
     name: Deploy to GitHub Pages
     if: (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch) || github.event_name == 'workflow_dispatch'
-    needs: [quality, unit, e2e]
+    needs: [quality, unit, e2e, visual, lighthouse]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
