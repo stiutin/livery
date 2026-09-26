@@ -10,6 +10,9 @@
       {
         "ignoreProperties": ["/^-webkit-(backdrop-filter|user-select)$/", "backdrop-filter", "user-select"]
       }
-    ]
+    ],
+    "color-no-hex": true,
+    "color-named": "never",
+    "function-disallowed-list": ["rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch", "color"]
   }
 }

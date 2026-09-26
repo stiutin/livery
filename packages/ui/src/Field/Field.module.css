@@ -1,0 +1,55 @@
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.label {
+  color: var(--color-text-default);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.error {
+  color: var(--color-danger-text);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* Shared by Input and Select. */
+.control {
+  background: var(--input-background);
+  border: 2px solid var(--input-border);
+  border-radius: var(--input-radius);
+  color: var(--color-text-default);
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  transition: border-color var(--duration-fast) ease;
+  width: 100%;
+}
+
+/* A solid ring in the focus colour: the token contract holds it to 3:1 against the page and surfaces. */
+.control:focus {
+  border-color: var(--input-border-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--color-danger-text);
+}
+
+.control[aria-invalid='true']:focus {
+  outline-color: var(--color-danger-text);
+}
+
+.control:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
