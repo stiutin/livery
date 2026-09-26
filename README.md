@@ -21,6 +21,7 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 - Plurals, dates and money written the way each language writes them: ICU MessageFormat and `Intl`
 - One accessible component library for every brand: buttons, fields, selects, cards, a dialog, notifications and tables
 - A theme preview that shows every component in the active brand, with its compiled colours
+- Livery Studio: make a brand from one colour, see the real pages in it, check its contrast live, share it as a link and export it as a tenant that builds with no code changes
 - Deployed to GitHub Pages from CI after every green push
 
 ## Tech stack
@@ -32,7 +33,7 @@ Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-lib
 
 **Brands are token files.** Each tenant is `tenants/<id>/tokens.json`, written in the [Design Tokens Format Module 2025.10](https://www.designtokens.org/tr/2025.10/format/), on top of a shared `packages/tokens/base.tokens.json`. Tokens sit in three layers. _Primitives_ are the raw palette, free-form and never emitted. _Semantic_ tokens say what a value is for: the page, a surface, muted text, the brand colour, the focus ring. _Component_ tokens say what a button or an input uses, and the base file maps them to semantic ones, so a tenant usually writes only its palette and its semantic colours. Only the semantic and component layers become CSS custom properties, which keeps components away from raw palette values.
 
-**The contract is closed.** Every tenant defines the same 49 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
+**The contract is closed.** Every tenant defines the same 50 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
 
 **Contrast is a build gate.** The contract also lists which colour sits on which: body text on the page, the button label on the button, the button label on its hover colour, and so on. `@livery/tokens` measures 21 such pairs per tenant with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops `vite build` and names where each colour is written, since that is where the fix goes. The original themes failed it: white on the violet theme's cyan hover colour was 2.4:1.
 
@@ -56,18 +57,20 @@ Accessibility is built in rather than left to each page. `Field` gives its contr
 
 **Three languages, prerendered.** Every tenant page lives at `/<tenant>/<language>/…`, in English, German and Spanish, and all of them are prerendered: 3 brands, 3 languages and 5 pages make 45 HTML files, each with `<html lang>` and `hreflang` links to the other two. A brand's bare address, such as `/meadow`, redirects at once to its default language, which is the language of the locale in its tenant.json (German for Meadow). Messages are [ICU MessageFormat](https://formatjs.github.io/docs/intl-messageformat/): "4 invoices, 2 to pay" and "1 Rechnung, 1 offen" come from the same plural rules the browser uses, and tags such as `<link>` inside a message become React elements. Each language's catalogue is loaded by the tenant route at build time, so a page carries only its own language. Numbers and dates follow the tenant's locale in its own language and the language's usual one otherwise: Harbour's pounds read £43.50 in English and 43,50 GBP in Spanish. The mock API answers with error codes, and the page names them in its language. Unit tests hold every catalogue to the English keys and to the same arguments.
 
+**Studio makes brands with the build's own checks.** [Livery Studio](https://stiutin.github.io/livery/studio) starts from one colour. It converts it to OKLCH and builds tonal scales from it: every step keeps the hue, takes its lightness from a fixed ladder and a share of the chroma, and is fitted into sRGB by lowering chroma only, so the steps look evenly spaced whatever the hue. It then maps the scales onto the contract for a light or a dark brand, picks white or near-black text for the brand colour, moves the hover colour away from that text, and chooses the first steps that give links 4.5:1 and focus rings 3:1. Font, corner radius, pill buttons and density are tokens too; density is a number every component multiplies its padding by. The result goes through `compileTenant` and `parseTenantConfig`, the functions the build runs, so the contrast table in Studio is the build's own verdict, and a brand with a problem cannot be exported. The preview renders the product's real pages in the new tokens, scoped to the preview's element and on a router of its own. Every setting lives in the URL hash, so the address is always a share link. Export gives the two files of a tenant folder; a test puts brands from all round the colour wheel into a copy of `tenants/` and builds them, and an end-to-end test does the same with files downloaded from the page.
+
 The shell owns routing, the tenant context and the API client. [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md) describe the MVP this started from and will fold into this section.
 
 The whole site lives under `/livery/`, in development too, so local URLs match the live ones.
 
 ## Testing
 
-| Layer      | Tool                    | What it covers                                                                                                                                                                                                                                                                                                   |
-| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit       | Vitest                  | the token compiler and tenant settings: parsing, aliases, colour maths, the contract, contrast, CSS, tenant.json, a real Vite build per tenant chunk and one that must fail - 36 tests                                                                                                                           |
-| Unit       | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 16 tests                                                                                                                                                                                                               |
-| Unit       | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 43 tests                                                                                                                          |
-| End-to-end | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, sign-in redirects, pages without JavaScript, 404s, components - 31 scenarios |
+| Layer      | Tool                    | What it covers                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit       | Vitest                  | the token compiler, tenant settings and Studio: parsing, aliases, colour maths and OKLCH, the contract, contrast, CSS, tenant.json, share links, exported brands built from disk, a real Vite build per tenant chunk and one that must fail - 47 tests                                                                                                                       |
+| Unit       | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 17 tests                                                                                                                                                                                                                                                                           |
+| Unit       | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 43 tests                                                                                                                                                                                      |
+| End-to-end | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, sign-in redirects, pages without JavaScript, 404s, components, and Studio from settings to a downloaded brand that builds - 36 scenarios |
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
 
@@ -75,7 +78,7 @@ The end-to-end tests run against the production build, served by `scripts/serve.
 
 ```
 apps/shell/                 the app: React Router routes, the document, tenant and session context, the API client, the MSW mock API, the payment machine
-packages/tokens/            the token compiler, the contract, the base token file, the Vite plugin and a CLI
+packages/tokens/            the token compiler, the contract, the base token file, OKLCH palettes, Studio's generator, the Vite plugin and a CLI
 packages/ui/                the component library, styled only by tokens
 tenants/<id>/                one tenant each: tenant.json (settings) and tokens.json (its look)
 e2e/                        Playwright tests
@@ -120,7 +123,7 @@ Pushing to `master` runs formatting, lint, type checks, unit tests and the end-t
 - [x] Tenants as validated configuration, tenant-based routes, and every page prerendered in its own brand
 - [x] The product: sign-in, account, invoices and payment, with a mocked API and per-tenant features
 - [x] English, German and Spanish
-- [ ] Studio: create a brand in the browser, check its contrast live, export or share it
+- [x] Studio: create a brand in the browser, check its contrast live, export or share it
 - [ ] End-to-end, accessibility and visual regression tests for every tenant
 - [ ] Dark mode inside every brand
 - [ ] Importing tokens from Figma (Tokens Studio format)
