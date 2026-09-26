@@ -5,9 +5,9 @@
 }
 
 .shellHeader {
-  background: var(--brand-primary);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
-  color: white;
+  background: var(--header-background);
+  box-shadow: var(--shadow-raised);
+  color: var(--header-text);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -24,11 +24,16 @@
 }
 
 .shellLogo {
-  color: white;
+  color: var(--header-text);
   flex-shrink: 0;
   font-size: 1rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+.shellLogo:focus-visible {
+  outline: 2px solid var(--header-text);
+  outline-offset: 4px;
 }
 
 .shellLogo:hover {
@@ -50,17 +55,17 @@
 }
 
 .shellTenantBadge {
-  background: rgb(255 255 255 / 20%);
-  border: 1px solid rgb(255 255 255 / 25%);
+  background: color-mix(in srgb, var(--header-text) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--header-text) 25%, transparent);
   border-radius: 32px;
-  color: #fff;
+  color: var(--header-text);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 4px 8px;
 }
 
 .shellTenantMeta {
-  color: rgb(255 255 255 / 65%);
+  color: var(--header-text);
   font-size: 0.75rem;
 }
 

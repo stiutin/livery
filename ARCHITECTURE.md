@@ -1,5 +1,7 @@
 # Architecture: Shell vs Theme Boundaries
 
+> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json` (see the README's _How it works_): the token objects in the theme packages, `ThemeLoader`'s inline properties, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
+
 ## Overview
 
 ```
@@ -119,9 +121,3 @@ The shell imports only from this surface. It never imports `tokens.css` directly
 4. `ThemeLoader` writes the new token values as inline CSS properties on `<html>`.
 5. `useThemeComponents()` returns the matching branded components.
 6. All CSS variables cascade instantly - buttons, cards, inputs, the header - without re-mounting any feature component.
-
----
-
-## Storybook
-
-Component documentation lives inside the theme package (`themes/theme-tenant-alpha/.storybook/`). Stories import `tokens.css` directly (acceptable - Storybook is the theme package's own dev tool, not the shell). Stories cover `BrandButton` and `BrandCard` with variants: Primary, Disabled, Loading, FullWidth, WithTitle, WithAction, NestedCards.

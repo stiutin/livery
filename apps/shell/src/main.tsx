@@ -1,3 +1,5 @@
+// Every tenant's design tokens, compiled at build time; global.css only refers to them.
+import 'virtual:livery/tenants.css';
 import './styles/global.css';
 
 import React from 'react';

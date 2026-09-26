@@ -1,5 +1,7 @@
 # Decisions
 
+> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json` (see the README's _How it works_): the token objects in the theme packages, `ThemeLoader`'s inline properties, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
+
 ## 1. Vite + React + TypeScript (not Next.js)
 
 Next.js would add SSR complexity that a white-label shell doesn't need in the MVP. Vite gives instant HMR, a tiny config surface, and easy workspace resolution. TypeScript strict mode (`noUnusedLocals`, `noUnusedParameters`) catches dead code early.

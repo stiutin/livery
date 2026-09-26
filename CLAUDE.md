@@ -6,39 +6,39 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 **Livery** is a white-label React app: one product (a customer account with sign-in and billing) shown in the brand of each tenant. The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phase 0 is done:** the code is still the original MVP, now on the portfolio's tooling, tests and CI. Much of what sections 5 and 11 describe is what the next phases replace; do not build on it more than a change needs.
+The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 and 1 are done:** the portfolio's tooling, tests and CI, and design tokens as W3C files with a closed contract and WCAG AA contrast as a build gate. Pages, the tenant context and the per-theme components are still the MVP's; section 11 lists what the next phases replace, so do not build on those parts more than a change needs.
 
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
-- `ARCHITECTURE.md` and `DECISIONS.md` come from the MVP. They stay until the rebuild folds them into the README's _How it works_ and this file (house style has no ADR folder).
+- `ARCHITECTURE.md` and `DECISIONS.md` describe the MVP and say where they no longer hold. They stay until the rebuild folds them into the README's _How it works_ and this file (house style has no ADR folder).
 
 ## 2. Toolchain
 
-| Tool         | Version                                                                               | Notes                                                                      |
-| ------------ | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Node.js      | 24 (`.nvmrc`), `engines` `>=22.22.3`                                                  |                                                                            |
-| React        | 19                                                                                    | `StrictMode` on                                                            |
-| React Router | 8, library mode                                                                       | imports come from `react-router`; `react-router-dom` no longer exists      |
-| TypeScript   | 6.0, strict + `noUncheckedIndexedAccess`, `noImplicitOverride`, `noImplicitReturns`   | 7.0 is not supported by `typescript-eslint` yet                            |
-| Vite         | 8                                                                                     | base `/livery/` for builds (`BASE_PATH` overrides), `/` for the dev server |
-| Tests        | Vitest 5 (jsdom), Testing Library, Playwright 1.63                                    |                                                                            |
-| Lint         | ESLint 10 (strict-type-checked + house rules + React hooks), Stylelint 17, Prettier 3 |                                                                            |
-| Storybook    | 10, in `themes/theme-tenant-alpha`                                                    | kept for now; the roadmap replaces it with Studio unless decided otherwise |
+| Tool          | Version                                                                               | Notes                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Node.js       | 24 (`.nvmrc`), `engines` `>=22.22.3`                                                  | runs `packages/tokens/src/cli.ts` directly through type stripping                                    |
+| React         | 19                                                                                    | `StrictMode` on                                                                                      |
+| React Router  | 8, library mode                                                                       | imports come from `react-router`; `react-router-dom` no longer exists                                |
+| TypeScript    | 6.0, strict + `noUncheckedIndexedAccess`, `noImplicitOverride`, `noImplicitReturns`   | 7.0 is not supported by `typescript-eslint` yet                                                      |
+| Vite          | 8                                                                                     | base `/livery/` for builds (`BASE_PATH` overrides), `/` for the dev server                           |
+| Design tokens | Design Tokens Format Module 2025.10, compiled by `@livery/tokens` (no dependencies)   | types: color (srgb, oklch), dimension, fontFamily, fontWeight, duration, number, cubicBezier, shadow |
+| Tests         | Vitest 5 (node for tokens, jsdom for the app), Testing Library, Playwright 1.63       |                                                                                                      |
+| Lint          | ESLint 10 (strict-type-checked + house rules + React hooks), Stylelint 17, Prettier 3 |                                                                                                      |
 
-npm workspaces: `apps/*` and `themes/*`. Install and run everything from the root.
+npm workspaces: `apps/*`, `packages/*` and `themes/*`. Install and run everything from the root. Workspace packages are consumed from their TypeScript sources (`exports` point at `src/`); nothing is prebuilt.
 
 ## 3. Commands
 
 ```bash
-npm start              # Vite dev server on :5173 (base /)
-npm run build          # themes (tsc), then the shell: tsc -b + vite build into apps/shell/dist (base /livery/)
+npm start              # Vite dev server on :5173 (base /); saving a token file reloads the page
+npm run build          # tsc -b + vite build into apps/shell/dist (base /livery/); fails on any token problem
 npm run serve          # serve apps/shell/dist like GitHub Pages on :4173/livery/ (scripts/serve.mjs)
-npm test               # Vitest unit tests (apps/shell/src/**/*.test.tsx)
+npm test               # Vitest: packages/tokens, then the shell
+npm run tokens         # contrast summary per tenant and every problem; `-- --all` lists every pair
 npm run e2e            # build, then Playwright on desktop + Pixel 7; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
-npm run storybook      # theme-tenant-alpha components on :6006
 npm run lint           # ESLint + Stylelint (src CSS only)
-npm run typecheck      # the shell, the e2e suite and both themes
+npm run typecheck      # the shell, the e2e suite, the tokens package and both themes
 npm run check          # format:check + lint + typecheck + test  ← before finishing
 ```
 
@@ -47,73 +47,94 @@ npm run check          # format:check + lint + typecheck + test  ← before fini
 ## 4. Repository map
 
 ```
+tenants/<id>/tokens.json   one brand each (tenant-default, tenant-alpha, tenant-beta): palette + semantic tokens
+packages/tokens/
+  base.tokens.json         shared by every tenant: component → semantic mappings, font, radii, shadow, duration
+  src/contract.ts          the closed list of semantic and component tokens, and the 16 contrast pairs
+  src/parse.ts             file → flat tokens (dot paths, inherited $type), structural problems
+  src/resolve.ts           aliases (whole values and inside shadows), cycles, value validation
+  src/color.ts             sRGB/OKLCH conversion, compositing, WCAG luminance and contrast, CSS colours
+  src/compile.ts           merge files, check the contract and contrast, emit CSS and the manifest
+  src/css.ts               token → CSS custom property name and value
+  src/node.ts              reads the files from disk; src/vite.ts the plugin; src/cli.ts the report
+  src/virtual.d.ts         types of virtual:livery/tenants(.css), referenced from the shell's tsconfig
 apps/shell/
-  index.html               title, description, #root, noscript
-  vite.config.ts           base path, the 404.html copy (spaFallback), theme aliases to their sources
-  src/main.tsx             BrowserRouter with basename = import.meta.env.BASE_URL
+  vite.config.ts           base path, the 404.html copy (spaFallback), the tokens plugin
+  src/main.tsx             tenants.css, global.css, BrowserRouter with basename = import.meta.env.BASE_URL
   src/routes/              App.tsx (route tree) and one folder per page, with its test
   src/components/          AppLayout (header + nav), TenantNavLink, BackToHome
   src/tenant/              TenantContext: {brandId, locale, currency}
-  src/theme/               ThemeBoot, ThemeLoader, themeRegistry, fallback components, ambient .d.ts for themes
+  src/theme/               ThemeBoot, ThemeLoader (data-tenant), themeRegistry, fallback components
   src/services/            identityApi, billingApi: mocked adapters
   src/constants/ types/ utils/ styles/ test/
-themes/theme-tenant-alpha/ tokens (theme.config.ts + tokens.css), BrandButton, BrandCard, Storybook
-themes/theme-tenant-beta/  the same exports with other values
+themes/theme-tenant-*/     BrandButton and BrandCard per brand, styled only by tokens (removed in Phase 2)
 e2e/                       Playwright specs and helpers
 scripts/serve.mjs          GitHub-Pages-like static server
 ```
 
-## 5. Architecture (as of Phase 0)
+## 5. Architecture
 
+- **Token layers.** A tenant's files have three top-level groups. `primitive` is free-form and never emitted. `semantic` and `component` are closed: `CONTRACT` in `contract.ts` lists each token with its type, and a missing, unknown or mistyped token is a problem. The base file maps every component token to a semantic one; a tenant may override any token, since later files replace earlier ones token by token.
+- **Compilation.** `compileTenant` parses each file, merges them, resolves aliases, then checks the contract and the contrast pairs. It never throws: every problem is collected with its file and path. An alias to another emitted token becomes `var(--…)`, so the cascade keeps component → semantic; an alias to a primitive is inlined. CSS names drop the layer: `semantic.color.text.default` → `--color-text-default`.
+- **Contrast.** `CONTRAST_PAIRS` lists what the app draws on what. Ratios follow WCAG 2.2; a translucent foreground is composited over its background first, and backgrounds must be opaque. Text needs 4.5:1, control borders and focus rings 3:1. A failure names where each colour of the pair is finally written.
+- **Delivery.** The Vite plugin compiles all tenants in `buildStart` and fails the build on any problem. It serves `virtual:livery/tenants.css` (the default tenant's block first, on `:root` and its `[data-tenant]`, then one block per tenant) and `virtual:livery/tenants` (the manifest: every token's name, CSS and resolved value). In the dev server a token file change invalidates both and reloads the page.
 - **Tenant state is the URL.** `ThemeBoot` reads `?brand`, `?locale` and `?currency`, falls back to `DEFAULT_TENANT` for unknown values, and provides a memoised context. Links keep `location.search`, so the tenant survives navigation.
-- **Theme boundary.** `themeRegistry.ts` is the only file that knows which brands exist. `ThemeLoader` writes the tokens to `<html>` in an effect; pages get `BrandButton`/`BrandCard` from `useThemeComponents()` and never import a theme package.
-- **Themes in development and production** are resolved from their TypeScript sources through Vite aliases; `build:themes` only proves the packages compile on their own.
+- **Theme boundary.** `themeRegistry.ts` maps each brand to a token set (a folder in `tenants/`) and its components. `ThemeLoader` sets `<html data-tenant>` in a layout effect; pages get `BrandButton`/`BrandCard` from `useThemeComponents()` and never import a theme package.
 - **API adapters** return typed results; pages hold no network code. `BillingPage` is a discriminated-union state machine (`idle | loading | error | empty | success`).
 - **Base path.** Builds are made for `BASE_PATH` (default `/livery/`; CI passes `/<repository>/`). The router's basename is `import.meta.env.BASE_URL`, and the build copies `index.html` to `404.html`, so GitHub Pages boots the app on any deep link (with status 404; prerendering is on the roadmap).
 
 ## 6. Invariants - do not break
 
-1. **Pages never import from a theme package or its CSS.** Components come from `useThemeComponents()`, tokens from `ThemeLoader`.
-2. **Links keep the tenant.** Internal navigation carries `location.search` (`TenantNavLink`, `BackToHome`, `navigate(\`…${search}\`)`).
-3. **No absolute URLs in app code.** The router adds the base path; assets go through Vite. A hard-coded `/…` breaks under `/livery/`.
-4. **Build and serve with the same `BASE_PATH`.** `scripts/serve.mjs` refuses a build made for another base.
-5. **Promises are handled.** `navigate()` and `handleSubmit()` return promises; event handlers wrap them in a block with `void` (lint-enforced).
-6. **`tenant-empty` exists only for the billing mock's empty state.** Do not give it other meaning; the product phase removes it.
+1. **No literal colours, radii or durations in app or theme CSS.** Use the semantic or component custom properties; if one is missing, add it to the contract (recipe below), never a one-off value.
+2. **Components never read primitives.** Only semantic and component tokens are emitted; keep it that way.
+3. **Every contrast pair passes for every tenant.** Do not lower a minimum or drop a pair to make a brand build; change the brand's colours.
+4. **The default tenant's CSS block comes first.** `:root` and `[data-tenant]` have equal specificity; the order is what lets a tenant override the default.
+5. **Pages never import from a theme package.** Components come from `useThemeComponents()`, tokens from the stylesheet.
+6. **Links keep the tenant.** Internal navigation carries `location.search` (`TenantNavLink`, `BackToHome`, `navigate(\`…${search}\`)`).
+7. **No absolute URLs in app code.** The router adds the base path; assets go through Vite. A hard-coded `/…` breaks under `/livery/`.
+8. **Build and serve with the same `BASE_PATH`.** `scripts/serve.mjs` refuses a build made for another base.
+9. **Promises are handled.** `navigate()` and `handleSubmit()` return promises; event handlers wrap them in a block with `void` (lint-enforced).
+10. **`tenant-empty` exists only for the billing mock's empty state.** It uses the default token set; the product phase removes it.
 
 ## 7. Testing guide
 
-- **Unit** (Vitest, jsdom, globals, `@testing-library/jest-dom`): pages are rendered inside a `MemoryRouter`; the adapters are stubbed with `vi.spyOn`. Use role and label queries.
-- **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a token from `<html>`; poll it (`expect.poll`), since tokens are applied in an effect.
+- **Tokens** (`packages/tokens/src/*.test.ts`, Vitest, node): colour maths against known values, parsing and resolution problems with their exact messages, the contract and contrast on the real default tenant plus a small edit file, CSS order, the repository's tenants compiling clean, and a real `vite build` of a throwaway app that must fail when a tenant drops below AA.
+- **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): pages are rendered inside a `MemoryRouter`; the adapters are stubbed with `vi.spyOn`. Use role and label queries. The tokens plugin runs here too, so a broken tenant fails these tests as well.
+- **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after a tenant change.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
 ## 8. Recipes
 
-- **Add a tenant (MVP way, until Phase 1):** a theme package mirroring `theme-tenant-beta`, an alias in `vite.config.ts`, an ambient `.d.ts` in `src/theme/`, and an entry in `SUPPORTED_BRANDS` and `THEME_REGISTRY`.
-- **Add a page:** a route in `routes/App.tsx` under `AppLayout`, a `TenantNavLink` in the header if it belongs there, a unit test, and an end-to-end scenario for the flow.
+- **Add a tenant:** copy a folder in `tenants/`, change its palette and semantic colours, run `npm run tokens` until every pair passes, then add the brand to `SUPPORTED_BRANDS` and `THEME_REGISTRY` (until Phase 3 makes tenants configuration).
+- **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
+- **Add a token to the contract:** add it to `CONTRACT` (and to `CONTRAST_PAIRS` if something is drawn on it), give it a value in `base.tokens.json` or in every tenant, then use its custom property in CSS.
 
 ## 9. CI/CD
 
-The jobs are _Lint and types_, _Unit tests_, _Build_ (uploads `apps/shell/dist`), _End-to-end (Playwright)_ against that build, and _Deploy to GitHub Pages_, which publishes the same artifact from `master`. `BASE_PATH` is set once at the top of the workflow from the repository name. One-time setup is listed in the workflow header.
+The jobs are _Lint and types_, _Unit tests_, _Build_ (uploads `apps/shell/dist`), _End-to-end (Playwright)_ against that build, and _Deploy to GitHub Pages_, which publishes the same artifact from `master`. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` is set once at the top of the workflow from the repository name. One-time setup is listed in the workflow header.
 
 ## 10. Troubleshooting
 
-| Symptom                                                         | Cause / fix                                                                           |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `npm run serve` refuses to start                                | no build, or a build for another base path: `npm run build` with the same `BASE_PATH` |
-| E2E hits the wrong app                                          | another project's server is on port 4173 (`reuseExistingServer`); stop it             |
-| Playwright: "Executable doesn't exist"                          | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                             |
-| The live site shows a blank page after renaming the repository  | the build's base path is the old name; re-run the workflow, which reads the new name  |
-| Deploy rejected: "branch not allowed to deploy to github-pages" | Settings → Environments → github-pages → allow `master`                               |
+| Symptom                                                         | Cause / fix                                                                                      |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Build fails with "Design tokens have N problem(s)"              | each line names the tenant, the file and the token; `npm run tokens -- --all` shows every pair   |
+| "hex … does not match the components"                           | a colour was edited in one place only; update `components` and `hex` together                    |
+| A tenant looks like the default                                 | its `[data-tenant]` block is missing or comes before `:root`; check `virtual:livery/tenants.css` |
+| `npm run serve` refuses to start                                | no build, or a build for another base path: `npm run build` with the same `BASE_PATH`            |
+| E2E hits the wrong app                                          | another project's server is on port 4173 (`reuseExistingServer`); stop it                        |
+| Playwright: "Executable doesn't exist"                          | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                                        |
+| The live site shows a blank page after renaming the repository  | the build's base path is the old name; re-run the workflow, which reads the new name             |
+| Deploy rejected: "branch not allowed to deploy to github-pages" | Settings → Environments → github-pages → allow `master`                                          |
 
 ## 11. Known limitations
 
 These are what the roadmap phases replace:
 
-- Each theme forks `BrandButton` and `BrandCard`; hover and focus are JavaScript state with inline styles, and focus shows on mouse clicks too (no `:focus-visible`).
-- Tokens are applied in an effect, so every brand first paints in the fallback colours.
-- Nothing checks contrast: white on alpha's hover colour is about 2.4:1 and on beta's about 1.9:1 (AA needs 4.5:1).
-- The token contract is `Record<string, string>`: alpha has 14 tokens, beta 5. Values are duplicated between `tokens.css` and `theme.config.ts`, and the themes' types between the packages and ambient `.d.ts` files.
-- The initial bundle is about 97 kB gzipped; React Router 8 added about 15 kB over 6. Per-tenant chunks come with the tenant model.
+- Each theme forks `BrandButton` and `BrandCard`; hover and focus are JavaScript state with inline styles (Phase 2).
+- Before the JavaScript runs, the page has the default tenant's colours; prerendering each tenant fixes it (Phase 3).
+- Beta's card lost its teal shadow: the contract has no card shadow, and adding one for a single brand was not worth it.
+- The token manifest (about 1 kB gzipped) is in the main bundle, for the theme preview only. The initial bundle is about 98 kB gzipped; React Router 8 added about 15 kB over 6. Per-tenant chunks come with the tenant model.
+- Only the token types Livery uses are supported; gradients, borders, typography and transitions report "unsupported $type".
 
 ## House style (identical in every repository of this portfolio)
 

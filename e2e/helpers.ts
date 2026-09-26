@@ -13,7 +13,7 @@ export function trackErrors(page: Page): string[] {
   return errors;
 }
 
-/** The value of a design token as the theme loader applied it to <html>. */
+/** The value a compiled design token has on the page, for the tenant <html data-tenant> selects. */
 export function brandToken(page: Page, name: string): Promise<string> {
-  return page.evaluate((token) => document.documentElement.style.getPropertyValue(token).trim(), name);
+  return page.evaluate((token) => getComputedStyle(document.documentElement).getPropertyValue(token).trim(), name);
 }

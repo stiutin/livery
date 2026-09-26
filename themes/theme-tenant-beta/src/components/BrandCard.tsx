@@ -13,11 +13,10 @@ export function BrandCard({
       {...props}
       className={className}
       style={{
-        background: 'var(--card-bg)',
+        background: 'var(--card-background)',
         border: '1px solid var(--card-border)',
-        borderRadius: 18,
+        borderRadius: 'var(--card-radius)',
         padding: '22px 26px',
-        boxShadow: '0 15px 30px rgba(15, 118, 110, 0.08)',
         ...style,
       }}
     >

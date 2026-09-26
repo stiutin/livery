@@ -1,11 +1,13 @@
 import {copyFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 
+import {liveryTokens} from '@livery/tokens/vite';
 import react from '@vitejs/plugin-react';
 import {defineConfig, type Plugin} from 'vite';
 
 /** Where GitHub Pages serves the site: /<repository>/. CI passes the real name, so a renamed fork still works. */
 const PAGES_BASE = process.env.BASE_PATH ?? '/livery/';
+const REPOSITORY = resolve(import.meta.dirname, '../..');
 
 /**
  * GitHub Pages answers unknown paths with 404.html. A copy of index.html there lets a deep link such as
@@ -25,13 +27,14 @@ function spaFallback(): Plugin {
 
 export default defineConfig(({command}) => ({
   base: command === 'build' ? PAGES_BASE : '/',
-  plugins: [react(), spaFallback()],
+  plugins: [
+    react(),
+    // Every tenant's design tokens, compiled and checked for contrast; a failing tenant stops the build.
+    liveryTokens({root: REPOSITORY, tenantsDir: join(REPOSITORY, 'tenants'), defaultTenant: 'tenant-default'}),
+    spaFallback(),
+  ],
   resolve: {
     tsconfigPaths: true,
-    alias: {
-      'theme-tenant-alpha': resolve(import.meta.dirname, '../../themes/theme-tenant-alpha/src/index.ts'),
-      'theme-tenant-beta': resolve(import.meta.dirname, '../../themes/theme-tenant-beta/src/index.ts'),
-    },
     dedupe: ['react', 'react-dom'],
   },
   server: {

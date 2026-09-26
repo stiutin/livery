@@ -1,0 +1,25 @@
+{
+  "name": "@livery/tokens",
+  "version": "0.1.0",
+  "description": "Design tokens in the W3C format: parsing, aliases, the Livery contract, WCAG contrast checks and CSS output.",
+  "license": "MIT",
+  "author": "Serge Tiutin",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./vite": "./src/vite.ts",
+    "./virtual": {
+      "types": "./src/virtual.d.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}

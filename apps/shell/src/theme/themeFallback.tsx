@@ -42,19 +42,20 @@ export function BrandButton({
         alignItems: 'center',
         justifyContent: 'center',
         gap: '6px',
-        background: hovered && !disabled ? 'var(--brand-accent)' : 'var(--brand-primary)',
-        color: 'white',
+        background:
+          hovered && !disabled ? 'var(--button-primary-background-hover)' : 'var(--button-primary-background)',
+        color: 'var(--button-primary-text)',
         border: 0,
-        borderRadius: 12,
+        borderRadius: 'var(--button-radius)',
         padding: '12px 20px',
         fontWeight: 700,
         fontSize: '0.95rem',
         lineHeight: 1.2,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
-        outline: 'none',
-        boxShadow: focused && !disabled ? '0 0 0 3px var(--brand-accent, #60a5fa)' : 'none',
-        transition: 'background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease',
+        outline: focused && !disabled ? '2px solid var(--color-focus)' : 'none',
+        outlineOffset: 2,
+        transition: 'background var(--duration-fast) ease, opacity var(--duration-fast) ease',
         userSelect: 'none',
         ...(style ?? {}),
       }}
@@ -70,11 +71,10 @@ export function BrandCard({children, className, style, ...props}: BrandCardProps
       {...props}
       className={className}
       style={{
-        background: 'var(--card-bg)',
+        background: 'var(--card-background)',
         border: '1px solid var(--card-border)',
-        borderRadius: 14,
+        borderRadius: 'var(--card-radius)',
         padding: '20px 24px',
-        transition: 'box-shadow 0.15s ease',
         ...(style ?? {}),
       }}
     >

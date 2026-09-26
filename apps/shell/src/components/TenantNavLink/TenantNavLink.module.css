@@ -1,25 +1,30 @@
 .shellNavLink {
   align-items: center;
   border-radius: 8px;
-  color: rgb(255 255 255 / 80%);
+  color: var(--header-text);
   display: inline-flex;
   font-size: 0.875rem;
   font-weight: 500;
   padding: 8px 12px;
   text-decoration: none;
   transition:
-    background 0.12s ease,
-    color 0.12s ease;
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
 }
 
 .shellNavLink:hover {
-  background: rgb(255 255 255 / 15%);
-  color: #fff;
+  background: color-mix(in srgb, var(--header-text) 15%, transparent);
+  color: var(--header-text);
   text-decoration: none;
 }
 
 .shellNavLink--active {
-  background: rgb(255 255 255 / 20%);
-  color: #fff;
+  background: color-mix(in srgb, var(--header-text) 20%, transparent);
+  color: var(--header-text);
   font-weight: 600;
+}
+
+.shellNavLink:focus-visible {
+  outline: 2px solid var(--header-text);
+  outline-offset: 2px;
 }
