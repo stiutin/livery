@@ -5,7 +5,7 @@ import {brandToken} from './helpers';
 const notifications = (page: Page) => page.getByRole('region', {name: 'Notifications'}).getByRole('status');
 
 test.beforeEach(async ({page}) => {
-  await page.goto('./tenant-alpha/theme/preview');
+  await page.goto('./harbour/theme/preview');
 });
 
 test('the dialog opens from the keyboard, closes on Escape and gives focus back', async ({page, isMobile}) => {
