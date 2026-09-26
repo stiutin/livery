@@ -1,43 +1,27 @@
-import {render, screen, within} from '@testing-library/react';
-import {MemoryRouter} from 'react-router';
+import {screen, within} from '@testing-library/react';
 import {describe, expect, test} from 'vitest';
 
-import {TenantProvider} from '../../tenant/TenantContext';
+import {renderPage, sessionFor} from '../../test/render';
 import HomePage from './HomePage';
 
-function renderHomePage() {
-  return render(
-    <MemoryRouter initialEntries={['/tenant-alpha']}>
-      <TenantProvider value={{brandId: 'tenant-alpha', name: 'Alpha', locale: 'en-GB', currency: 'GBP'}}>
-        <HomePage />
-      </TenantProvider>
-    </MemoryRouter>
-  );
-}
+const tenant = {brandId: 'onyx', name: 'Onyx', locale: 'en-US', currency: 'USD', features: {payments: true}};
 
 describe('HomePage', () => {
-  test("shows the tenant's settings", () => {
-    renderHomePage();
-    expect(screen.getByRole('heading', {level: 1, name: 'Welcome to Alpha'})).toBeInTheDocument();
-    expect(screen.getByText('/tenant-alpha')).toBeInTheDocument();
-    expect(screen.getByText('en-GB')).toBeInTheDocument();
-    expect(screen.getByText('GBP')).toBeInTheDocument();
+  test("shows the tenant's settings and invites a sign-in", async () => {
+    renderPage(<HomePage />, {path: '/onyx', tenant});
+    expect(screen.getByRole('heading', {level: 1, name: 'Welcome to Onyx'})).toBeInTheDocument();
+    expect(screen.getByText('/onyx')).toBeInTheDocument();
+    expect(await screen.findByRole('link', {name: 'Sign in'})).toHaveAttribute('href', '/onyx/login');
   });
 
-  test("links to the tenant's pages under its own path", () => {
-    renderHomePage();
-    const pages = within(screen.getByRole('heading', {name: 'Pages'}).closest('div') ?? document.body);
-    expect(pages.getByRole('link', {name: 'Login'})).toHaveAttribute('href', '/tenant-alpha/auth/login');
-    expect(pages.getByRole('link', {name: 'Billing'})).toHaveAttribute('href', '/tenant-alpha/account/billing');
-    expect(pages.getByRole('link', {name: 'Theme preview'})).toHaveAttribute('href', '/tenant-alpha/theme/preview');
+  test('greets a signed-in customer', async () => {
+    renderPage(<HomePage />, {path: '/onyx', tenant, session: sessionFor('ada@example.com', 'onyx')});
+    expect(await screen.findByRole('link', {name: 'Open your account'})).toHaveAttribute('href', '/onyx/account');
   });
 
   test('links to every other tenant, not to itself', () => {
-    renderHomePage();
+    renderPage(<HomePage />, {path: '/onyx', tenant});
     const others = within(screen.getByRole('heading', {name: 'Other tenants'}).closest('div') ?? document.body);
-    const names = others.getAllByRole('link').map((link) => link.textContent);
-    expect(names).toContain('Beta');
-    expect(names).toContain('Livery');
-    expect(names).not.toContain('Alpha');
+    expect(others.getAllByRole('link').map((link) => link.textContent)).toEqual(['Harbour', 'Meadow']);
   });
 });

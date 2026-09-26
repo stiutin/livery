@@ -1,11 +1,14 @@
-import {Link, NavLink, Outlet} from 'react-router';
+import {Link, NavLink, Outlet, useNavigate} from 'react-router';
 
+import {useSession} from '../../session/useSession';
 import {useTenant} from '../../tenant/useTenant';
 import TenantNavLink from '../TenantNavLink/TenantNavLink';
 import styles from './AppLayout.module.css';
 
 export function AppLayout() {
-  const {brandId, name, locale, currency} = useTenant();
+  const {brandId, name} = useTenant();
+  const {session, signOut} = useSession();
+  const navigate = useNavigate();
 
   return (
     <div className={styles.shell}>
@@ -15,13 +18,27 @@ export function AppLayout() {
             {name}
           </NavLink>
           <nav className={styles.shellNav} aria-label="Main navigation">
-            <TenantNavLink to="auth/login">Login</TenantNavLink>
-            <TenantNavLink to="account/billing">Billing</TenantNavLink>
+            <TenantNavLink to="account">Account</TenantNavLink>
+            <TenantNavLink to="invoices">Invoices</TenantNavLink>
           </nav>
-          <div className={styles.shellTenant} aria-label="Active tenant">
-            <span className={styles.shellTenantMeta}>{locale}</span>
-            <span className={styles.shellTenantMeta}>{currency}</span>
-            <Link to="/" className={styles.shellTenantBadge}>
+          <div className={styles.shellTenant}>
+            {session ? (
+              <button
+                type="button"
+                className={styles.shellTenantBadge}
+                onClick={() => {
+                  signOut();
+                  void navigate(`/${brandId}`);
+                }}
+              >
+                Sign out
+              </button>
+            ) : (
+              <Link to={`/${brandId}/login`} className={styles.shellTenantBadge}>
+                Sign in
+              </Link>
+            )}
+            <Link to="/" className={styles.shellTenantMeta}>
               All tenants
             </Link>
           </div>

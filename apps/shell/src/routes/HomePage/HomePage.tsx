@@ -2,11 +2,13 @@ import {Card} from '@livery/ui';
 import {Link} from 'react-router';
 import {tenants} from 'virtual:livery/tenants';
 
+import {useSession} from '../../session/useSession';
 import {useTenant} from '../../tenant/useTenant';
 import styles from './HomePage.module.css';
 
 export default function HomePage() {
-  const {brandId, name, locale, currency} = useTenant();
+  const {brandId, name, locale, currency, features} = useTenant();
+  const {session} = useSession();
   const others = tenants.filter((tenant) => tenant.id !== brandId);
 
   return (
@@ -14,11 +16,23 @@ export default function HomePage() {
       <h1 className="h1">Welcome to {name}</h1>
 
       <p className="description">
-        Every page here is the same code as every other tenant&apos;s; only the tokens and the settings differ.
+        Your account, your invoices and {features.payments ? 'card payments' : 'bank transfer details'} in one place.
       </p>
 
       <Card className={styles.card}>
-        <h2 className="h2">This tenant</h2>
+        {session ? (
+          <p>
+            Signed in as <strong>{session.name}</strong>. <Link to={`/${brandId}/account`}>Open your account</Link>
+          </p>
+        ) : (
+          <p>
+            <Link to={`/${brandId}/login`}>Sign in</Link> to see your account and invoices.
+          </p>
+        )}
+      </Card>
+
+      <Card className={styles.card}>
+        <h2 className="h3">This tenant</h2>
         <dl className={styles.settings}>
           <dt>Address</dt>
           <dd>
@@ -28,22 +42,12 @@ export default function HomePage() {
           <dd>{locale}</dd>
           <dt>Currency</dt>
           <dd>{currency}</dd>
+          <dt>Card payments</dt>
+          <dd>{features.payments ? 'On' : 'Off'}</dd>
         </dl>
-      </Card>
-
-      <Card className={styles.card}>
-        <h2 className="h3">Pages</h2>
-        <ul className={styles.links}>
-          <li>
-            <Link to={`/${brandId}/auth/login`}>Login</Link>
-          </li>
-          <li>
-            <Link to={`/${brandId}/account/billing`}>Billing</Link>
-          </li>
-          <li>
-            <Link to={`/${brandId}/theme/preview`}>Theme preview</Link>
-          </li>
-        </ul>
+        <p className={styles.more}>
+          <Link to={`/${brandId}/theme/preview`}>See every component in {name}&apos;s look</Link>
+        </p>
       </Card>
 
       {others.length > 0 && (

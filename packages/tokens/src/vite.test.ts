@@ -18,7 +18,7 @@ function fixture(): string {
   writeFileSync(join(root, 'index.html'), '<script type="module" src="./main.js"></script>');
   writeFileSync(
     join(root, 'main.js'),
-    "import {loadTenant} from 'virtual:livery/tenants';\nconst tenant = await loadTenant('tenant-alpha');\nconsole.log(tenant?.css);\n"
+    "import {loadTenant} from 'virtual:livery/tenants';\nconst tenant = await loadTenant('onyx');\nconsole.log(tenant?.css);\n"
   );
   return root;
 }
@@ -28,7 +28,7 @@ function buildApp(root: string) {
     root,
     logLevel: 'silent',
     configFile: false,
-    plugins: [liveryTokens({root, tenantsDir: join(root, 'tenants'), defaultTenant: 'tenant-default'})],
+    plugins: [liveryTokens({root, tenantsDir: join(root, 'tenants'), defaultTenant: 'harbour'})],
     build: {outDir: join(root, 'dist'), target: 'es2022'},
   });
 }
@@ -48,22 +48,22 @@ describe('liveryTokens', () => {
       readFileSync(join(root, 'dist', 'assets', file), 'utf8')
     );
     const withBrand = (hex: string) => chunks.filter((chunk) => chunk.includes(`--color-brand-default:${hex};`));
-    expect(withBrand('#5b21b6')).toHaveLength(1);
+    expect(withBrand('#d4a94a')).toHaveLength(1);
     expect(withBrand('#0f766e')).toHaveLength(1);
-    // The alpha chunk carries only alpha's tokens.
-    expect(withBrand('#5b21b6')[0]).not.toContain('#0f766e');
+    // The Onyx chunk carries only Onyx's tokens.
+    expect(withBrand('#d4a94a')[0]).not.toContain('#0f766e');
   });
 
   it('fails the build when a tenant falls below WCAG AA', async () => {
     const root = fixture();
-    const file = join(root, 'tenants', 'tenant-alpha', 'tokens.json');
+    const file = join(root, 'tenants', 'harbour', 'tokens.json');
     const tokens = JSON.parse(readFileSync(file, 'utf8')) as {primitive: {color: Record<string, {$value: unknown}>}};
-    // Give alpha a light hover colour: white text on it drops to about 2.4:1.
-    tokens.primitive.color['brand-700'] = {$value: {colorSpace: 'srgb', components: [6 / 255, 182 / 255, 212 / 255]}};
+    // Give Harbour a light hover colour: white text on it drops to about 2.4:1.
+    tokens.primitive.color['brand-hover'] = {$value: {colorSpace: 'srgb', components: [6 / 255, 182 / 255, 212 / 255]}};
     writeFileSync(file, JSON.stringify(tokens));
 
     await expect(buildApp(root)).rejects.toThrow(
-      /tenant-alpha › contrast › primary button label under the pointer: .*primitive\.color\.brand-700 in tenants\/tenant-alpha\/tokens\.json\) is 2\.4\d:1/
+      /harbour › contrast › primary button label under the pointer: .*primitive\.color\.brand-hover in tenants\/harbour\/tokens\.json\) is 2\.4\d:1/
     );
   });
 });

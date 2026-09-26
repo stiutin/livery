@@ -1,6 +1,0 @@
-{
-  "$schema": "../tenant.schema.json",
-  "name": "Livery",
-  "locale": "en-US",
-  "currency": "USD"
-}

@@ -12,9 +12,15 @@ export interface TenantConfig {
   readonly locale: string;
   /** ISO 4217 currency code, such as `GBP`. */
   readonly currency: string;
+  /** What the tenant's customers can do; every flag is set explicitly. */
+  readonly features: Readonly<Record<Feature, boolean>>;
 }
 
-const KNOWN_KEYS = new Set(['$schema', 'name', 'tokens', 'locale', 'currency']);
+/** Feature flags a tenant.json sets. Adding one means adding it here, to the schema and to every tenant. */
+export const FEATURES = ['payments'] as const;
+export type Feature = (typeof FEATURES)[number];
+
+const KNOWN_KEYS = new Set(['$schema', 'name', 'tokens', 'locale', 'currency', 'features']);
 export const TENANT_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -30,6 +36,34 @@ function isLocale(value: string): boolean {
 }
 
 const CURRENCIES = new Set(Intl.supportedValuesOf('currency'));
+
+function readFeatures(
+  value: unknown,
+  report: (path: string, message: string) => void
+): Record<Feature, boolean> | undefined {
+  if (!isRecord(value)) {
+    report('features', `is required: an object with ${FEATURES.join(', ')}`);
+    return undefined;
+  }
+  let valid = true;
+  for (const key of Object.keys(value)) {
+    if (!FEATURES.some((feature) => feature === key)) {
+      report(`features.${key}`, `is not a feature; the flags are ${FEATURES.join(', ')}`);
+      valid = false;
+    }
+  }
+  const flags = {} as Record<Feature, boolean>;
+  for (const feature of FEATURES) {
+    const flag = value[feature];
+    if (typeof flag === 'boolean') {
+      flags[feature] = flag;
+    } else {
+      report(`features.${feature}`, 'must be true or false');
+      valid = false;
+    }
+  }
+  return valid ? flags : undefined;
+}
 
 /**
  * Validates one tenant.json. `tokenSets` are the folders that have a tokens.json, so a tenant can only
@@ -55,11 +89,12 @@ export function parseTenantConfig(
   }
   for (const key of Object.keys(json)) {
     if (!KNOWN_KEYS.has(key)) {
-      report(key, 'is not a tenant setting; use name, tokens, locale and currency');
+      report(key, 'is not a tenant setting; use name, tokens, locale, currency and features');
     }
   }
 
-  const {name, tokens = id, locale, currency} = json;
+  const {name, tokens = id, locale, currency, features} = json;
+  const flags = readFeatures(features, report);
   if (typeof name !== 'string' || name.trim() === '') {
     report('name', 'is required: the brand name people read');
   }
@@ -78,9 +113,10 @@ export function parseTenantConfig(
     typeof name !== 'string' ||
     typeof tokens !== 'string' ||
     typeof locale !== 'string' ||
-    typeof currency !== 'string'
+    typeof currency !== 'string' ||
+    !flags
   ) {
     return {config: undefined, problems};
   }
-  return {config: {id, name, tokens, locale, currency}, problems};
+  return {config: {id, name, tokens, locale, currency, features: flags}, problems};
 }

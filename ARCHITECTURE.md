@@ -1,6 +1,6 @@
 # Architecture: Shell vs Theme Boundaries
 
-> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json`, since Phase 2 every brand shares `@livery/ui`, and since Phase 3 tenants are folders with their own URLs and prerendered pages (see the README's _How it works_): the theme packages, their components and token objects, `useThemeComponents`, `ThemeBoot`, `ThemeLoader`, `themeRegistry`, the tenant query parameters, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
+> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json`, since Phase 2 every brand shares `@livery/ui`, since Phase 3 tenants are folders with their own URLs and prerendered pages, and since Phase 4 the product runs on an MSW mock API (see the README's _How it works_): the theme packages, their components and token objects, `useThemeComponents`, `ThemeBoot`, `ThemeLoader`, `themeRegistry`, the tenant query parameters, the billing form and its adapters, `tenant-empty`, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
 
 ## Overview
 

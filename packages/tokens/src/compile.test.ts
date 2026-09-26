@@ -10,7 +10,7 @@ import {BASE_TOKENS_FILE} from './node.ts';
 const read = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 const base: TokenSource = {name: 'base.tokens.json', json: read(BASE_TOKENS_FILE)};
 const defaultTenant = (): Record<string, unknown> =>
-  read(resolve(import.meta.dirname, '../../../tenants/tenant-default/tokens.json')) as Record<string, unknown>;
+  read(resolve(import.meta.dirname, '../../../tenants/harbour/tokens.json')) as Record<string, unknown>;
 
 /** The default tenant plus one more file, to test what an edit to a tenant does. */
 function compileWith(overrides: unknown) {
@@ -43,9 +43,9 @@ describe('compileTenant', () => {
     const tokens = new Map(compileWith({}).tokens.map((token) => [token.cssVariable, token]));
     expect(tokens.get('--button-primary-background')).toMatchObject({
       css: 'var(--color-brand-default)',
-      resolvedCss: '#2563eb',
+      resolvedCss: '#1c1917',
     });
-    expect(tokens.get('--color-brand-default')).toMatchObject({css: '#2563eb'});
+    expect(tokens.get('--color-brand-default')).toMatchObject({css: '#1c1917'});
     expect([...tokens.keys()].some((name) => name.startsWith('--primitive') || name.includes('blue'))).toBe(false);
   });
 
@@ -53,7 +53,7 @@ describe('compileTenant', () => {
     // The original alpha theme's hover colour, with white text on it.
     const {messages} = compileWith({semantic: {color: {brand: {hover: {$type: 'color', $value: srgb('#06b6d4')}}}}});
     expect(messages).toEqual([
-      'primary button label under the pointer: #ffffff (primitive.color.white in tenant.json) on ' +
+      'primary button label under the pointer: #ffffff (primitive.color.on-brand in tenant.json) on ' +
         '#06b6d4 (semantic.color.brand.hover in edit.json) is 2.43:1, WCAG AA needs 4.5:1',
     ]);
   });
@@ -61,7 +61,7 @@ describe('compileTenant', () => {
   it('holds focus rings and control borders to 3:1', () => {
     const {messages} = compileWith({semantic: {color: {border: {strong: {$type: 'color', $value: srgb('#cbd5e1')}}}}});
     const where =
-      '#cbd5e1 (semantic.color.border.strong in edit.json) on #ffffff (primitive.color.white in tenant.json)';
+      '#cbd5e1 (semantic.color.border.strong in edit.json) on #ffffff (primitive.color.surface in tenant.json)';
     // Both controls drawn with the strong border fail, each reported under its own pair.
     expect(messages).toEqual([
       `secondary button border: ${where} is 1.48:1, WCAG AA needs 3:1`,
@@ -107,7 +107,7 @@ describe('compileTenant', () => {
 describe('tokenSetToCss', () => {
   it('puts every emitted token on :root, keeping aliases as var()', () => {
     const css = tokenSetToCss(compileWith({}));
-    expect(css.startsWith(':root{--color-canvas:#ebedf0;')).toBe(true);
+    expect(css.startsWith(':root{--color-canvas:#f4f4f2;')).toBe(true);
     expect(css).toContain('--button-primary-background:var(--color-brand-default);');
     expect(css).not.toContain('primitive');
   });

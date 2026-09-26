@@ -1,0 +1,27 @@
+.card {
+  margin-top: 16px;
+}
+
+.facts {
+  display: grid;
+  gap: 8px 16px;
+  grid-template-columns: max-content 1fr;
+  margin: 12px 0 0;
+}
+
+.facts dt {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.amount {
+  font-size: 1.25rem;
+}
+
+.more {
+  margin-top: 12px;
+}

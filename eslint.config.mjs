@@ -34,7 +34,15 @@ const HOUSE_TS_RULES = {
 };
 
 export default defineConfig(
-  globalIgnores(['**/dist/', '**/build/', '**/.react-router/', 'coverage/', 'playwright-report/', 'test-results/']),
+  globalIgnores([
+    '**/dist/',
+    '**/build/',
+    '**/.react-router/',
+    '**/public/mockServiceWorker.js',
+    'coverage/',
+    'playwright-report/',
+    'test-results/',
+  ]),
   {
     languageOptions: {globals: globals.browser},
     plugins: {'simple-import-sort': simpleImportSort, 'unused-imports': unusedImports},
@@ -57,8 +65,12 @@ export default defineConfig(
     },
   },
   {
+    files: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat['recommended-latest']],
+  },
+  {
     files: ['apps/**/*.tsx', 'packages/**/*.tsx'],
-    extends: [reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
+    extends: [reactRefresh.configs.vite],
   },
   {
     // React Router route modules export these next to the component; Fast Refresh handles them.

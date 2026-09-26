@@ -1,0 +1,9 @@
+{
+  "$schema": "../tenant.schema.json",
+  "name": "Meadow",
+  "locale": "de-DE",
+  "currency": "EUR",
+  "features": {
+    "payments": false
+  }
+}

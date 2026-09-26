@@ -4,9 +4,9 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 ## 1. What this is
 
-**Livery** is a white-label React app: one product (a customer account with sign-in and billing) shown in the brand of each tenant. The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
+**Livery** is a white-label React app: one product (a customer account with sign-in, invoices and card payments) shown in three brands, Harbour (light, the default), Onyx (dark) and Meadow (bright, card payments off). The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 3 are done:** the portfolio's tooling, tests and CI; design tokens as W3C files with a closed contract and WCAG AA contrast as a build gate; one component library for every brand; and tenants as validated folders with their own URLs, every page prerendered in its tenant's colours. The pages' content, the mocked API and the demo tenant `tenant-empty` are still the MVP's; section 11 lists what the next phases replace.
+The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 4 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; and the product on a mocked API. Section 11 lists what later phases address.
 
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
@@ -47,8 +47,8 @@ npm run check          # format:check + lint + typecheck + test  ← before fini
 ## 4. Repository map
 
 ```
-tenants/<id>/tenant.json   settings: name, locale, currency, optional `tokens` (borrow another tenant's look)
-tenants/<id>/tokens.json   the look: palette + semantic tokens (tenant-empty has none and borrows tenant-default's)
+tenants/<id>/tenant.json   settings: name, locale, currency, features ({payments}), optional `tokens` (borrow a look)
+tenants/<id>/tokens.json   the look: palette + semantic tokens, and overrides such as radii or a dark font stack
 tenants/tenant.schema.json the tenant.json rules for editors; the build checks the same rules in tenant.ts
 packages/tokens/
   base.tokens.json         shared by every tenant: component → semantic mappings, font, radii, shadow, duration
@@ -78,7 +78,13 @@ apps/shell/
                            one folder per page with its test
   src/components/          AppLayout (header + nav), TenantNavLink, BackToHome
   src/tenant/              TenantContext: {brandId, name, locale, currency} from the tenant loader
-  src/services/            identityApi, billingApi: mocked adapters
+  src/api/                 types (money in minor units), client (fetch under BASE_URL/api/<tenant>/, starts the
+                           mocks), useApi (keyed request state with reload)
+  src/mocks/               handlers (MSW: session, account, invoices, payments, confirm; TEST_CARDS, WRONG_PASSWORD),
+                           db (customers derived from the email; paid invoices in sessionStorage), start (lazy worker)
+  src/payment/             machine (the payment reducer), card (Luhn, expiry, CVC; shared with the mock API)
+  src/session/             SessionProvider (useSyncExternalStore over sessionStorage), useSession, RequireSession
+  src/test/                setup (MSW Node server, dialog stand-in, resets), render (renderPage, sessionFor)
   src/constants/ types/ utils/ styles/ test/
 e2e/                       Playwright specs and helpers
 scripts/serve.mjs          GitHub-Pages-like static server
@@ -95,7 +101,9 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **404s.** An unknown page of a known tenant matches the `*` route, whose `clientLoader` throws a 404. An unknown tenant arrives in `404.html` with no loader data for `/:tenant`; the root `ErrorBoundary` treats any error under an unknown first segment as not found. Pages itself answers both with status 404.
 - **Tenant context.** The tenant route puts `{brandId, name, locale, currency}` in `TenantContext`; pages read it with `useTenant()` and build links as `/${brandId}/…`. Pages and components never look at the URL for the tenant.
 - **Component library.** `@livery/ui` components use CSS Modules and read only semantic and component custom properties. States are CSS (`:hover:not(:disabled)`, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`), variants are `data-variant` attributes. `Field` takes a render function and hands the control its `id`, `aria-describedby` (hint, then error) and `aria-invalid`; its error has `role="alert"`. `Dialog` wraps the native `<dialog>` (`showModal`, `close`, the `close` event) and treats a click on the element itself as a click on the backdrop. `ToastProvider` owns one always-present region (`role="status"`, polite); `useToast()` lives in its own file so Fast Refresh keeps working. `Table` is generic over its row type.
-- **API adapters** return typed results; pages hold no network code. `BillingPage` is a discriminated-union state machine (`idle | loading | error | empty | success`).
+- **Mock API.** `api/client.ts` calls `${BASE_URL}api/<tenant>/…` with the session token; before the first call it awaits `startMocks()`, which imports MSW and the handlers and registers `mockServiceWorker.js` with the base path as its scope. In tests (`MODE === 'test'`) it does nothing, because `src/test/setup.ts` runs the same handlers with `msw/node`. Tokens are base64 JSON `{tenant, email}` and only valid for their tenant.
+- **Payments.** `PaymentDialog` (lazy, only rendered when `features.payments` is on) keeps its state in `paymentReducer`: `closed → editing → submitting → (succeeded | confirming → submitting | editing with an error)`. Events a state does not expect return the same state. Card checks in `payment/card.ts` run in the form and in the mock API alike.
+- **Sessions.** Per tenant, in sessionStorage (`livery:session:<tenant>`). `SessionProvider` uses `useSyncExternalStore` with a server snapshot of `undefined`, so prerendered HTML and hydration agree; `RequireSession` shows a status while `undefined`, redirects to `login?next=` when `null`. The login page follows `next` only within its own tenant.
 - **Base path.** Everything is built and served for `BASE_PATH` (default `/livery/`; CI passes `/<repository>/`): Vite's `base` and React Router's `basename` both come from `livery.config.ts`.
 
 ## 6. Invariants - do not break
@@ -111,13 +119,15 @@ scripts/serve.mjs          GitHub-Pages-like static server
 9. **Promises are handled.** `navigate()` and `handleSubmit()` return promises; event handlers wrap them in a block with `void` (lint-enforced).
 10. **Loaders only on prerendered routes.** With `ssr: false`, a `loader` on a route that is not prerendered fails the build; use a `clientLoader` there. When a page is added, add it to `routes.ts` and `TENANT_PAGES` together.
 11. **Component states stay in CSS.** No hover or focus state in React; focus rings use `:focus-visible` and the focus token.
-12. **`tenant-empty` exists only for the billing mock's empty state.** It borrows the default token set; the product phase removes it.
+12. **Money is in minor units** in the API and the mock data; only `formatMoney` divides, in the tenant's locale and currency.
+13. **Mock and UI share rules.** Card checks, test cards and the refused password live in one place and are imported by the form, the mock API and the tests.
+14. **Features are read from the tenant, never from the tenant id.** No `if (brandId === …)` anywhere.
 
 ## 7. Testing guide
 
 - **Tokens** (`packages/tokens/src/*.test.ts`, Vitest, node): colour maths against known values, parsing and resolution problems with their exact messages, the contract and contrast on the real default tenant plus a small edit file, `tokenSetToCss`, tenant.json validation, the repository's tenants compiling clean, and real `vite build`s of a throwaway app: one per tenant chunk, one that must fail when a tenant drops below AA.
 - **Components** (`packages/ui/src/**/*.test.tsx`, Vitest, jsdom): what a user or a screen reader gets. Query by role, name and description; assert attributes (`aria-busy`, `aria-invalid`, `data-variant`), not class names. Toast timing uses fake timers.
-- **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): pages are rendered inside a `MemoryRouter` with a `TenantProvider`, without the framework plugin; the adapters are stubbed with `vi.spyOn`. Use role and label queries. The tokens plugin runs here too, so a broken tenant fails these tests as well.
+- **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): `renderPage()` from `src/test/render.tsx` wraps a page in a `MemoryRouter`, `TenantProvider`, `SessionProvider` and `ToastProvider`, without the framework plugin; `sessionFor(email)` signs in beforehand. The mock API runs through `msw/node`, so pages are tested against the same handlers as the browser; `onUnhandledRequest: 'error'` catches any call outside them, and every test starts with an empty mock database and session. The payment machine and card checks are tested as plain functions.
 - **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after moving to another tenant. The prerendering scenarios read raw HTML with `request.get()` and run a page with JavaScript disabled. The notification region is always a `status`, so scope page statuses to `getByRole('main')` and toasts to the `Notifications` region. Keyboard-only scenarios skip the mobile project.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
@@ -125,6 +135,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 
 - **Add a tenant:** a folder in `tenants/` with a `tenant.json` (name, locale, currency) and either a `tokens.json` (copy one, change the palette and semantic colours, run `npm run tokens` until every pair passes) or `"tokens": "<other tenant>"`. No code changes: the router, the prerender list and the landing page pick it up.
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
+- **Add a feature flag:** add it to `FEATURES` in `packages/tokens/src/tenant.ts`, to `features` in `tenants/tenant.schema.json` and `LoadedTenant`, set it in every tenant.json, and read it with `useTenant().features`.
 - **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test and an end-to-end scenario.
 - **Add a component:** a folder in `packages/ui/src/` with the component, a CSS Module that uses only custom properties, and tests; export it from `index.ts`. If it needs a value no token covers, add a component token first (next recipe).
 - **Add a token to the contract:** add it to `CONTRACT` (and to `CONTRAST_PAIRS` if something is drawn on it), give it a value in `base.tokens.json` or in every tenant, then use its custom property in CSS.
@@ -150,13 +161,12 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 
 ## 11. Known limitations
 
-These are what the roadmap phases replace, or trade-offs worth knowing:
+These are what later phases address, or trade-offs worth knowing:
 
-- Tenant ids are still the MVP's (`tenant-alpha`…), and `tenant-empty` exists only for the billing mock; the product phase brings real brands and removes it.
-- Locale and currency are fixed per tenant; switching language comes with localisation (Phase 5).
+- Locale and currency are fixed per tenant, and the text is English only; localisation is Phase 5.
+- The mock API forgets pending bank confirmations on reload, and paid invoices only last for the browser session.
 - The output layout assumes GitHub Pages serves `x.html` for `/x` even when a folder `x/` exists; `scripts/serve.mjs` does the same. Check the live site after the first deploy.
-- Framework mode brings its own runtime: a tenant page loads about 128 kB of JavaScript (gzipped), against about 98 kB before. Paint no longer waits for it, since the HTML is complete; Lighthouse comes with the testing phase.
-- Beta's card lost its teal shadow in Phase 1: the contract has no card shadow.
+- Framework mode brings its own runtime: a tenant page loads about 128 kB of JavaScript (gzipped). Paint does not wait for it, since the HTML is complete; Lighthouse comes with the testing phase.
 - Only the token types Livery uses are supported; gradients, borders, typography and transitions report "unsupported $type".
 
 ## House style (identical in every repository of this portfolio)
