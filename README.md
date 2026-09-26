@@ -2,9 +2,18 @@
 
 A white-label React app where a brand is data: design tokens, one component library, many tenants.
 
-An airline's livery is the paint on the aircraft: the same plane in a different company's colours. Livery does the same for a web product. A customer account (sign-in, an account overview, invoices and card payments) is built once, and three brands wear it: Harbour, light and minimal; Onyx, dark and premium; Meadow, bright and rounded. Each brand is a folder with a settings file and a token file, checked for contrast at build time; every screen comes from one component library; every page is prerendered in its brand's colours. The project is being rebuilt in phases, listed in the roadmap below.
+An airline's livery is the paint on the aircraft: the same plane in a different company's colours. Livery does the same for a web product. A customer account (sign-in, an account overview, invoices and card payments) is built once, and three brands wear it: Harbour, light and minimal; Onyx, dark and premium; Meadow, bright and rounded. Each brand is a folder with a settings file and a token file, checked for contrast at build time. Every screen comes from one component library, and every page is prerendered in its brand's colours, in three languages. Livery Studio makes new brands from a single colour.
 
 **[Open the live demo](https://stiutin.github.io/livery/)**
+
+<p align="center">
+  <img src=".github/screenshots/harbour.png" width="32%" alt="Harbour: the invoices page in charcoal on paper, with square corners" />
+  <img src=".github/screenshots/onyx.png" width="32%" alt="Onyx: the same invoices page in gold on near-black" />
+  <img src=".github/screenshots/meadow.png" width="32%" alt="Meadow: the same invoices page in teal on mint, with bank-transfer details instead of card payments" />
+</p>
+<p align="center">
+  <img src=".github/screenshots/studio.png" width="97%" alt="Livery Studio: brand settings on the left, the product's real home page in the new brand on the right" />
+</p>
 
 ## Features
 
@@ -26,42 +35,56 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 
 ## Tech stack
 
-[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/) in framework mode with prerendering, [react-hook-form](https://react-hook-form.com/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, [W3C Design Tokens](https://www.designtokens.org/tr/2025.10/format/), npm workspaces.
-Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/) and [Playwright](https://playwright.dev/).
+[React 19](https://react.dev/), [React Router 8](https://reactrouter.com/) in framework mode with prerendering, [react-hook-form](https://react-hook-form.com/), [intl-messageformat](https://formatjs.github.io/docs/intl-messageformat/), [MSW](https://mswjs.io/), TypeScript (strict), [Vite](https://vite.dev/), CSS Modules, [W3C Design Tokens](https://www.designtokens.org/tr/2025.10/format/), npm workspaces.
+Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/), [Playwright](https://playwright.dev/), [axe](https://github.com/dequelabs/axe-core) and [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci).
 
 ## How it works
 
-**Brands are token files.** Each tenant is `tenants/<id>/tokens.json`, written in the [Design Tokens Format Module 2025.10](https://www.designtokens.org/tr/2025.10/format/), on top of a shared `packages/tokens/base.tokens.json`. Tokens sit in three layers. _Primitives_ are the raw palette, free-form and never emitted. _Semantic_ tokens say what a value is for: the page, a surface, muted text, the brand colour, the focus ring. _Component_ tokens say what a button or an input uses, and the base file maps them to semantic ones, so a tenant usually writes only its palette and its semantic colours. Only the semantic and component layers become CSS custom properties, which keeps components away from raw palette values.
+### Brands are token files
 
-**The contract is closed.** Every tenant defines the same 50 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
+Each tenant's look is `tenants/<id>/tokens.json`, written in the [Design Tokens Format Module 2025.10](https://www.designtokens.org/tr/2025.10/format/), on top of a shared `packages/tokens/base.tokens.json`. Tokens sit in three layers. _Primitives_ are the raw palette, free-form and never emitted. _Semantic_ tokens say what a value is for: the page, a surface, muted text, the brand colour, the focus ring, the density of the layout. _Component_ tokens say what a button or an input uses, and the base file maps them to semantic ones, so a tenant usually writes only its palette and its semantic colours. Only the semantic and component layers become CSS custom properties, which keeps components away from raw palette values.
 
-**Contrast is a build gate.** The contract also lists which colour sits on which: body text on the page, the button label on the button, the button label on its hover colour, and so on. `@livery/tokens` measures 21 such pairs per tenant with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops `vite build` and names where each colour is written, since that is where the fix goes. The original themes failed it: white on the violet theme's cyan hover colour was 2.4:1.
+The contract is closed: every tenant defines the same 50 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
 
-**A tenant is a folder.** Next to its `tokens.json`, each tenant has a `tenant.json`: its name, its locale, its currency, its feature flags, and optionally another tenant whose tokens it borrows. The build validates it like the tokens, and `tenants/tenant.schema.json` gives editors the same rules. The folder name is the tenant's id and the first segment of its URLs, so adding a brand is adding a folder: no code, no registry.
+### Contrast is a build gate
 
-**Every page is prerendered in its own brand.** The app uses React Router in framework mode with `ssr: false`: there is no server, but at build time every page of every tenant is rendered to HTML. The `/:tenant` route's loader loads the tenant through a dynamic import, one module per tenant, and the document inlines that tenant's compiled tokens as a `<style>` on `:root`. So the first frame is already in the tenant's colours, with or without JavaScript, and no page carries another tenant's tokens. Client-side navigation fetches the next page's prerendered data file instead of running the loader.
+The contract also lists which colour sits on which: body text on the page, the button label on the button and on its hover colour, a control's border on its background, and so on. `@livery/tokens` measures 21 such pairs per tenant with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops the build and names the file and token where each colour of the pair is written, since that is where the fix goes. `npm run tokens -- --all` prints every pair of every tenant.
 
-**Built for GitHub Pages.** Pages has no routing, so the build output is shaped for it. Pages would redirect `/livery/onyx/en/invoices` to a trailing slash if the file were `onyx/en/invoices/index.html`, so each page is written as `onyx/en/invoices.html`. For any other address Pages returns `404.html` with status 404; that file is the client-rendered shell React Router builds for URLs it did not prerender, and it shows a not-found page in the default look. An unknown page of a known tenant reaches the same page through a catch-all route.
+### A tenant is a folder
 
-**One component library, no forks.** The MVP gave every brand its own copy of the button and the card, with hover and focus kept in JavaScript state. `@livery/ui` replaces them with one set of components for all brands: Button, Field with Input, Select, Card, Dialog, Toast and Table. They read only semantic and component custom properties, so a brand changes them without a line of code, and Stylelint rejects any literal colour in their CSS or the app's. States are CSS: `:hover`, `:focus-visible`, `:disabled` and ARIA attributes, so focus rings appear for the keyboard and not for the mouse.
+Next to its `tokens.json`, each tenant has a `tenant.json`: its name, its locale, its currency, its feature flags, and optionally another tenant whose tokens it borrows. The build validates it like the tokens, and `tenants/tenant.schema.json` gives editors the same rules. The folder name is the tenant's id and the first segment of its URLs, so adding a brand is adding a folder: no code, no registry.
 
-Accessibility is built in rather than left to each page. `Field` gives its control an id, ties the label to it, and describes it with the hint and the error, which is announced as it appears and marks the control invalid. `Button` defaults to `type="button"` and becomes busy and disabled while loading. `Dialog` uses the native `<dialog>`, so the browser traps focus, makes the page inert, closes on Escape and returns focus; the component only keeps `open` in sync and turns every way of closing into `onClose`. `Toast` keeps its live region in the page from the start, so screen readers announce what appears, pauses while the pointer or focus is inside, and never times out an error. `Table` scrolls inside a focusable region named after its caption instead of widening the page.
+Harbour, Onyx and Meadow run the same pages. Onyx shows that the contract holds for a dark brand too: its tokens flip the surfaces and text, gold on near-black passes every contrast pair, and no component knows it is dark. Meadow's rounder shapes are radius tokens and a pill-shaped button token. What differs in behaviour comes from `features` in tenant.json: with `payments` off, Meadow's invoices show bank-transfer details, and the payment dialog, loaded lazily, is never downloaded.
 
-**One product, three brands.** Harbour, Onyx and Meadow run the same pages. Onyx shows that the contract holds for a dark brand too: its tokens flip the surfaces and text, gold on near-black passes every contrast pair, and no component knows it is dark. Meadow's rounder shapes are radius tokens and a pill-shaped button token. What differs in behaviour comes from `features` in tenant.json: with `payments` off, Meadow's invoices show bank-transfer details, and the payment dialog, loaded lazily, is never downloaded.
+### Every page is prerendered in its own brand
 
-**A mocked API, in the browser.** There is no backend. [MSW](https://mswjs.io/) answers `/livery/api/<tenant>/…` from a service worker in the browser, and the same handlers answer Node's fetch in the unit tests. The worker starts the first time a page calls the API, so the landing page and the theme preview never load it. Any email signs in; the customer and their invoices are made up from the address, so the same address always gets the same account, and one starting with `new` gets none. Paid invoices are remembered for the browser session.
+The app uses React Router in framework mode with `ssr: false`: there is no server, but at build time every page of every tenant, in every language, is rendered to HTML. The `/:tenant/:lang` route's loader loads the tenant through a dynamic import, one module per tenant, and the document inlines that tenant's compiled tokens as a `<style>` on `:root`. So the first frame is already in the tenant's colours, with or without JavaScript, and no page carries another tenant's tokens. Client-side navigation fetches the next page's prerendered data file instead of running the loader.
 
-**Payment is a state machine.** The payment dialog has five states: closed, editing, submitting, confirming (the bank asks the customer to approve) and succeeded. Card data, button clicks and API answers are events, and a reducer decides what each state does with each event; anything a state does not expect is ignored. So a second click cannot pay twice, the dialog cannot be closed while the bank is working, and a late answer cannot reopen a closed dialog. A declined card returns to the form with the reason.
+GitHub Pages has no routing, so the build output is shaped for it. Pages would redirect `/livery/onyx/en/invoices` to a trailing slash if the file were `onyx/en/invoices/index.html`, so each page is written as `onyx/en/invoices.html`. For any other address Pages returns `404.html` with status 404; that file is the client-rendered shell React Router builds for URLs it did not prerender, and it shows a not-found page in the default look. The whole site lives under `/livery/`, in development too, so local URLs match the live ones.
 
-**Sessions and prerendering agree.** A prerendered page cannot know who is signed in, so the session is read through `useSyncExternalStore` with a server snapshot of "not known yet": the HTML and the first client render match, and the stored session appears right after hydration. Pages that need it show a short "checking" state, then either the content or a redirect to the login page, which returns to the page afterwards.
+### Three languages
 
-**Three languages, prerendered.** Every tenant page lives at `/<tenant>/<language>/…`, in English, German and Spanish, and all of them are prerendered: 3 brands, 3 languages and 5 pages make 45 HTML files, each with `<html lang>` and `hreflang` links to the other two. A brand's bare address, such as `/meadow`, redirects at once to its default language, which is the language of the locale in its tenant.json (German for Meadow). Messages are [ICU MessageFormat](https://formatjs.github.io/docs/intl-messageformat/): "4 invoices, 2 to pay" and "1 Rechnung, 1 offen" come from the same plural rules the browser uses, and tags such as `<link>` inside a message become React elements. Each language's catalogue is loaded by the tenant route at build time, so a page carries only its own language. Numbers and dates follow the tenant's locale in its own language and the language's usual one otherwise: Harbour's pounds read £43.50 in English and 43,50 GBP in Spanish. The mock API answers with error codes, and the page names them in its language. Unit tests hold every catalogue to the English keys and to the same arguments.
+Every tenant page exists in English, German and Spanish: 3 brands, 3 languages and 5 pages make 45 HTML files, each with `<html lang>`, a canonical link and `hreflang` links to the others. A brand's bare address, such as `/meadow`, redirects at once to its default language, the language of the locale in its tenant.json (German for Meadow). Messages are ICU MessageFormat: "4 invoices, 2 to pay" and "4 Rechnungen, 2 offen" come from the same plural rules the browser uses, and tags such as `<link>` inside a message become React elements. Each language's catalogue is loaded by the tenant route at build time, so a page carries only its own language. Numbers and dates follow the tenant's locale in its own language and the language's usual one otherwise: Harbour's pounds read £43.50 in English and 43,50 GBP in Spanish. Unit tests hold every catalogue to the English keys and arguments.
 
-**Studio makes brands with the build's own checks.** [Livery Studio](https://stiutin.github.io/livery/studio) starts from one colour. It converts it to OKLCH and builds tonal scales from it: every step keeps the hue, takes its lightness from a fixed ladder and a share of the chroma, and is fitted into sRGB by lowering chroma only, so the steps look evenly spaced whatever the hue. It then maps the scales onto the contract for a light or a dark brand, picks white or near-black text for the brand colour, moves the hover colour away from that text, and chooses the first steps that give links 4.5:1 and focus rings 3:1. Font, corner radius, pill buttons and density are tokens too; density is a number every component multiplies its padding by. The result goes through `compileTenant` and `parseTenantConfig`, the functions the build runs, so the contrast table in Studio is the build's own verdict, and a brand with a problem cannot be exported. The preview renders the product's real pages in the new tokens, scoped to the preview's element and on a router of its own. Every setting lives in the URL hash, so the address is always a share link. Export gives the two files of a tenant folder; a test puts brands from all round the colour wheel into a copy of `tenants/` and builds them, and an end-to-end test does the same with files downloaded from the page.
+### One component library
 
-The shell owns routing, the tenant context and the API client. [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md) describe the MVP this started from and will fold into this section.
+`@livery/ui` has one set of components for every brand: Button, Field with Input, Select, Checkbox, Card, Dialog, Toast and Table. They read only semantic and component custom properties, so a brand changes them without a line of code, and Stylelint rejects any literal colour in their CSS or the app's. States are CSS: `:hover`, `:focus-visible`, `:disabled` and ARIA attributes, so focus rings appear for the keyboard and not for the mouse.
 
-The whole site lives under `/livery/`, in development too, so local URLs match the live ones.
+Accessibility is built in rather than left to each page. `Field` gives its control an id, ties the label to it, and describes it with the hint and the error, which is announced as it appears and marks the control invalid. `Button` defaults to `type="button"` and becomes busy and disabled while loading. `Dialog` uses the native `<dialog>`, so the browser traps focus, makes the page inert, closes on Escape and returns focus; the component keeps `open` in sync and turns every way of closing into `onClose`. `Toast` keeps its live region in the page from the start, so screen readers announce what appears, pauses while the pointer or focus is inside, and never times out an error. `Table` scrolls inside a focusable region named after its caption instead of widening the page.
+
+### The product and its mocked API
+
+There is no backend. [MSW](https://mswjs.io/) answers `/livery/api/<tenant>/…` from a service worker in the browser, and the same handlers answer Node's fetch in the unit tests. The worker starts the first time a page calls the API, so pages that never call it never load it. Any email signs in; the customer and their invoices are made up from the address, so the same address always gets the same account, and one starting with `new` gets none. Paid invoices are remembered for the browser session. The API answers with error codes, and the page names them in its language.
+
+The payment dialog is a finite state machine with five states: closed, editing, submitting, confirming (the bank asks the customer to approve) and succeeded. Card data, button clicks and API answers are events, and a reducer decides what each state does with each event; anything a state does not expect is ignored. So a second click cannot pay twice, the dialog cannot be closed while the bank is working, and a late answer cannot reopen a closed dialog.
+
+A prerendered page cannot know who is signed in, so the session is read through `useSyncExternalStore` with a server snapshot of "not known yet": the HTML and the first client render match, and the stored session appears right after hydration. The account and the invoices need a session; opened without one, they send the visitor to the login page with the page to return to (`?next=invoices`), and the login page says why.
+
+### Studio makes brands with the build's own checks
+
+[Livery Studio](https://stiutin.github.io/livery/studio) starts from one colour. It converts it to OKLCH and builds tonal scales from it: every step keeps the hue, takes its lightness from a fixed ladder and a share of the chroma, and is fitted into sRGB by lowering chroma only, so the steps look evenly spaced whatever the hue. It maps the scales onto the contract for a light or a dark brand, picks white or near-black text for the brand colour, moves the hover colour away from that text, and chooses the first steps that give links 4.5:1 and focus rings 3:1. Font, corner radius, pill buttons and density are tokens too; density is a number every component multiplies its padding by.
+
+The result goes through `compileTenant` and `parseTenantConfig`, the functions the build runs, so the contrast table in Studio is the build's own verdict, and a brand with a problem cannot be exported. The preview renders the product's real pages in the new tokens, scoped to the preview's element and on a router of its own. Every setting lives in the URL hash, so the address is always a share link. Export gives the two files of a tenant folder, and they build with no code changes: a unit test does it for brands all round the colour wheel, and an end-to-end test with files downloaded from the page.
 
 ## Testing
 
@@ -75,19 +98,21 @@ The whole site lives under `/livery/`, in development too, so local URLs match t
 | Visual        | Playwright              | screenshots of every tenant × page (home, login, theme preview, account, invoices), the landing page and Studio, on both viewports, with a fixed clock                                                                                                                                                                                                                                        |
 | Performance   | Lighthouse CI           | five pages, three runs each: accessibility, best practices and SEO at 100, layout shift under 0.02, performance at 0.9 or more                                                                                                                                                                                                                                                                |
 
-The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
+The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths. Axe fails on any WCAG 2.2 A or AA violation, on every tenant and in every state the tests reach.
 
-The visual baselines live in `e2e/visual/__screenshots__` and are only valid in the Playwright container, since fonts and anti-aliasing differ from machine to machine. CI compares against them in that container; to make new ones, run CI by hand (Actions → CI → Run workflow) with “Update the visual baselines” ticked: the Visual regression job then takes the screenshots from the same build in the same container and commits them to that branch. Axe found real problems when it was added: links in running text told apart by colour alone, a header badge and menu items on a tint that lowered the contrast in Meadow, and a header whose German labels overflowed on a phone. They are fixed, and the test keeps them fixed.
+The visual baselines live in `e2e/visual/__screenshots__` and are only valid in the Playwright container, since fonts and anti-aliasing differ from machine to machine. CI compares against them in that container. To make new ones, run CI by hand (Actions → CI → Run workflow) with "Update the visual baselines" ticked: the _Visual regression_ job takes the screenshots from the same build in the same container and commits them to that branch.
 
 ## Project structure
 
 ```
-apps/shell/                 the app: React Router routes, the document, tenant and session context, the API client, the MSW mock API, the payment machine
-packages/tokens/            the token compiler, the contract, the base token file, OKLCH palettes, Studio's generator, the Vite plugin and a CLI
-packages/ui/                the component library, styled only by tokens
-tenants/<id>/                one tenant each: tenant.json (settings) and tokens.json (its look)
-e2e/                        Playwright tests
-scripts/                    a server that behaves like GitHub Pages
+apps/shell/          the app: React Router routes, the document, tenant and session context, the API client,
+                     the MSW mock API, the payment machine, the translations and Studio
+packages/tokens/     the token compiler, the contract, the base token file, OKLCH palettes, Studio's generator,
+                     the Vite plugin and a CLI
+packages/ui/         the component library, styled only by tokens
+tenants/<id>/        one tenant each: tenant.json (settings) and tokens.json (its look)
+e2e/                 Playwright tests, axe included; e2e/visual/ holds the screenshot tests and their baselines
+scripts/             a server that behaves like GitHub Pages, and the README screenshots
 ```
 
 ## Running locally
@@ -113,6 +138,7 @@ npm run tokens         # every tenant's contrast report (`-- --all` lists every 
 npm run e2e            # build, then Playwright with axe (run `npm run e2e:install` once)
 npm run e2e:visual     # screenshot comparison; only reliable in the Playwright container
 npm run lighthouse     # Lighthouse CI on the production build (needs `npm run build`)
+npm run screenshots    # the README screenshots and the social preview, from a fresh build
 npm run lint           # ESLint and Stylelint
 npm run typecheck      # TypeScript for the app, both packages and the end-to-end suite
 npm run check          # formatting, lint, types and unit tests, as in CI
@@ -124,16 +150,8 @@ Pushing to `master` runs formatting, lint, type checks, unit tests, the end-to-e
 
 ## Roadmap
 
-- [x] The portfolio's tooling, strict TypeScript, Playwright, CI and deployment
-- [x] Design tokens as data in the W3C format, compiled at build time, with WCAG AA contrast as a build gate
-- [x] One accessible component library for every tenant, instead of a fork per theme
-- [x] Tenants as validated configuration, tenant-based routes, and every page prerendered in its own brand
-- [x] The product: sign-in, account, invoices and payment, with a mocked API and per-tenant features
-- [x] English, German and Spanish
-- [x] Studio: create a brand in the browser, check its contrast live, export or share it
-- [x] End-to-end, accessibility and visual regression tests for every tenant
-- [ ] Dark mode inside every brand
-- [ ] Importing tokens from Figma (Tokens Studio format)
+- [ ] Dark mode inside every brand, as a second set of semantic colours in the same token file
+- [ ] Importing tokens from Figma, in the Tokens Studio format
 - [ ] Publishing the `ui` and `tokens` packages to npm
 
 ## License

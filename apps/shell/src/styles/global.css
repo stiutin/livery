@@ -98,60 +98,6 @@ li {
   padding: 10px 14px;
 }
 
-/* ── Success card ── */
-.success-card {
-  background: var(--color-surface-default);
-  border: 1px solid var(--color-success-border);
-  border-radius: var(--radius-large);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 32px 28px;
-}
-
-.success-card__icon {
-  align-items: center;
-  background: var(--color-success-surface);
-  border-radius: 50%;
-  color: var(--color-success-text);
-  display: flex;
-  font-size: 1.4rem;
-  font-weight: 700;
-  height: 48px;
-  justify-content: center;
-  margin-bottom: 4px;
-  width: 48px;
-}
-
-.success-card__title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 4px;
-}
-
-.success-card__detail {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-}
-
-.success-card__label {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.success-card__action {
-  margin-top: 8px;
-}
-
-.success-card__value {
-  font-size: 0.95rem;
-}
-
 /* ── Links ── */
 
 /* Links in running text are underlined: colour alone does not tell them apart (WCAG 1.4.1). */
