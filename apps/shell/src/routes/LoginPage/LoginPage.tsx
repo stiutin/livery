@@ -9,7 +9,7 @@ import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
 import {errorKey} from '../../i18n/errors';
 import type {MessageKey} from '../../i18n/messages';
 import {useI18n} from '../../i18n/useI18n';
-import {WRONG_PASSWORD} from '../../mocks/handlers';
+import {WRONG_PASSWORD} from '../../mocks/constants';
 import {useSession} from '../../session/useSession';
 import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';

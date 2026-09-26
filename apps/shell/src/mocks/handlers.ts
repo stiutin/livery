@@ -3,17 +3,10 @@ import {tenants} from 'virtual:livery/tenants';
 
 import type {ApiErrorCode, Card, PaymentOutcome, Session} from '../api/types';
 import {isCardNumber, isCvc, isExpiry, normaliseCardNumber} from '../payment/card';
+import {TEST_CARDS, WRONG_PASSWORD} from './constants';
 import {customer, markPaid, startPayment, takePayment} from './db';
 
-/** Test cards, as payment providers publish them: one always declines, one always asks the bank to confirm. */
-export const TEST_CARDS = {
-  success: '4242 4242 4242 4242',
-  declined: '4000 0000 0000 0002',
-  confirm: '4000 0027 6000 3184',
-} as const;
-
-/** The one password the mock API refuses, to show a failed sign-in. */
-export const WRONG_PASSWORD = 'wrong-password';
+export {TEST_CARDS, WRONG_PASSWORD} from './constants';
 
 const API = '*/api/:tenant';
 const LATENCY = 400;

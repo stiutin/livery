@@ -2,7 +2,7 @@ import {screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe, expect, test} from 'vitest';
 
-import {TEST_CARDS} from '../../mocks/handlers';
+import {TEST_CARDS} from '../../mocks/constants';
 import {renderPage, sessionFor} from '../../test/render';
 import InvoicesPage from './InvoicesPage';
 

@@ -2,7 +2,7 @@ import {screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe, expect, test} from 'vitest';
 
-import {WRONG_PASSWORD} from '../../mocks/handlers';
+import {WRONG_PASSWORD} from '../../mocks/constants';
 import {renderPage} from '../../test/render';
 import LoginPage from './LoginPage';
 
