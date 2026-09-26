@@ -1,6 +1,8 @@
 export type {ButtonProps} from './Button/Button';
 export {Button} from './Button/Button';
 export {Card} from './Card/Card';
+export type {CheckboxProps} from './Checkbox/Checkbox';
+export {Checkbox} from './Checkbox/Checkbox';
 export type {DialogProps} from './Dialog/Dialog';
 export {Dialog} from './Dialog/Dialog';
 export type {FieldControlProps, FieldProps} from './Field/Field';
