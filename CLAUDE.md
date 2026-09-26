@@ -6,7 +6,7 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 **Livery** is a white-label React app: one product (a customer account with sign-in, invoices and card payments) shown in three brands, Harbour (light, the default), Onyx (dark) and Meadow (bright, card payments off). The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 6 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; the product on a mocked API; English, German and Spanish on every tenant page; and Studio, which makes brands that build with no code changes. Section 11 lists what later phases address.
+The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 7 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; the product on a mocked API; English, German and Spanish; Studio; and the full test matrix: axe on every tenant, visual regression and Lighthouse in CI. Section 11 lists what later phases address.
 
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
@@ -35,8 +35,11 @@ npm run build          # tsc -b + react-router build: prerenders every page into
 npm run serve          # serve apps/shell/build/client like GitHub Pages on :4173/livery/ (scripts/serve.mjs)
 npm test               # Vitest: packages/tokens, packages/ui, then the shell
 npm run tokens         # contrast summary per tenant and every problem; `-- --all` lists every pair
-npm run e2e            # build, then Playwright on desktop + Pixel 7; `npm run e2e:install` once
+npm run e2e            # build, then Playwright on desktop + Pixel 7, axe included; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
+npm run e2e:visual     # screenshots vs e2e/visual/__screenshots__ (playwright.visual.config.ts); container only
+npm run e2e:visual:update  # new baselines; run it through the Screenshots workflow, not locally
+npm run lighthouse     # lhci autorun on the existing build (lighthouserc.json)
 npm run lint           # ESLint + Stylelint (src CSS only)
 npm run typecheck      # the shell, the e2e suite and both packages
 npm run check          # format:check + lint + typecheck + test  ← before finishing
@@ -142,6 +145,9 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Components** (`packages/ui/src/**/*.test.tsx`, Vitest, jsdom): what a user or a screen reader gets. Query by role, name and description; assert attributes (`aria-busy`, `aria-invalid`, `data-variant`), not class names. Toast timing uses fake timers.
 - **Shell** (Vitest, jsdom, globals, `@testing-library/jest-dom`): `renderPage()` from `src/test/render.tsx` wraps a page in a `MemoryRouter`, `TenantProvider`, `SessionProvider` and `ToastProvider`, without the framework plugin; `sessionFor(email)` signs in beforehand. The mock API runs through `msw/node`, so pages are tested against the same handlers as the browser; `onUnhandledRequest: 'error'` catches any call outside them, and every test starts with an empty mock database and session. The payment machine and card checks are tested as plain functions.
 - **End-to-end** (`e2e/`): against the production build served by `scripts/serve.mjs`, on `desktop` and `mobile` (Pixel 7). `trackErrors(page)` collects page and console errors, ignoring the deliberate 404 of deep links served through `404.html`. `brandToken(page, name)` reads a custom property's computed value on `<html>`; poll it (`expect.poll`) after moving to another tenant. The prerendering scenarios read raw HTML with `request.get()` and run a page with JavaScript disabled. The notification region is always a `status`, so scope page statuses to `getByRole('main')` and toasts to the `Notifications` region. Keyboard-only scenarios skip the mobile project.
+- **Accessibility** (`e2e/accessibility.spec.ts`): `@axe-core/playwright` with the WCAG 2.2 A/AA tags on every tenant's pages and states (login errors, signed in, payment dialog), German and Spanish pages, landing, Studio and 404, on both viewports. A violation fails with its rule id and elements. Fix the page, never exclude a rule.
+- **Visual** (`e2e/visual/`, `playwright.visual.config.ts`): `toHaveScreenshot` per tenant × page, full page, clock fixed at 2026-09-26 so mock dates hold, animations disabled. The main config ignores this folder. Baselines come only from the Screenshots workflow in `mcr.microsoft.com/playwright:v<version>-noble`; a local run compares against images from another renderer and will differ.
+- **Lighthouse** (`lighthouserc.json`): five URLs, three runs each, served by `scripts/serve.mjs`. Locally, `CHROME_PATH` points it at a browser.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
 ## 8. Recipes
@@ -149,7 +155,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Add a tenant:** a folder in `tenants/` with a `tenant.json` (name, locale, currency) and either a `tokens.json` (copy one, change the palette and semantic colours, run `npm run tokens` until every pair passes) or `"tokens": "<other tenant>"`. No code changes: the router, the prerender list and the landing page pick it up.
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
 - **Add a feature flag:** add it to `FEATURES` in `packages/tokens/src/tenant.ts`, to `features` in `tenants/tenant.schema.json` and `LoadedTenant`, set it in every tenant.json, and read it with `useTenant().features`.
-- **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test and an end-to-end scenario.
+- **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test, an end-to-end scenario, an axe check and a screenshot (then run the Screenshots workflow).
 - **Add a message:** add the key to `messages/en.json`, `de.json` and `es.json` with the same ICU arguments (the catalogue tests fail otherwise), then use `t('key', {…})` or `rich()` for tags.
 - **Add a language:** an entry in `LANGUAGES`, a catalogue in `messages/`, and the test's catalogue map; the router, the prerender list and the switcher pick it up.
 - **Change what Studio generates:** edit `brandFromSettings` in `packages/tokens/src/studio.ts`; the sweep test in `studio.test.ts` rebuilds brands all round the colour wheel and fails if any exported one does not build.
@@ -158,22 +164,25 @@ scripts/serve.mjs          GitHub-Pages-like static server
 
 ## 9. CI/CD
 
-The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build, and _Deploy to GitHub Pages_, which publishes the same artifact from `master`. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` is set once at the top of the workflow from the repository name. One-time setup is listed in the workflow header.
+The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. `.github/workflows/screenshots.yml` (manual) builds, updates the visual baselines in the same container and commits them; a commit made by GitHub Actions does not start CI, so re-run it afterwards. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
 
 ## 10. Troubleshooting
 
-| Symptom                                                          | Cause / fix                                                                                              |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Build fails with "Design tokens have N problem(s)"               | each line names the tenant, the file and the token; `npm run tokens -- --all` shows every pair           |
-| "hex … does not match the components"                            | a colour was edited in one place only; update `components` and `hex` together                            |
-| A tenant looks like the default                                  | its tenant.json borrows another look (`tokens`), or the page was not prerendered: check `prerenderPaths` |
-| "Invalid route exports found when prerendering with `ssr:false`" | a route that is not prerendered has a `loader`; make it a `clientLoader` or prerender its paths          |
-| A new page is a 404 on the live site                             | it is in `routes.ts` but not in `TENANT_PAGES`, so it was never prerendered                              |
-| `npm run serve` refuses to start                                 | no build, or a build for another base path: `npm run build` with the same `BASE_PATH`                    |
-| E2E hits the wrong app                                           | another project's server is on port 4173 (`reuseExistingServer`); stop it                                |
-| Playwright: "Executable doesn't exist"                           | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                                                |
-| The live site shows a blank page after renaming the repository   | the build's base path is the old name; re-run the workflow, which reads the new name                     |
-| Deploy rejected: "branch not allowed to deploy to github-pages"  | Settings → Environments → github-pages → allow `master`                                                  |
+| Symptom                                                          | Cause / fix                                                                                                      |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Build fails with "Design tokens have N problem(s)"               | each line names the tenant, the file and the token; `npm run tokens -- --all` shows every pair                   |
+| "hex … does not match the components"                            | a colour was edited in one place only; update `components` and `hex` together                                    |
+| A tenant looks like the default                                  | its tenant.json borrows another look (`tokens`), or the page was not prerendered: check `prerenderPaths`         |
+| "Invalid route exports found when prerendering with `ssr:false`" | a route that is not prerendered has a `loader`; make it a `clientLoader` or prerender its paths                  |
+| A new page is a 404 on the live site                             | it is in `routes.ts` but not in `TENANT_PAGES`, so it was never prerendered                                      |
+| `npm run serve` refuses to start                                 | no build, or a build for another base path: `npm run build` with the same `BASE_PATH`                            |
+| E2E hits the wrong app                                           | another project's server is on port 4173 (`reuseExistingServer`); stop it                                        |
+| Playwright: "Executable doesn't exist"                           | `npm run e2e:install`, or `CHROMIUM_PATH=/path/to/chrome`                                                        |
+| The live site shows a blank page after renaming the repository   | the build's base path is the old name; re-run the workflow, which reads the new name                             |
+| _Visual regression_ fails with "A snapshot doesn't exist"        | the baselines were never made for this branch: run the Screenshots workflow, then re-run CI                      |
+| _Visual regression_ fails after a Playwright upgrade             | the container tag no longer matches the version; update both, then remake the baselines                          |
+| _Lighthouse_ performance dips below 0.9 on one run               | check the uploaded report; variance on shared runners is a few points, a real regression shows in all three runs |
+| Deploy rejected: "branch not allowed to deploy to github-pages"  | Settings → Environments → github-pages → allow `master`                                                          |
 
 ## 11. Known limitations
 
@@ -184,7 +193,7 @@ These are what later phases address, or trade-offs worth knowing:
 - `StudioPreview` relies on React Router's UNSAFE_ contexts; a React Router upgrade may need it adjusted, and the Studio end-to-end tests will say so.
 - The mock API forgets pending bank confirmations on reload, and paid invoices only last for the browser session.
 - The output layout assumes GitHub Pages serves `x.html` for `/x` even when a folder `x/` exists; `scripts/serve.mjs` does the same. Check the live site after the first deploy.
-- A tenant page loads about 132 kB of JavaScript (gzipped); Studio adds its own chunk of about 18 kB. Paint does not wait for either, since the HTML is complete; Lighthouse comes with the testing phase.
+- A tenant page loads about 132 kB of JavaScript (gzipped) and Studio adds about 18 kB; Lighthouse still scores 0.93 to 0.97 on performance, since the HTML is complete and paint does not wait for scripts.
 - Only the token types Livery uses are supported; gradients, borders, typography and transitions report "unsupported $type".
 
 ## House style (identical in every repository of this portfolio)
@@ -223,7 +232,7 @@ These six repositories are written as one body of work: [cosmos-stories](https:/
 
 **Tests.** Every project has Playwright tests against its production build, on a desktop and a Pixel 7 viewport, served the way GitHub Pages serves it. `CHROMIUM_PATH` points Playwright and the screenshot scripts at a specific browser binary (useful in sandboxes). Projects with logic worth isolating also have Vitest unit tests.
 
-**CI.** `.github/workflows/ci.yml` with the same job names: _Lint and types_, _Unit tests_, _Build_, _End-to-end (Playwright)_, _Lighthouse_ (Angular projects), _Deploy to GitHub Pages_. It runs on `ubuntu-24.04`, reads the Node version from `.nvmrc`, and uses the same action versions everywhere. Deploys go from `master` only, and only after the gates pass. The header of the workflow lists the one-time repository settings; the `github-pages` environment must allow `master`.
+**CI.** `.github/workflows/ci.yml` with the same job names: _Lint and types_, _Unit tests_, _Build_, _End-to-end (Playwright)_, _Lighthouse_ (Angular projects and livery), _Visual regression_ (livery, in the Playwright container), _Deploy to GitHub Pages_. It runs on `ubuntu-24.04`, reads the Node version from `.nvmrc`, and uses the same action versions everywhere. Deploys go from `master` only, and only after the gates pass. The header of the workflow lists the one-time repository settings; the `github-pages` environment must allow `master`.
 
 **Documentation.** The README follows one outline: title, one line, a paragraph, **Open the live demo**, screenshots, then _Features_, _Tech stack_, _How it works_, _Testing_ (a table), _Project structure_, _Running locally_, _Deployment_, _Roadmap_, _License_, _Author_. The voice is calm and specific, in British English, with no badges and no marketing adjectives. Explain _why_ in prose. There is no CHANGELOG and no ADR folder: decisions live in _How it works_ and in this file. `.github/social-preview.png` (1280×640) is the repository's social preview, and every project uses the same design.
 

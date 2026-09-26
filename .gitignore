@@ -37,4 +37,6 @@ node_modules/
 **/dist/
 **/build/
 .react-router/
+lighthouse-report/
+.lighthouseci/
 *.tsbuildinfo

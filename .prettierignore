@@ -16,3 +16,5 @@ package-lock.json
 build
 .react-router
 mockServiceWorker.js
+lighthouse-report
+.lighthouseci

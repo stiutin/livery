@@ -9,11 +9,14 @@ import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
 import {errorKey} from '../../i18n/errors';
 import type {MessageKey} from '../../i18n/messages';
 import {useI18n} from '../../i18n/useI18n';
-import {WRONG_PASSWORD} from '../../mocks/handlers';
+import {WRONG_PASSWORD} from '../../mocks/constants';
 import {useSession} from '../../session/useSession';
 import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';
 import {isValidEmail} from '../../utils/formatters.utils';
+
+/** The pages that send signed-out visitors here, and where a sign-in may return to. */
+const RETURN_PAGES = ['account', 'invoices'] as const;
 
 interface LoginFormValues {
   email: string;
@@ -34,9 +37,9 @@ export default function LoginPage() {
     formState: {errors, isSubmitting},
   } = useForm<LoginFormValues>({mode: 'onTouched'});
 
-  // Only ever return to a page of this tenant.
-  const next = searchParams.get('next');
-  const destination = next?.startsWith(`/${brandId}/`) ? next : page('account');
+  // `next` names one of the tenant's pages; anything else, including a path to another site, is ignored.
+  const next = RETURN_PAGES.find((candidate) => candidate === searchParams.get('next'));
+  const destination = page(next ?? 'account');
 
   async function onSubmit(data: LoginFormValues) {
     setApiError(null);
@@ -51,6 +54,12 @@ export default function LoginPage() {
   return (
     <div className="page">
       <h1 className="h1">{t('login.title', {name})}</h1>
+
+      {next && (
+        <p className="notice" role="status">
+          {t('login.required', {page: next})}
+        </p>
+      )}
 
       <p className="notice">
         {rich('login.demo', {min: PASSWORD_MIN_LENGTH, wrong: WRONG_PASSWORD, code: (chunks) => <code>{chunks}</code>})}

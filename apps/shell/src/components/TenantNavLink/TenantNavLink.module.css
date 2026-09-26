@@ -7,20 +7,15 @@
   font-weight: 500;
   padding: 8px 12px;
   text-decoration: none;
-  transition:
-    background var(--duration-fast) ease,
-    color var(--duration-fast) ease;
 }
 
+/* Hover and the current page are marked with a line, not a tint, so the text keeps the contract's contrast. */
 .shellNavLink:hover {
-  background: color-mix(in srgb, var(--header-text) 15%, transparent);
-  color: var(--header-text);
-  text-decoration: none;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--header-text) 50%, transparent);
 }
 
 .shellNavLink--active {
-  background: color-mix(in srgb, var(--header-text) 20%, transparent);
-  color: var(--header-text);
+  box-shadow: inset 0 -2px 0 var(--header-text);
   font-weight: 600;
 }
 

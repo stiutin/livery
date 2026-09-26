@@ -112,7 +112,10 @@ test('a new customer has no invoices', async ({page}) => {
 
 test('signed-out visitors are sent to the login page and back', async ({page}) => {
   await page.goto('./onyx/en/account');
-  await expect(page).toHaveURL(/\/onyx\/en\/login\?next=%2Fonyx%2Fen%2Faccount$/);
+  await expect(page).toHaveURL(/\/onyx\/en\/login\?next=account$/);
+  await expect(page.getByRole('status').filter({hasText: 'Sign in to open'})).toHaveText(
+    'Sign in to open your account.'
+  );
 
   await page.getByLabel('Email address').fill('ada@example.com');
   await page.getByLabel('Password').fill('secret-password');
@@ -135,4 +138,28 @@ test('a refused password is explained', async ({page}) => {
   await page.getByLabel('Password').fill('wrong-password');
   await page.getByRole('button', {name: 'Sign in'}).click();
   await expect(page.getByRole('alert')).toHaveText('The email or password is not right.');
+});
+
+test('the menu sends a signed-out visitor to sign in, in any language, and on to the page', async ({page}) => {
+  await page.goto('./meadow/en');
+  await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name: 'Invoices'}).click();
+  await expect(page).toHaveURL(/\/meadow\/en\/login\?next=invoices$/);
+
+  // Switching language keeps the page to return to.
+  await page.getByRole('navigation', {name: 'Language'}).getByRole('link', {name: 'Deutsch'}).click();
+  await expect(page).toHaveURL(/\/meadow\/de\/login\?next=invoices$/);
+  await expect(page.getByRole('status').filter({hasText: 'Melde dich an'})).toHaveText(
+    'Melde dich an, um deine Rechnungen zu öffnen.'
+  );
+
+  await page.getByLabel('E-Mail-Adresse').fill('ada@example.com');
+  await page.getByLabel('Passwort').fill('secret-password');
+  await page.getByRole('button', {name: 'Anmelden'}).click();
+  await expect(page).toHaveURL(/\/meadow\/de\/invoices$/);
+  await expect(page.getByRole('heading', {level: 1, name: 'Rechnungen'})).toBeVisible();
+
+  // Signed in, the menu opens the pages themselves.
+  await page.getByRole('navigation', {name: 'Hauptnavigation'}).getByRole('link', {name: 'Konto'}).click();
+  await expect(page).toHaveURL(/\/meadow\/de\/account$/);
+  await expect(page.getByRole('heading', {level: 1, name: 'Dein Konto'})).toBeVisible();
 });

@@ -6,7 +6,7 @@ import {api} from '../../api/client';
 import type {Card, Invoice, PaymentOutcome, Session} from '../../api/types';
 import {errorKey} from '../../i18n/errors';
 import {useI18n} from '../../i18n/useI18n';
-import {TEST_CARDS} from '../../mocks/handlers';
+import {TEST_CARDS} from '../../mocks/constants';
 import {isCardNumber, isCvc, isExpiry} from '../../payment/card';
 import {initialPayment, paymentReducer} from '../../payment/machine';
 import {useTenant} from '../../tenant/useTenant';

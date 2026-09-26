@@ -20,7 +20,13 @@ const PAGES: {id: PreviewPage; label: string}[] = [
 ];
 
 export function meta() {
-  return [{title: 'Studio · Livery'}];
+  return [
+    {title: 'Studio · Livery'},
+    {
+      name: 'description',
+      content: 'Livery Studio: make a brand from one colour, check its contrast live and export it as a tenant.',
+    },
+  ];
 }
 
 function download(fileName: string, json: unknown): void {

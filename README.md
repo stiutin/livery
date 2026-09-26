@@ -65,14 +65,19 @@ The whole site lives under `/livery/`, in development too, so local URLs match t
 
 ## Testing
 
-| Layer      | Tool                    | What it covers                                                                                                                                                                                                                                                                                                                                                               |
-| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit       | Vitest                  | the token compiler, tenant settings and Studio: parsing, aliases, colour maths and OKLCH, the contract, contrast, CSS, tenant.json, share links, exported brands built from disk, a real Vite build per tenant chunk and one that must fail - 47 tests                                                                                                                       |
-| Unit       | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 17 tests                                                                                                                                                                                                                                                                           |
-| Unit       | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 43 tests                                                                                                                                                                                      |
-| End-to-end | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, sign-in redirects, pages without JavaScript, 404s, components, and Studio from settings to a downloaded brand that builds - 36 scenarios |
+| Layer         | Tool                    | What it covers                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit          | Vitest                  | the token compiler, tenant settings and Studio: parsing, aliases, colour maths and OKLCH, the contract, contrast, CSS, tenant.json, share links, exported brands built from disk, a real Vite build per tenant chunk and one that must fail - 47 tests                                                                                                                                        |
+| Unit          | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 17 tests                                                                                                                                                                                                                                                                                            |
+| Unit          | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 44 tests                                                                                                                                                                                                       |
+| End-to-end    | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the sign-in redirect from the menu, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, pages without JavaScript, 404s, components, and Studio from settings to a downloaded brand that builds - 37 scenarios |
+| Accessibility | Playwright, axe         | WCAG 2.2 A and AA on every tenant: public pages, the login form with errors, the account, the invoices, the payment dialog, German and Spanish pages, the landing page, Studio and the 404 page, on both viewports                                                                                                                                                                            |
+| Visual        | Playwright              | screenshots of every tenant × page (home, login, theme preview, account, invoices), the landing page and Studio, on both viewports, with a fixed clock                                                                                                                                                                                                                                        |
+| Performance   | Lighthouse CI           | five pages, three runs each: accessibility, best practices and SEO at 100, layout shift under 0.02, performance at 0.9 or more                                                                                                                                                                                                                                                                |
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
+
+The visual baselines live in `e2e/visual/__screenshots__` and are only valid in the Playwright container, since fonts and anti-aliasing differ from machine to machine. CI compares against them in that container; the _Screenshots_ workflow, started by hand from the Actions tab, makes new ones there and commits them to the branch it ran on. Axe found real problems when it was added: links in running text told apart by colour alone, a header badge and menu items on a tint that lowered the contrast in Meadow, and a header whose German labels overflowed on a phone. They are fixed, and the test keeps them fixed.
 
 ## Project structure
 
@@ -105,7 +110,9 @@ npm run build          # prerender every page into apps/shell/build/client, for 
 npm run serve          # serve that build like GitHub Pages, on http://localhost:4173/livery/
 npm test               # unit tests
 npm run tokens         # every tenant's contrast report (`-- --all` lists every pair)
-npm run e2e            # build, then Playwright (run `npm run e2e:install` once)
+npm run e2e            # build, then Playwright with axe (run `npm run e2e:install` once)
+npm run e2e:visual     # screenshot comparison; only reliable in the Playwright container
+npm run lighthouse     # Lighthouse CI on the production build (needs `npm run build`)
 npm run lint           # ESLint and Stylelint
 npm run typecheck      # TypeScript for the app, both packages and the end-to-end suite
 npm run check          # formatting, lint, types and unit tests, as in CI
@@ -113,7 +120,7 @@ npm run check          # formatting, lint, types and unit tests, as in CI
 
 ## Deployment
 
-Pushing to `master` runs formatting, lint, type checks, unit tests and the end-to-end suite. Only when they pass does the deploy job publish the same build the tests ran against to GitHub Pages. The build's base path comes from the repository name, so a fork deploys under its own name.
+Pushing to `master` runs formatting, lint, type checks, unit tests, the end-to-end and accessibility suite, visual regression and Lighthouse. Only when they all pass does the deploy job publish the same build the tests ran against to GitHub Pages. The build's base path and origin come from the repository name and owner, so a fork deploys under its own name.
 
 ## Roadmap
 
@@ -124,7 +131,7 @@ Pushing to `master` runs formatting, lint, type checks, unit tests and the end-t
 - [x] The product: sign-in, account, invoices and payment, with a mocked API and per-tenant features
 - [x] English, German and Spanish
 - [x] Studio: create a brand in the browser, check its contrast live, export or share it
-- [ ] End-to-end, accessibility and visual regression tests for every tenant
+- [x] End-to-end, accessibility and visual regression tests for every tenant
 - [ ] Dark mode inside every brand
 - [ ] Importing tokens from Figma (Tokens Studio format)
 - [ ] Publishing the `ui` and `tokens` packages to npm

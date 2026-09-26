@@ -13,14 +13,16 @@
   z-index: 10;
 }
 
+/* The header grows instead of overflowing: longer labels (German) wrap onto a second row on a phone. */
 .shellHeaderInner {
   align-items: center;
   display: flex;
-  gap: 16px;
-  height: 52px;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   margin: 0 auto;
   max-width: 1000px;
-  padding: 0 20px;
+  min-height: 52px;
+  padding: 6px 20px;
 }
 
 .shellLogo {
@@ -55,8 +57,9 @@
 }
 
 .shellTenantBadge {
-  background: color-mix(in srgb, var(--header-text) 20%, transparent);
-  border: 1px solid color-mix(in srgb, var(--header-text) 25%, transparent);
+  /* Text straight on the header colour, the pair the token contract checks; a tint would lower the contrast. */
+  background: transparent;
+  border: 1px solid var(--header-text);
   border-radius: 32px;
   color: var(--header-text);
   cursor: pointer;
@@ -70,6 +73,7 @@
 .shellTenantMeta {
   color: var(--header-text);
   font-size: 0.75rem;
+  text-decoration: none;
 }
 
 .shellMain {

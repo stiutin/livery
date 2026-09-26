@@ -19,6 +19,11 @@ import {isLanguage, LANGUAGE_CODES} from './i18n/languages';
 import type {TenantRouteData} from './routes/tenant';
 
 /** The default tenant styles the pages outside any tenant: the landing page and the 404 page. */
+/** An absolute URL for an app path such as /harbour/en/login. */
+function absolute(path: string): string {
+  return `${import.meta.env.VITE_SITE_ORIGIN}${import.meta.env.BASE_URL}${path.slice(1)}`;
+}
+
 export async function loader() {
   const fallback = await loadTenant(defaultTenant);
   if (!fallback) {
@@ -57,14 +62,15 @@ export function Layout({children}: {children: ReactNode}) {
         <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
         <Meta />
         <Links />
-        {/* The same page in the other languages, for search engines and assistive tools. */}
+        {/* The page's absolute address, and the same page in every language, for search engines. */}
+        {page && <link rel="canonical" href={absolute(pathname)} />}
         {page &&
-          LANGUAGE_CODES.filter((language) => language !== page.language).map((language) => (
+          LANGUAGE_CODES.map((language) => (
             <link
               key={language}
               rel="alternate"
               hrefLang={language}
-              href={`${import.meta.env.BASE_URL}${pathname.slice(1).replace(/^([^/]+)\/[^/]+/, `$1/${language}`)}`}
+              href={absolute(pathname.replace(/^\/([^/]+)\/[^/]+/, `/$1/${language}`))}
             />
           ))}
         {/* Compiled at build time from the repository's token files, never from user input. */}
