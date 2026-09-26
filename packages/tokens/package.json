@@ -12,7 +12,8 @@
     "./vite": "./src/vite.ts",
     "./virtual": {
       "types": "./src/virtual.d.ts"
-    }
+    },
+    "./base.tokens.json": "./base.tokens.json"
   },
   "scripts": {
     "test": "vitest run",
