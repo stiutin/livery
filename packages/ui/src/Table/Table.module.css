@@ -18,14 +18,14 @@
 .caption {
   color: var(--color-text-muted);
   font-size: 0.8125rem;
-  padding: 10px 14px;
+  padding: calc(10px * var(--density)) calc(14px * var(--density));
   text-align: start;
 }
 
 .table th,
 .table td {
   border-top: 1px solid var(--table-border);
-  padding: 10px 14px;
+  padding: calc(10px * var(--density)) calc(14px * var(--density));
   vertical-align: middle;
 }
 

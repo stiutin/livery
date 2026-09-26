@@ -23,6 +23,9 @@ export type Feature = (typeof FEATURES)[number];
 const KNOWN_KEYS = new Set(['$schema', 'name', 'tokens', 'locale', 'currency', 'features']);
 export const TENANT_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** Ids the app uses for its own pages, so no tenant can take them. */
+export const RESERVED_TENANT_IDS = ['studio'] as const;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -82,6 +85,9 @@ export function parseTenantConfig(
 
   if (!TENANT_ID.test(id)) {
     report('(folder)', `"${id}" cannot be a tenant id: use lower-case letters, digits and single hyphens`);
+  }
+  if (RESERVED_TENANT_IDS.some((reserved) => reserved === id)) {
+    report('(folder)', `"${id}" is the address of one of Livery's own pages`);
   }
   if (!isRecord(json)) {
     report('(root)', 'a tenant file must contain a JSON object');

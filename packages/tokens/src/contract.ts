@@ -51,6 +51,7 @@ export const CONTRACT: readonly ContractToken[] = [
   token('semantic.shadow.raised', 'shadow', 'elements lifted off the surface'),
   token('semantic.shadow.overlay', 'shadow', 'dialogs and notifications above the page'),
   token('semantic.duration.fast', 'duration', 'hover and focus transitions'),
+  token('semantic.density', 'number', 'a factor on the padding of every component: below 1 is compact, above 1 roomy'),
 
   token('component.button.primary.background', 'color', 'primary button'),
   token('component.button.primary.background-hover', 'color', 'primary button under the pointer'),

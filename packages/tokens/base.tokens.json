@@ -116,6 +116,11 @@
         },
         "$description": "Behind a modal dialog. Translucent, so it is never a contrast background."
       }
+    },
+    "density": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Multiplies component padding. 1 is the design's own spacing."
     }
   },
   "component": {

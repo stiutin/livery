@@ -48,6 +48,25 @@ export function toRgba(color: ColorValue): Rgba {
   return {r: r ?? 0, g: g ?? 0, b: b ?? 0, a: clamp01(color.alpha)};
 }
 
+/** sRGB to OKLCH (lightness 0–1, chroma, hue in degrees), following Björn Ottosson's OKLab definition. */
+export function toOklch({r, g, b}: Rgba): [number, number, number] {
+  const [lr, lg, lb] = [r, g, b].map(srgbToLinear) as [number, number, number];
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  const lightness = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bAxis = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  const chroma = Math.hypot(a, bAxis);
+  const hue = chroma < 1e-4 ? 0 : ((Math.atan2(bAxis, a) * 180) / Math.PI + 360) % 360;
+  return [lightness, chroma, hue];
+}
+
+/** Whether an OKLCH colour exists in sRGB without clipping. */
+export function inSrgbGamut(components: readonly [number, number, number]): boolean {
+  return oklchToLinearSrgb(components).every((channel) => channel >= -1e-4 && channel <= 1 + 1e-4);
+}
+
 /** Paints a translucent colour over an opaque one, the way browsers blend: in gamma-encoded sRGB. */
 export function composite(foreground: Rgba, background: Rgba): Rgba {
   const mix = (top: number, bottom: number): number => top * foreground.a + bottom * (1 - foreground.a);
