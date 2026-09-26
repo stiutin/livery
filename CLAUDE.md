@@ -6,7 +6,7 @@ Working notes for AI assistants (and humans) on this repository. Read this first
 
 **Livery** is a white-label React app: one product (a customer account with sign-in, invoices and card payments) shown in three brands, Harbour (light, the default), Onyx (dark) and Meadow (bright, card payments off). The goal is that a brand is data, not code: design tokens compiled at build time, one component library, tenants as validated configuration.
 
-The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 4 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; and the product on a mocked API. Section 11 lists what later phases address.
+The project is being rebuilt in phases (README, _Roadmap_). **Phases 0 to 5 are done:** tooling, tests and CI; design tokens with a closed contract and WCAG AA as a build gate; one component library; tenants as folders with their own URLs and prerendered pages; the product on a mocked API; and English, German and Spanish on every tenant page. Section 11 lists what later phases address.
 
 - Live: `https://stiutin.github.io/livery/` (GitHub Pages, base path `/livery/`)
 - It is a **portfolio project**. Code quality, tests, accessibility and docs matter as much as features.
@@ -70,14 +70,18 @@ apps/shell/
   livery.config.ts         base path, repository root, tenant options: shared by Vite, Vitest and React Router
   react-router.config.ts   ssr: false, basename, the prerender list, buildEnd (Pages-shaped output)
   vite.config.ts           reactRouter() + liveryTokens(); vitest.config.ts uses liveryTokens() only
-  src/routes.ts            / (landing), /:tenant (layout, id "tenant") with its pages, * (404)
-  src/tenantPaths.ts       TENANT_PAGES and prerenderPaths(): keep in step with routes.ts
+  src/routes.ts            / (landing), /:tenant (redirect to its default language), /:tenant/:lang (layout, id
+                           "tenant") with its pages, * (404)
+  src/tenantPaths.ts       TENANT_PAGES and prerenderPaths(tenants, languages): keep in step with routes.ts
   src/root.tsx             the document: loader (default tenant), Layout (<html lang data-tenant>, inline token
                            <style>), ToastProvider, ErrorBoundary (404 and errors)
   src/routes/              landing, tenant (loader → TenantProvider → AppLayout), not-found (clientLoader),
                            one folder per page with its test
   src/components/          AppLayout (header + nav), TenantNavLink, BackToHome
-  src/tenant/              TenantContext: {brandId, name, locale, currency} from the tenant loader
+  src/tenant/              TenantContext {brandId, name, locale (for formatting), currency, features}; usePaths()
+                           (page(p) → /<tenant>/<lang>/p, inLanguage(l) → this page in l)
+  src/i18n/                languages (LANGUAGES, defaultLanguage, formattingLocale), messages/{en,de,es}.json
+                           (ICU), messages.ts (MessageKey, loadMessages), I18nProvider + useI18n (t, rich), errors
   src/api/                 types (money in minor units), client (fetch under BASE_URL/api/<tenant>/, starts the
                            mocks), useApi (keyed request state with reload)
   src/mocks/               handlers (MSW: session, account, invoices, payments, confirm; TEST_CARDS, WRONG_PASSWORD),
@@ -100,6 +104,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Output for GitHub Pages.** `buildEnd` in `react-router.config.ts` renames React Router's top-level `index.html` (the client-rendered fallback for URLs that were not prerendered) to `404.html`, moves the prerendered files out of the `livery/` basename folder, and turns every nested `x/index.html` into `x.html`, because Pages redirects a directory URL to its trailing slash.
 - **404s.** An unknown page of a known tenant matches the `*` route, whose `clientLoader` throws a 404. An unknown tenant arrives in `404.html` with no loader data for `/:tenant`; the root `ErrorBoundary` treats any error under an unknown first segment as not found. Pages itself answers both with status 404.
 - **Tenant context.** The tenant route puts `{brandId, name, locale, currency}` in `TenantContext`; pages read it with `useTenant()` and build links as `/${brandId}/…`. Pages and components never look at the URL for the tenant.
+- **Localisation.** `/:tenant/:lang`'s loader validates the language and returns the tenant, the language, the formatting locale (`formattingLocale`: the tenant's locale in its own language, the language's usual one otherwise) and that language's catalogue, loaded through `import.meta.glob` so each language is its own chunk. `I18nProvider` compiles each message once with `IntlMessageFormat`; `t(key, values)` returns text, `rich(key, values)` renders tags such as `<b>` and `<link>` with the functions passed for them. `/:tenant` redirects to `defaultLanguage(tenant.locale)`; the build shortens React Router's redirect page to an immediate refresh. Root `Layout` sets `<html lang>` and writes `hreflang` links to the page in the other languages. Paths drop a trailing slash before links are built, because prerendering requests pages with one and the browser has none.
 - **Component library.** `@livery/ui` components use CSS Modules and read only semantic and component custom properties. States are CSS (`:hover:not(:disabled)`, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`), variants are `data-variant` attributes. `Field` takes a render function and hands the control its `id`, `aria-describedby` (hint, then error) and `aria-invalid`; its error has `role="alert"`. `Dialog` wraps the native `<dialog>` (`showModal`, `close`, the `close` event) and treats a click on the element itself as a click on the backdrop. `ToastProvider` owns one always-present region (`role="status"`, polite); `useToast()` lives in its own file so Fast Refresh keeps working. `Table` is generic over its row type.
 - **Mock API.** `api/client.ts` calls `${BASE_URL}api/<tenant>/…` with the session token; before the first call it awaits `startMocks()`, which imports MSW and the handlers and registers `mockServiceWorker.js` with the base path as its scope. In tests (`MODE === 'test'`) it does nothing, because `src/test/setup.ts` runs the same handlers with `msw/node`. Tokens are base64 JSON `{tenant, email}` and only valid for their tenant.
 - **Payments.** `PaymentDialog` (lazy, only rendered when `features.payments` is on) keeps its state in `paymentReducer`: `closed → editing → submitting → (succeeded | confirming → submitting | editing with an error)`. Events a state does not expect return the same state. Card checks in `payment/card.ts` run in the form and in the mock API alike.
@@ -122,6 +127,7 @@ scripts/serve.mjs          GitHub-Pages-like static server
 12. **Money is in minor units** in the API and the mock data; only `formatMoney` divides, in the tenant's locale and currency.
 13. **Mock and UI share rules.** Card checks, test cards and the refused password live in one place and are imported by the form, the mock API and the tests.
 14. **Features are read from the tenant, never from the tenant id.** No `if (brandId === …)` anywhere.
+15. **No UI text in code.** Every string a person reads on a tenant page is a message key in all three catalogues; links go through `usePaths()` so they keep the language.
 
 ## 7. Testing guide
 
@@ -137,6 +143,8 @@ scripts/serve.mjs          GitHub-Pages-like static server
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
 - **Add a feature flag:** add it to `FEATURES` in `packages/tokens/src/tenant.ts`, to `features` in `tenants/tenant.schema.json` and `LoadedTenant`, set it in every tenant.json, and read it with `useTenant().features`.
 - **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test and an end-to-end scenario.
+- **Add a message:** add the key to `messages/en.json`, `de.json` and `es.json` with the same ICU arguments (the catalogue tests fail otherwise), then use `t('key', {…})` or `rich()` for tags.
+- **Add a language:** an entry in `LANGUAGES`, a catalogue in `messages/`, and the test's catalogue map; the router, the prerender list and the switcher pick it up.
 - **Add a component:** a folder in `packages/ui/src/` with the component, a CSS Module that uses only custom properties, and tests; export it from `index.ts`. If it needs a value no token covers, add a component token first (next recipe).
 - **Add a token to the contract:** add it to `CONTRACT` (and to `CONTRAST_PAIRS` if something is drawn on it), give it a value in `base.tokens.json` or in every tenant, then use its custom property in CSS.
 
@@ -163,10 +171,10 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 
 These are what later phases address, or trade-offs worth knowing:
 
-- Locale and currency are fixed per tenant, and the text is English only; localisation is Phase 5.
+- The landing page and the 404 page are outside any tenant and only in English. Mock data such as customer names and IBANs is not translated.
 - The mock API forgets pending bank confirmations on reload, and paid invoices only last for the browser session.
 - The output layout assumes GitHub Pages serves `x.html` for `/x` even when a folder `x/` exists; `scripts/serve.mjs` does the same. Check the live site after the first deploy.
-- Framework mode brings its own runtime: a tenant page loads about 128 kB of JavaScript (gzipped). Paint does not wait for it, since the HTML is complete; Lighthouse comes with the testing phase.
+- Framework mode and intl-messageformat bring their own runtime: a tenant page loads about 132 kB of JavaScript (gzipped). Paint does not wait for it, since the HTML is complete; Lighthouse comes with the testing phase.
 - Only the token types Livery uses are supported; gradients, borders, typography and transitions report "unsupported $type".
 
 ## House style (identical in every repository of this portfolio)

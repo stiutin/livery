@@ -9,6 +9,7 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 ## Features
 
 - Three brands, each at its own address (`/harbour/…`, `/onyx/…`, `/meadow/…`), described by a settings file and a token file
+- Every tenant page in English, German and Spanish, with each brand opening in its own default language
 - Each brand is a design token file in the W3C format: colours, type, radii and timing, nothing in code
 - The build fails if a brand's text or controls fall below WCAG AA contrast, and says which colour to change
 - Every page of every tenant is prerendered in that tenant's colours, so it is branded before any script runs, and readable without JavaScript
@@ -17,7 +18,7 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 - Card payments as a finite state machine, including a declined card and a confirmation by the bank (3-D Secure)
 - Feature flags per tenant: Meadow has card payments off and shows bank-transfer details instead
 - A mocked API that runs in the browser (MSW), so the live demo works without a server
-- Money formatted through `Intl` in each tenant's own locale and currency
+- Plurals, dates and money written the way each language writes them: ICU MessageFormat and `Intl`
 - One accessible component library for every brand: buttons, fields, selects, cards, a dialog, notifications and tables
 - A theme preview that shows every component in the active brand, with its compiled colours
 - Deployed to GitHub Pages from CI after every green push
@@ -39,7 +40,7 @@ Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-lib
 
 **Every page is prerendered in its own brand.** The app uses React Router in framework mode with `ssr: false`: there is no server, but at build time every page of every tenant is rendered to HTML. The `/:tenant` route's loader loads the tenant through a dynamic import, one module per tenant, and the document inlines that tenant's compiled tokens as a `<style>` on `:root`. So the first frame is already in the tenant's colours, with or without JavaScript, and no page carries another tenant's tokens. Client-side navigation fetches the next page's prerendered data file instead of running the loader.
 
-**Built for GitHub Pages.** Pages has no routing, so the build output is shaped for it. Pages would redirect `/livery/onyx/invoices` to a trailing slash if the file were `onyx/invoices/index.html`, so each page is written as `onyx/invoices.html`. For any other address Pages returns `404.html` with status 404; that file is the client-rendered shell React Router builds for URLs it did not prerender, and it shows a not-found page in the default look. An unknown page of a known tenant reaches the same page through a catch-all route.
+**Built for GitHub Pages.** Pages has no routing, so the build output is shaped for it. Pages would redirect `/livery/onyx/en/invoices` to a trailing slash if the file were `onyx/en/invoices/index.html`, so each page is written as `onyx/en/invoices.html`. For any other address Pages returns `404.html` with status 404; that file is the client-rendered shell React Router builds for URLs it did not prerender, and it shows a not-found page in the default look. An unknown page of a known tenant reaches the same page through a catch-all route.
 
 **One component library, no forks.** The MVP gave every brand its own copy of the button and the card, with hover and focus kept in JavaScript state. `@livery/ui` replaces them with one set of components for all brands: Button, Field with Input, Select, Card, Dialog, Toast and Table. They read only semantic and component custom properties, so a brand changes them without a line of code, and Stylelint rejects any literal colour in their CSS or the app's. States are CSS: `:hover`, `:focus-visible`, `:disabled` and ARIA attributes, so focus rings appear for the keyboard and not for the mouse.
 
@@ -53,18 +54,20 @@ Accessibility is built in rather than left to each page. `Field` gives its contr
 
 **Sessions and prerendering agree.** A prerendered page cannot know who is signed in, so the session is read through `useSyncExternalStore` with a server snapshot of "not known yet": the HTML and the first client render match, and the stored session appears right after hydration. Pages that need it show a short "checking" state, then either the content or a redirect to the login page, which returns to the page afterwards.
 
+**Three languages, prerendered.** Every tenant page lives at `/<tenant>/<language>/…`, in English, German and Spanish, and all of them are prerendered: 3 brands, 3 languages and 5 pages make 45 HTML files, each with `<html lang>` and `hreflang` links to the other two. A brand's bare address, such as `/meadow`, redirects at once to its default language, which is the language of the locale in its tenant.json (German for Meadow). Messages are [ICU MessageFormat](https://formatjs.github.io/docs/intl-messageformat/): "4 invoices, 2 to pay" and "1 Rechnung, 1 offen" come from the same plural rules the browser uses, and tags such as `<link>` inside a message become React elements. Each language's catalogue is loaded by the tenant route at build time, so a page carries only its own language. Numbers and dates follow the tenant's locale in its own language and the language's usual one otherwise: Harbour's pounds read £43.50 in English and 43,50 GBP in Spanish. The mock API answers with error codes, and the page names them in its language. Unit tests hold every catalogue to the English keys and to the same arguments.
+
 The shell owns routing, the tenant context and the API client. [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md) describe the MVP this started from and will fold into this section.
 
 The whole site lives under `/livery/`, in development too, so local URLs match the live ones.
 
 ## Testing
 
-| Layer      | Tool                    | What it covers                                                                                                                                                                                                                                   |
-| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Unit       | Vitest                  | the token compiler and tenant settings: parsing, aliases, colour maths, the contract, contrast, CSS, tenant.json, a real Vite build per tenant chunk and one that must fail - 36 tests                                                           |
-| Unit       | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 16 tests                                                                                                                                               |
-| Unit       | Vitest, Testing Library | the payment machine, card checks, the mock API, and the home, sign-in and invoice pages against it, payment flows included - 30 tests                                                                                                            |
-| End-to-end | Playwright              | the production build on desktop and a Pixel 7: the account and invoices on all three brands, card payments, declines, bank confirmation, flags, sign-in redirects, prerendered tokens, pages without JavaScript, 404s, components - 26 scenarios |
+| Layer      | Tool                    | What it covers                                                                                                                                                                                                                                                                                                   |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit       | Vitest                  | the token compiler and tenant settings: parsing, aliases, colour maths, the contract, contrast, CSS, tenant.json, a real Vite build per tenant chunk and one that must fail - 36 tests                                                                                                                           |
+| Unit       | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 16 tests                                                                                                                                                                                                               |
+| Unit       | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 43 tests                                                                                                                          |
+| End-to-end | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, sign-in redirects, pages without JavaScript, 404s, components - 31 scenarios |
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths.
 
@@ -90,7 +93,7 @@ npm ci
 npm start
 ```
 
-Open http://localhost:5173/livery/ and pick a brand. The API is mocked: any email and a password of six characters or more signs in, the password `wrong-password` is refused, and an email starting with `new` has no invoices. To pay, use `4242 4242 4242 4242` (goes through), `4000 0000 0000 0002` (declined) or `4000 0027 6000 3184` (the bank asks you to confirm), with any future expiry and any three digits.
+Open http://localhost:5173/livery/ and pick a brand; the language links are in its header. The API is mocked: any email and a password of six characters or more signs in, the password `wrong-password` is refused, and an email starting with `new` has no invoices. To pay, use `4242 4242 4242 4242` (goes through), `4000 0000 0000 0002` (declined) or `4000 0027 6000 3184` (the bank asks you to confirm), with any future expiry and any three digits.
 
 Other scripts:
 
@@ -116,7 +119,7 @@ Pushing to `master` runs formatting, lint, type checks, unit tests and the end-t
 - [x] One accessible component library for every tenant, instead of a fork per theme
 - [x] Tenants as validated configuration, tenant-based routes, and every page prerendered in its own brand
 - [x] The product: sign-in, account, invoices and payment, with a mocked API and per-tenant features
-- [ ] English, German and Spanish
+- [x] English, German and Spanish
 - [ ] Studio: create a brand in the browser, check its contrast live, export or share it
 - [ ] End-to-end, accessibility and visual regression tests for every tenant
 - [ ] Dark mode inside every brand
