@@ -2,12 +2,13 @@
 export const TENANT_PAGES = ['', 'login', 'account', 'invoices', 'theme/preview'] as const;
 
 /**
- * Every URL to prerender: the landing page, each tenant's root (a redirect to its default language), and each
+ * Every URL to prerender: the landing page, Studio, each tenant's root (a redirect to its default language), and each
  * page of each tenant in each language.
  */
 export function prerenderPaths(tenantIds: readonly string[], languages: readonly string[]): string[] {
   return [
     '/',
+    '/studio',
     ...tenantIds.flatMap((id) => [
       `/${id}`,
       ...languages.flatMap((language) =>

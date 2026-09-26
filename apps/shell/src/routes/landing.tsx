@@ -23,6 +23,13 @@ export default function Landing() {
           ))}
         </ul>
       </Card>
+      <Card className={styles.card}>
+        <h2 className="h3">Make your own</h2>
+        <p>
+          <Link to="/studio">Open Livery Studio</Link> to build a brand from a colour, check it live and export it as a
+          tenant.
+        </p>
+      </Card>
     </main>
   );
 }
