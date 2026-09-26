@@ -20,18 +20,3 @@ export const TENANT_OPTIONS = {
   locales: SUPPORTED_LOCALES,
   currencies: SUPPORTED_CURRENCIES,
 } as const;
-
-export const SWATCHES = [
-  {name: 'Primary', var: '--brand-primary'},
-  {name: 'Primary variant', var: '--brand-primary-variant'},
-  {name: 'Accent', var: '--brand-accent'},
-  {name: 'Accent 2', var: '--brand-accent-2'},
-  {name: 'Gradient', var: '--brand-gradient'},
-  {name: 'Card background', var: '--card-bg'},
-  {name: 'Card border', var: '--card-border'},
-  {name: 'Text', var: '--text'},
-  {name: 'Muted text', var: '--muted'},
-  {name: 'Success', var: '--success'},
-  {name: 'Info', var: '--info'},
-  {name: 'Danger', var: '--danger'},
-];
