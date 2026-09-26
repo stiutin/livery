@@ -1,7 +1,7 @@
 import {Button, Field, Input} from '@livery/ui';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
-import {useLocation, useNavigate} from 'react-router';
+import {useNavigate} from 'react-router';
 
 import BackToHome from '../../components/BackToHome/BackToHome';
 import {PASSWORD_MIN_LENGTH} from '../../constants/common.const';
@@ -13,7 +13,6 @@ import {isValidEmail} from '../../utils/formatters.utils';
 export default function LoginPage() {
   const {brandId} = useTenant();
   const navigate = useNavigate();
-  const {search} = useLocation();
   const [apiError, setApiError] = useState<string | null>(null);
   const {
     register,
@@ -30,7 +29,7 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       });
-      await navigate(`/account/billing${search}`);
+      await navigate(`/${brandId}/account/billing`);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Login unsuccessful.');
     }

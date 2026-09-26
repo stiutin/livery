@@ -2,10 +2,11 @@
 // Apps reference them with `/// <reference types="@livery/tokens/virtual" />`.
 
 declare module 'virtual:livery/tenants' {
-  import type {TenantManifest} from '@livery/tokens';
+  import type {LoadedTenant, TenantSummary} from '@livery/tokens';
 
-  const manifest: TenantManifest;
-  export default manifest;
+  /** The tenant that styles pages outside any tenant. */
+  export const defaultTenant: string;
+  export const tenants: readonly TenantSummary[];
+  /** One tenant's chunk, or undefined for an id that is not a tenant. */
+  export function loadTenant(id: string): Promise<LoadedTenant | undefined>;
 }
-
-declare module 'virtual:livery/tenants.css';

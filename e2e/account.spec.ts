@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 test('login validates the form, then signs in and opens billing', async ({page}) => {
-  await page.goto('./auth/login?brand=tenant-alpha');
+  await page.goto('./tenant-alpha/auth/login');
 
   await page.getByRole('button', {name: 'Login'}).click();
   await expect(page.getByRole('alert').first()).toBeVisible();
@@ -11,11 +11,11 @@ test('login validates the form, then signs in and opens billing', async ({page})
   await page.getByRole('button', {name: 'Login'}).click();
 
   await expect(page.getByRole('heading', {level: 1, name: 'Billing'})).toBeVisible();
-  await expect(page).toHaveURL(/\/account\/billing\?.*brand=tenant-alpha/);
+  await expect(page).toHaveURL(/\/tenant-alpha\/account\/billing$/);
 });
 
 test('billing creates an invoice', async ({page}) => {
-  await page.goto('./account/billing?brand=tenant-alpha&locale=en-GB&currency=GBP');
+  await page.goto('./tenant-alpha/account/billing');
 
   await page.getByLabel('Billing amount (GBP)').fill('49.99');
   await page.getByRole('button', {name: 'Create invoice'}).click();
@@ -27,10 +27,19 @@ test('billing creates an invoice', async ({page}) => {
 });
 
 test('billing shows the empty state for a tenant without invoices', async ({page}) => {
-  await page.goto('./account/billing?brand=tenant-empty');
+  await page.goto('./tenant-empty/account/billing');
 
   await page.getByLabel(/Billing amount/).fill('10');
   await page.getByRole('button', {name: 'Create invoice'}).click();
 
   await expect(page.getByRole('main').getByRole('status')).toHaveText('No invoice generated for this tenant');
+});
+
+test("billing formats money in the tenant's locale and currency", async ({page}) => {
+  await page.goto('./tenant-beta/account/billing');
+
+  await page.getByLabel('Billing amount (EUR)').fill('49.99');
+  await page.getByRole('button', {name: 'Create invoice'}).click();
+
+  await expect(page.getByRole('main').getByRole('status')).toContainText('49,99\u00a0€');
 });

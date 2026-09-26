@@ -12,7 +12,7 @@ const root = resolve(import.meta.dirname, '..', '..', '..');
 const all = process.argv.includes('--all');
 const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'tenant-default'});
 
-for (const tenant of result.tenants) {
+for (const tenant of result.tokenSets) {
   const failing = tenant.contrast.filter((pair) => !pair.passes).length;
   const mark = tenant.problems.length === 0 ? '✔' : '✖';
   console.log(

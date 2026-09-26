@@ -35,4 +35,6 @@ Thumbs.db
 # Project
 node_modules/
 **/dist/
+**/build/
+.react-router/
 *.tsbuildinfo

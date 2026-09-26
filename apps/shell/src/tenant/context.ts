@@ -1,12 +1,12 @@
 import React from 'react';
 
-import type {Currency, Locale} from '../constants/common.const';
-import type {BrandId} from '../theme/themeRegistry';
-
+/** The tenant a page belongs to, from its tenant.json. */
 export interface TenantContextValue {
-  brandId: BrandId;
-  locale: Locale;
-  currency: Currency;
+  /** The tenant id, which is also the first segment of its URLs. */
+  brandId: string;
+  name: string;
+  locale: string;
+  currency: string;
 }
 
 export const TenantContext = React.createContext<TenantContextValue | null>(null);

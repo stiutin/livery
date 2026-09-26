@@ -13,7 +13,7 @@ import {createServer} from 'node:http';
 import {extname, join, normalize, sep} from 'node:path';
 import {createGzip} from 'node:zlib';
 
-const ROOT = join(import.meta.dirname, '..', 'apps', 'shell', 'dist');
+const ROOT = join(import.meta.dirname, '..', 'apps', 'shell', 'build', 'client');
 const BASE = process.env.BASE_PATH ?? '/livery/';
 const PORT = Number(process.env.PORT ?? 4173);
 
@@ -35,7 +35,7 @@ function assertBuild() {
 
   if (!existsSync(index)) {
     problems.push('there is no production build');
-  } else if (!readFileSync(index, 'utf8').includes(`src="${BASE}assets/`)) {
+  } else if (!readFileSync(index, 'utf8').includes(`"${BASE}assets/`)) {
     problems.push(`the build was not made for ${BASE} (build and serve with the same BASE_PATH)`);
   }
   if (existsSync(index) && !existsSync(join(ROOT, '404.html'))) {

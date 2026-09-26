@@ -1,13 +1,14 @@
-import {Link, useLocation} from 'react-router';
+import {Link} from 'react-router';
 
+import {useTenant} from '../../tenant/useTenant';
 import styles from './BackToHome.module.css';
 
 export default function BackToHome() {
-  const {search} = useLocation();
+  const {brandId, name} = useTenant();
 
   return (
     <div className={styles.backToHome}>
-      <Link to={{pathname: '/', search}}>Back to Home</Link>
+      <Link to={`/${brandId}`}>Back to {name}</Link>
     </div>
   );
 }

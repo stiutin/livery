@@ -1,87 +1,43 @@
-/* @vitest-environment jsdom */
-import {cleanup, render, screen} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import {MemoryRouter, Route, Routes, useLocation} from 'react-router';
-import {afterEach, describe, expect, test} from 'vitest';
+import {render, screen, within} from '@testing-library/react';
+import {MemoryRouter} from 'react-router';
+import {describe, expect, test} from 'vitest';
 
 import {TenantProvider} from '../../tenant/TenantContext';
 import HomePage from './HomePage';
 
-function HomePageWithLocation() {
-  const location = useLocation();
-
-  return (
-    <>
-      <HomePage />
-      <div data-testid="location">
-        {location.pathname}
-        {location.search}
-      </div>
-    </>
-  );
-}
-
-function renderHomePage(initialEntries = ['/']) {
+function renderHomePage() {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <TenantProvider>
-        <Routes>
-          <Route path="/" element={<HomePageWithLocation />} />
-          <Route path="/auth/login" element={<div>Login page</div>} />
-          <Route path="/account/billing" element={<div>Billing page</div>} />
-        </Routes>
+    <MemoryRouter initialEntries={['/tenant-alpha']}>
+      <TenantProvider value={{brandId: 'tenant-alpha', name: 'Alpha', locale: 'en-GB', currency: 'GBP'}}>
+        <HomePage />
       </TenantProvider>
     </MemoryRouter>
   );
 }
 
 describe('HomePage', () => {
-  afterEach(() => {
-    cleanup();
+  test("shows the tenant's settings", () => {
+    renderHomePage();
+    expect(screen.getByRole('heading', {level: 1, name: 'Welcome to Alpha'})).toBeInTheDocument();
+    expect(screen.getByText('/tenant-alpha')).toBeInTheDocument();
+    expect(screen.getByText('en-GB')).toBeInTheDocument();
+    expect(screen.getByText('GBP')).toBeInTheDocument();
   });
 
-  test('renders tenant settings and navigation buttons', () => {
+  test("links to the tenant's pages under its own path", () => {
     renderHomePage();
-
-    expect(screen.getByRole('heading', {name: /welcome/i})).toBeInTheDocument();
-    expect(screen.getByRole('combobox', {name: /tenant/i})).toHaveValue('tenant-default');
-    expect(screen.getByRole('combobox', {name: /locale/i})).toHaveValue('en-US');
-    expect(screen.getByRole('combobox', {name: /currency/i})).toHaveValue('USD');
-    expect(screen.getByRole('button', {name: /go to login/i})).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: /go to billing/i})).toBeInTheDocument();
+    const pages = within(screen.getByRole('heading', {name: 'Pages'}).closest('div') ?? document.body);
+    expect(pages.getByRole('link', {name: 'Login'})).toHaveAttribute('href', '/tenant-alpha/auth/login');
+    expect(pages.getByRole('link', {name: 'Billing'})).toHaveAttribute('href', '/tenant-alpha/account/billing');
+    expect(pages.getByRole('link', {name: 'Theme preview'})).toHaveAttribute('href', '/tenant-alpha/theme/preview');
   });
 
-  test('updates query string when tenant settings change', async () => {
+  test('links to every other tenant, not to itself', () => {
     renderHomePage();
-
-    await userEvent.selectOptions(screen.getByRole('combobox', {name: /tenant/i}), 'tenant-alpha');
-
-    expect(screen.getByTestId('location')).toHaveTextContent('/?brand=tenant-alpha');
-
-    await userEvent.selectOptions(screen.getByRole('combobox', {name: /locale/i}), 'fr-FR');
-
-    expect(screen.getByTestId('location')).toHaveTextContent('/?brand=tenant-alpha&locale=fr-FR');
-
-    await userEvent.selectOptions(screen.getByRole('combobox', {name: /currency/i}), 'EUR');
-
-    expect(screen.getByTestId('location')).toHaveTextContent('/?brand=tenant-alpha&locale=fr-FR&currency=EUR');
-  });
-
-  test('navigates to login page and preserves query string', async () => {
-    renderHomePage();
-
-    await userEvent.selectOptions(screen.getByRole('combobox', {name: /tenant/i}), 'tenant-alpha');
-    await userEvent.click(screen.getByRole('button', {name: /go to login/i}));
-
-    expect(screen.getByText(/Login page/i)).toBeInTheDocument();
-  });
-
-  test('navigates to billing page and preserves query string', async () => {
-    renderHomePage();
-
-    await userEvent.selectOptions(screen.getByRole('combobox', {name: /tenant/i}), 'tenant-alpha');
-    await userEvent.click(screen.getByRole('button', {name: /go to billing/i}));
-
-    expect(screen.getByText(/Billing page/i)).toBeInTheDocument();
+    const others = within(screen.getByRole('heading', {name: 'Other tenants'}).closest('div') ?? document.body);
+    const names = others.getAllByRole('link').map((link) => link.textContent);
+    expect(names).toContain('Beta');
+    expect(names).toContain('Livery');
+    expect(names).not.toContain('Alpha');
   });
 });

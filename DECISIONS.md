@@ -1,6 +1,6 @@
 # Decisions
 
-> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json`, and since Phase 2 every brand shares `@livery/ui` (see the README's _How it works_): the theme packages, their components and token objects, `useThemeComponents`, `ThemeLoader`'s inline properties, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
+> Written for the MVP this project started from. Since Phase 1, tokens are compiled from `tenants/<id>/tokens.json`, since Phase 2 every brand shares `@livery/ui`, and since Phase 3 tenants are folders with their own URLs and prerendered pages (see the README's _How it works_): the theme packages, their components and token objects, `useThemeComponents`, `ThemeBoot`, `ThemeLoader`, `themeRegistry`, the tenant query parameters, `tokens.css` and the ambient declarations described below no longer exist. What still holds will fold into the README and `CLAUDE.md`.
 
 ## 1. Vite + React + TypeScript (not Next.js)
 
