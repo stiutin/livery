@@ -1,6 +1,6 @@
 import type {CompiledToken} from '@livery/tokens';
 import {ToastProvider} from '@livery/ui';
-import {createContext, useContext, useMemo} from 'react';
+import {createContext, type ReactNode, useContext, useMemo} from 'react';
 import {
   createMemoryRouter,
   RouterProvider,
@@ -65,7 +65,7 @@ interface Props {
  * The product's real pages, the same components as every tenant, in the brand being made. The brand's tokens
  * are written as custom properties on the preview's own element, so nothing outside it changes.
  */
-export function StudioPreview({page, language, name, locale, currency, payments, tokens, tokenSet}: Props) {
+export function StudioPreview({page, language, name, locale, currency, payments, tokens, tokenSet}: Props): ReactNode {
   const css = `[data-studio-preview]{${tokens.map((token) => `${token.cssVariable}:${token.css};`).join('')}}`;
   const start = `/${PREVIEW_ID}/${language}${page === 'home' ? '' : `/${page}`}`;
   const gallery = useMemo(() => ({tokens, tokenSet}), [tokens, tokenSet]);

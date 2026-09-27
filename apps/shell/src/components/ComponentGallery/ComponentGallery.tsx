@@ -1,6 +1,6 @@
 import type {CompiledToken} from '@livery/tokens';
 import {Button, Card, Dialog, Field, Input, Select, Table, type TableColumn, useToast} from '@livery/ui';
-import {useState} from 'react';
+import {type ReactNode, useState} from 'react';
 
 import {useI18n} from '../../i18n/useI18n';
 import styles from './ComponentGallery.module.css';
@@ -11,7 +11,7 @@ type Token = CompiledToken;
  * Every component of @livery/ui, and a table of the semantic colours of a token set. The theme preview shows it
  * for the page's tenant; Studio shows it for the brand being made.
  */
-export function ComponentGallery({tokens, tokenSet}: {tokens: readonly Token[]; tokenSet: string}) {
+export function ComponentGallery({tokens, tokenSet}: {tokens: readonly Token[]; tokenSet: string}): ReactNode {
   const {t} = useI18n();
   const columns: readonly TableColumn<Token>[] = [
     {

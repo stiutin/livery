@@ -1,4 +1,4 @@
-import type {ComponentProps} from 'react';
+import type {ComponentProps, ReactNode} from 'react';
 
 import {cx} from '../cx';
 import styles from './Button.module.css';
@@ -24,7 +24,7 @@ export function Button({
   className,
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps): ReactNode {
   return (
     <button
       {...props}

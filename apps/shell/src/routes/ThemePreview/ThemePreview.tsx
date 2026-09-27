@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {useRouteLoaderData} from 'react-router';
 
 import {ComponentGallery} from '../../components/ComponentGallery/ComponentGallery';
@@ -5,7 +6,7 @@ import {useI18n} from '../../i18n/useI18n';
 import type {TenantRouteData} from '../tenant';
 
 /** Every component of @livery/ui in the page's brand, with the brand's compiled colours. */
-export default function ThemePreview() {
+export default function ThemePreview(): ReactNode {
   const tenant = useRouteLoaderData<TenantRouteData>('tenant')?.tenant;
   const {t} = useI18n();
   const tokenSet = tenant?.tokenSet ?? '';

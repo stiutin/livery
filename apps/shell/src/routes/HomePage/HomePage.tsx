@@ -1,4 +1,5 @@
 import {Card} from '@livery/ui';
+import type {ReactNode} from 'react';
 import {Link} from 'react-router';
 import {tenants} from 'virtual:livery/tenants';
 
@@ -8,7 +9,7 @@ import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';
 import styles from './HomePage.module.css';
 
-export default function HomePage() {
+export default function HomePage(): ReactNode {
   const {brandId, name, locale, currency, features} = useTenant();
   const {language, t, rich} = useI18n();
   const {page} = usePaths();

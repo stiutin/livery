@@ -1,5 +1,5 @@
 import {Button, Dialog, Field, Input} from '@livery/ui';
-import {useEffect, useReducer} from 'react';
+import {type ReactNode, useEffect, useReducer} from 'react';
 import {useForm} from 'react-hook-form';
 
 import {api} from '../../api/client';
@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** The card payment of one invoice, driven by the payment state machine. */
-export default function PaymentDialog({invoice, session, onClose}: Props) {
+export default function PaymentDialog({invoice, session, onClose}: Props): ReactNode {
   const {brandId, locale, currency} = useTenant();
   const {t, rich} = useI18n();
   const [state, dispatch] = useReducer(paymentReducer, initialPayment);

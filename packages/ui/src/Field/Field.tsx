@@ -24,7 +24,7 @@ export interface FieldProps {
  * A label, a control, an optional hint and an optional error, wired together: the label names the control,
  * the hint and the error describe it, and an error marks it invalid and is announced as it appears.
  */
-export function Field({label, hint, error, className, children}: FieldProps) {
+export function Field({label, hint, error, className, children}: FieldProps): ReactNode {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -51,6 +51,6 @@ export function Field({label, hint, error, className, children}: FieldProps) {
 }
 
 /** A text input styled by the `--input-*` tokens. Use it inside a Field. */
-export function Input({className, ...props}: ComponentProps<'input'>) {
+export function Input({className, ...props}: ComponentProps<'input'>): ReactNode {
   return <input {...props} className={cx(styles.control, className)} />;
 }

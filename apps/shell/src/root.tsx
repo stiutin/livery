@@ -1,11 +1,13 @@
 import './styles/global.css';
 
+import type {LoadedTenant} from '@livery/tokens';
 import type {ReactNode} from 'react';
 import {
   isRouteErrorResponse,
   Link,
   Links,
   Meta,
+  type MetaDescriptor,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -24,7 +26,7 @@ function absolute(path: string): string {
   return `${import.meta.env.VITE_SITE_ORIGIN}${import.meta.env.BASE_URL}${path.slice(1)}`;
 }
 
-export async function loader() {
+export async function loader(): Promise<{fallback: LoadedTenant}> {
   const fallback = await loadTenant(defaultTenant);
   if (!fallback) {
     throw new Error(`the default tenant "${defaultTenant}" is missing`);
@@ -32,7 +34,7 @@ export async function loader() {
   return {fallback};
 }
 
-export function meta() {
+export function meta(): MetaDescriptor[] {
   return [
     {title: 'Livery'},
     {
@@ -47,7 +49,7 @@ export function meta() {
  * The document for every page. The tenant's tokens are inlined as a <style> in the prerendered HTML, so the
  * first frame is already in the tenant's colours, with no script involved; `data-tenant` names the token set.
  */
-export function Layout({children}: {children: ReactNode}) {
+export function Layout({children}: {children: ReactNode}): ReactNode {
   const root = useRouteLoaderData<typeof loader>('root');
   const page = useRouteLoaderData<TenantRouteData>('tenant');
   const current = page?.tenant ?? root?.fallback;
@@ -85,7 +87,7 @@ export function Layout({children}: {children: ReactNode}) {
   );
 }
 
-export default function Root() {
+export default function Root(): ReactNode {
   return <Outlet />;
 }
 
@@ -94,7 +96,7 @@ export default function Root() {
  * known tenant throws a 404 from the catch-all route. An unknown tenant or language arrives in the client-rendered
  * 404.html with no loader data for its route, so the first two path segments decide.
  */
-export function ErrorBoundary() {
+export function ErrorBoundary(): ReactNode {
   const error = useRouteError();
   const [tenantId, language] = useLocation().pathname.split('/').filter(Boolean);
   const knownPath =

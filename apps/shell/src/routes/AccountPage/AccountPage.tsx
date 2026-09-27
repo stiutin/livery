@@ -1,4 +1,5 @@
 import {Card} from '@livery/ui';
+import type {ReactNode} from 'react';
 import {Link} from 'react-router';
 
 import {api} from '../../api/client';
@@ -12,7 +13,7 @@ import {useTenant} from '../../tenant/useTenant';
 import {formatDate, formatMoney} from '../../utils/formatters.utils';
 import styles from './AccountPage.module.css';
 
-export default function AccountPage() {
+export default function AccountPage(): ReactNode {
   const {t} = useI18n();
 
   return (

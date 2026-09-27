@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {Link} from 'react-router';
 
 import {useI18n} from '../../i18n/useI18n';
@@ -5,7 +6,7 @@ import {usePaths} from '../../tenant/usePaths';
 import {useTenant} from '../../tenant/useTenant';
 import styles from './BackToHome.module.css';
 
-export default function BackToHome() {
+export default function BackToHome(): ReactNode {
   const {name} = useTenant();
   const {t} = useI18n();
   const {page} = usePaths();

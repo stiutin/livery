@@ -29,7 +29,7 @@ export function ToastProvider({
   label?: string;
   /** The name of each toast's close button. */
   dismissLabel?: string;
-}) {
+}): ReactNode {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [paused, setPaused] = useState(false);
   const nextId = useRef(0);

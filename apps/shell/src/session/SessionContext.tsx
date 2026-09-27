@@ -47,7 +47,7 @@ function subscribe(onChange: () => void): () => void {
  * The signed-in customer of one tenant, kept for the browser session. Prerendered HTML cannot know it, so the
  * server snapshot is `undefined` ("not known yet"), and React switches to the stored session after hydration.
  */
-export function SessionProvider({tenant, children}: {tenant: string; children: ReactNode}) {
+export function SessionProvider({tenant, children}: {tenant: string; children: ReactNode}): ReactNode {
   const session = useSyncExternalStore(
     subscribe,
     () => readSession(tenant),

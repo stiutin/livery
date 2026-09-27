@@ -36,7 +36,7 @@ npm run tokens         # contrast summary per tenant and every problem; `-- --al
 npm run e2e            # build, then Playwright on desktop + Pixel 7, axe included; `npm run e2e:install` once
 npm run e2e:run        # the tests only, against the existing build
 npm run e2e:visual     # screenshots vs e2e/visual/__screenshots__ (playwright.visual.config.ts); container only
-npm run e2e:visual:update  # new baselines; CI runs it (see section 9), not your machine
+npm run e2e:visual:update  # new baselines; CI runs it (see section 10), not your machine
 npm run lighthouse     # lhci autorun on the existing build (lighthouserc.json)
 npm run screenshots    # .github/screenshots/*.png and .github/social-preview.png from a fresh build
 npm run lint           # ESLint + Stylelint (src CSS only)
@@ -139,7 +139,15 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 15. **No UI text in code.** Every string a person reads on a tenant page is a message key in all three catalogues; links go through `usePaths()` so they keep the language.
 16. **Studio checks with the build's code.** Studio never has its own rules: anything it accepts, `compileTenantsFromDisk` must accept. A new build check goes into the tokens package, and Studio shows it for free.
 
-## 7. Testing guide
+## 7. Conventions (project-specific)
+
+- **Components:** one folder per component, `Name/Name.tsx` with `Name.module.css` and `Name.test.tsx` beside it; a hook that shares a context lives in its own `useName.ts`, so Fast Refresh keeps working. React components return `ReactNode`.
+- **CSS:** CSS Modules with camelCase class names, and only custom properties for colours, radii, shadows, durations and density. Variants are `data-*` attributes, states are pseudo-classes and ARIA attributes.
+- **Token files:** the W3C format, kebab-case names; a colour carries both `components` and `hex`, which must agree.
+- **Messages:** keys are `area.name` (`invoices.caption`) in all three catalogues, ICU syntax, no text concatenated in code.
+- **Tests:** unit tests next to the code (`*.test.ts[x]`), end-to-end specs in `e2e/` by feature, and queries by role, name and label.
+
+## 8. Testing guide
 
 - **Tokens** (`packages/tokens/src/*.test.ts`, Vitest, node): colour maths against known values, parsing and resolution problems with their exact messages, the contract and contrast on the real default tenant plus a small edit file, `tokenSetToCss`, tenant.json validation, the repository's tenants compiling clean, and real `vite build`s of a throwaway app: one per tenant chunk, one that must fail when a tenant drops below AA.
 - **Components** (`packages/ui/src/**/*.test.tsx`, Vitest, jsdom): what a user or a screen reader gets. Query by role, name and description; assert attributes (`aria-busy`, `aria-invalid`, `data-variant`), not class names. Toast timing uses fake timers.
@@ -150,7 +158,7 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 - **Lighthouse** (`lighthouserc.json`): five URLs, three runs each, served by `scripts/serve.mjs`. Locally, `CHROME_PATH` points it at a browser.
 - `CHROMIUM_PATH=/path/to/chrome` points Playwright at a specific browser (sandboxes).
 
-## 8. Recipes
+## 9. Recipes
 
 - **Add a tenant:** a folder in `tenants/` with a `tenant.json` (name, locale, currency) and either a `tokens.json` (copy one, change the palette and semantic colours, run `npm run tokens` until every pair passes) or `"tokens": "<other tenant>"`. No code changes: the router, the prerender list and the landing page pick it up.
 - **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
@@ -162,11 +170,11 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 - **Add a component:** a folder in `packages/ui/src/` with the component, a CSS Module that uses only custom properties, and tests; export it from `index.ts`. If it needs a value no token covers, add a component token first (next recipe).
 - **Add a token to the contract:** add it to `CONTRACT` (and to `CONTRAST_PAIRS` if something is drawn on it), give it a value in `base.tokens.json` or in every tenant, then use its custom property in CSS.
 
-## 9. CI/CD
+## 10. CI/CD
 
 The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `apps/shell/build/client`), _End-to-end (Playwright)_ against that build (axe included), _Visual regression_ in the Playwright container, _Lighthouse_, and _Deploy to GitHub Pages_, which publishes the same artifact from `master` once all of them pass. A token problem fails _Unit tests_ and _Build_. `BASE_PATH` and `SITE_ORIGIN` are set once at the top of the workflow from the repository name and owner. Run by hand (Actions → CI → Run workflow) with “Update the visual baselines” ticked, the _Visual regression_ job updates the screenshots from the same build artifact and commits them to the branch instead of comparing; the commit starts no new run. A dispatched run deploys only on `master`. The container tag must equal the exact `@playwright/test` version in package.json. One-time setup is listed in the workflow header.
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Symptom                                                          | Cause / fix                                                                                                      |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -185,7 +193,7 @@ The jobs are _Lint and types_, _Unit tests_, _Build_ (prerenders and uploads `ap
 | _Lighthouse_ performance dips below 0.9 on one run               | check the uploaded report; variance on shared runners is a few points, a real regression shows in all three runs |
 | Deploy rejected: "branch not allowed to deploy to github-pages"  | Settings → Environments → github-pages → allow `master`                                                          |
 
-## 11. Known limitations
+## 12. Known limitations
 
 Trade-offs worth knowing, and what the roadmap in the README addresses:
 
@@ -207,7 +215,7 @@ These six repositories are written as one body of work: [cosmos-stories](https:/
 **Linting.** `eslint.config.mjs` with `defineConfig`, and two shared blocks:
 
 - `HOUSE_RULES`: sorted imports and exports (`simple-import-sort`), no unused imports, `curly: all`, arrow bodies only where needed, no `console` except `warn` and `error`;
-- `HOUSE_TS_RULES` in TypeScript projects: explicit `public`/`protected`/`private` on every class member (never on constructors), `T[]` rather than `Array<T>`, and unused variables allowed only as `_`.
+- `HOUSE_TS_RULES` in TypeScript projects: explicit `public`/`protected`/`private` on every class member (never on constructors), explicit return types on every exported function, no `any`, `T[]` rather than `Array<T>`, and unused variables allowed only with a leading `_`.
 
 `eslint-config-prettier` comes last. Each project adds its own strictness on top: `typescript-eslint` strict-type-checked in cosmos-stories, livery and pixi-neon-district (livery adds the React hooks and Fast Refresh rules), Larder's own rule set (magic numbers, naming, member ordering, RxJS) in larder. Styles are linted by Stylelint with properties in alphabetical order; `-webkit-backdrop-filter` and `-webkit-user-select` stay, for Safari.
 
@@ -234,6 +242,21 @@ These six repositories are written as one body of work: [cosmos-stories](https:/
 
 **CI.** `.github/workflows/ci.yml` with the same job names: _Lint and types_, _Unit tests_, _Build_, _End-to-end (Playwright)_, _Lighthouse_ (Angular projects and livery), _Visual regression_ (livery, in the Playwright container), _Deploy to GitHub Pages_. It runs on `ubuntu-24.04`, reads the Node version from `.nvmrc`, and uses the same action versions everywhere. Deploys go from `master` only, and only after the gates pass. The header of the workflow lists the one-time repository settings; the `github-pages` environment must allow `master`.
 
-**Documentation.** The README follows one outline: title, one line, a paragraph, **Open the live demo**, screenshots, then _Features_, _Tech stack_, _How it works_, _Testing_ (a table), _Project structure_, _Running locally_, _Deployment_, _Roadmap_, _License_, _Author_. The voice is calm and specific, in British English, with no badges and no marketing adjectives. Explain _why_ in prose. There is no CHANGELOG and no ADR folder: decisions live in _How it works_ and in this file. `.github/social-preview.png` (1280×640) is the repository's social preview, and every project uses the same design.
+**Documentation.** The README follows one outline: title, one line, a paragraph, **Open the live demo**, screenshots, then _Features_, _Tech stack_, _How it works_, _Testing_ (a table), _Project structure_, _Running locally_, _Deployment_, _Roadmap_, _Credits_ (only where the project uses other people's content), _License_, _Author_. The roadmap lists only what comes next; what is done is described in the sections above it. The voice is calm and specific, in British English, with no badges and no marketing adjectives. Explain _why_ in prose. `CLAUDE.md` follows one outline too: 1. What this is, 2. Toolchain, 3. Commands, 4. Repository map, 5. Architecture, 6. Invariants - do not break, 7. Conventions (project-specific), 8. Testing guide, 9. Recipes, 10. CI/CD, 11. Troubleshooting, 12. Known limitations, then this section, word for word. Both describe the project as it is, not how it got there. There is no CHANGELOG and no ADR folder: decisions live in _How it works_ and in this file. `.github/social-preview.png` (1280×640) is the repository's social preview, and every project uses the same design.
 
-**Scripts and tooling.** Node scripts are `.mjs`. TypeScript scripts run through Node's type stripping, and are used only when they share code with the app (cosmos-stories). Scripts have a header comment with usage examples.
+**Scripts and tooling.** Node scripts are `.mjs`. TypeScript scripts run through Node's type stripping, and are used only when they share code with the app (cosmos-stories, livery). Scripts have a header comment with usage examples.
+
+### Code style
+
+The rules every change follows, in every language of the portfolio. The list grows: add a rule here, in every repository at once.
+
+1. **Comments are meaningful.** A comment says why the code is the way it is, or what a reader could not know from the code: a browser quirk, a spec, a trade-off. When the code already says what it does, it needs no comment.
+2. **Names explain themselves.** A variable, a function or a type is named after what it is for (`unpaidInvoices`, `formatMoney`, `TenantRouteData`), so its role is clear without a comment. No abbreviations beyond the common ones (`id`, `url`, `i18n`).
+3. **Return early.** Handle the invalid, empty and error cases first and leave the function; the main path then reads without nesting. No `else` after a `return`.
+4. **One function, one job.** A function does one thing, and its name says which. When a name needs "and", or a block needs a comment to say what it does, it becomes a function of its own.
+
+**TypeScript.**
+
+- Strict mode is on everywhere, with the extra flags listed above.
+- Never use `any`. Use `unknown` for a value whose type is not known yet, and narrow it with a check or a type guard. `no-explicit-any` enforces it.
+- Every exported function states its return type, and so does every API route handler, loader and action. `explicit-module-boundary-types` enforces it; an inferred type is fine for local functions.

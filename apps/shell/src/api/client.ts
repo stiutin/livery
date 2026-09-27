@@ -35,12 +35,12 @@ async function request<T>(tenant: string, path: string, init: {token?: string; b
 }
 
 export const api = {
-  signIn: (tenant: string, email: string, password: string) =>
+  signIn: (tenant: string, email: string, password: string): Promise<Session> =>
     request<Session>(tenant, 'session', {body: {email, password}}),
-  account: (tenant: string, token: string) => request<Account>(tenant, 'account', {token}),
-  invoices: (tenant: string, token: string) => request<Invoice[]>(tenant, 'invoices', {token}),
-  pay: (tenant: string, token: string, invoiceId: string, card: Card) =>
+  account: (tenant: string, token: string): Promise<Account> => request<Account>(tenant, 'account', {token}),
+  invoices: (tenant: string, token: string): Promise<Invoice[]> => request<Invoice[]>(tenant, 'invoices', {token}),
+  pay: (tenant: string, token: string, invoiceId: string, card: Card): Promise<PaymentOutcome> =>
     request<PaymentOutcome>(tenant, `invoices/${invoiceId}/payments`, {token, body: card}),
-  confirm: (tenant: string, token: string, paymentId: string, approved: boolean) =>
+  confirm: (tenant: string, token: string, paymentId: string, approved: boolean): Promise<PaymentOutcome> =>
     request<PaymentOutcome>(tenant, `payments/${paymentId}/confirm`, {token, body: {approved}}),
 };

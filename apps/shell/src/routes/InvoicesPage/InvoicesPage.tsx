@@ -1,5 +1,5 @@
 import {Button, Card, Table, type TableColumn, useToast} from '@livery/ui';
-import {lazy, Suspense, useState} from 'react';
+import {lazy, type ReactNode, Suspense, useState} from 'react';
 
 import {api} from '../../api/client';
 import type {Invoice, Session} from '../../api/types';
@@ -14,7 +14,7 @@ import styles from './InvoicesPage.module.css';
 // Tenants without card payments never download the payment flow.
 const PaymentDialog = lazy(() => import('./PaymentDialog'));
 
-export default function InvoicesPage() {
+export default function InvoicesPage(): ReactNode {
   const {t} = useI18n();
 
   return (

@@ -22,7 +22,7 @@ export function I18nProvider({
   locale: string;
   messages: Messages;
   children: ReactNode;
-}) {
+}): ReactNode {
   const value = useMemo<I18nValue>(() => {
     const compiled = new Map<MessageKey, IntlMessageFormat>();
     const format = (key: MessageKey): IntlMessageFormat => {

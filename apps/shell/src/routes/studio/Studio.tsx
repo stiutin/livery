@@ -1,8 +1,8 @@
 import {checkBrand, DENSITIES, FONTS, MAX_RADIUS, type StudioSettings} from '@livery/tokens';
 import baseTokens from '@livery/tokens/base.tokens.json';
 import {Button, Card, Checkbox, Field, Input, Select, Table, ToastProvider, useToast} from '@livery/ui';
-import {useMemo, useState} from 'react';
-import {Link} from 'react-router';
+import {type ReactNode, useMemo, useState} from 'react';
+import {Link, type MetaDescriptor} from 'react-router';
 import {tenants} from 'virtual:livery/tenants';
 
 import {type Language, LANGUAGE_CODES, LANGUAGES} from '../../i18n/languages';
@@ -19,7 +19,7 @@ const PAGES: {id: PreviewPage; label: string}[] = [
   {id: 'components', label: 'Components'},
 ];
 
-export function meta() {
+export function meta(): MetaDescriptor[] {
   return [
     {title: 'Studio · Livery'},
     {
@@ -38,7 +38,7 @@ function download(fileName: string, json: unknown): void {
   URL.revokeObjectURL(url);
 }
 
-export default function Studio() {
+export default function Studio(): ReactNode {
   return (
     <ToastProvider>
       <StudioPage />

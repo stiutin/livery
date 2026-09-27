@@ -1,9 +1,11 @@
-import React from 'react';
+import {useContext} from 'react';
 
-import {TenantContext} from './context';
+import {TenantContext, type TenantContextValue} from './context';
 
-export function useTenant() {
-  const ctx = React.useContext(TenantContext);
-  if (!ctx) throw new Error('useTenant must be used within TenantProvider');
-  return ctx;
+export function useTenant(): TenantContextValue {
+  const tenant = useContext(TenantContext);
+  if (!tenant) {
+    throw new Error('useTenant() needs a <TenantProvider> above it');
+  }
+  return tenant;
 }

@@ -1,11 +1,12 @@
 import {Card} from '@livery/ui';
+import type {ReactNode} from 'react';
 import {Link} from 'react-router';
 import {tenants} from 'virtual:livery/tenants';
 
 import styles from './landing.module.css';
 
 /** The site's front door: every tenant, each a link to its own branded app. */
-export default function Landing() {
+export default function Landing(): ReactNode {
   return (
     <main className="page">
       <h1 className="h1">Livery</h1>
