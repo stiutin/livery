@@ -7,7 +7,7 @@ import {usePaths} from '../tenant/usePaths';
 import {useSession} from './useSession';
 
 /** Renders its children with the session, sends signed-out visitors to the login page, and waits in between. */
-export function RequireSession({children}: {children: (session: Session) => ReactNode}) {
+export function RequireSession({children}: {children: (session: Session) => ReactNode}): ReactNode {
   const {session} = useSession();
   const {t} = useI18n();
   const {page, current} = usePaths();

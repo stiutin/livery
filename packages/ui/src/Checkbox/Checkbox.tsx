@@ -10,7 +10,7 @@ export interface CheckboxProps extends Omit<ComponentProps<'input'>, 'type'> {
 }
 
 /** A native checkbox with its label beside it, in the brand colour. */
-export function Checkbox({label, hint, className, id, ...props}: CheckboxProps) {
+export function Checkbox({label, hint, className, id, ...props}: CheckboxProps): ReactNode {
   const generated = useId();
   const inputId = id ?? generated;
   const hintId = hint ? `${inputId}-hint` : undefined;

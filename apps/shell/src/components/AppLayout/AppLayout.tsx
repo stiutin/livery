@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {Link, NavLink, Outlet, useNavigate} from 'react-router';
 
 import {LANGUAGE_CODES, LANGUAGES} from '../../i18n/languages';
@@ -8,7 +9,7 @@ import {useTenant} from '../../tenant/useTenant';
 import TenantNavLink from '../TenantNavLink/TenantNavLink';
 import styles from './AppLayout.module.css';
 
-export function AppLayout() {
+export function AppLayout(): ReactNode {
   const {name} = useTenant();
   const {language, t} = useI18n();
   const {page, inLanguage} = usePaths();

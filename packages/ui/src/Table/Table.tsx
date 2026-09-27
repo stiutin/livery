@@ -26,7 +26,14 @@ export interface TableProps<Row> {
  * A data table with a caption and column headers. It scrolls sideways inside its own region instead of
  * widening the page; the region is focusable and named after the caption, so keyboard users can scroll it too.
  */
-export function Table<Row>({caption, columns, rows, rowKey, empty = 'Nothing to show', className}: TableProps<Row>) {
+export function Table<Row>({
+  caption,
+  columns,
+  rows,
+  rowKey,
+  empty = 'Nothing to show',
+  className,
+}: TableProps<Row>): ReactNode {
   const captionId = useId();
 
   return (

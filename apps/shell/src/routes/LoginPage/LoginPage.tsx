@@ -1,5 +1,5 @@
 import {Button, Field, Input} from '@livery/ui';
-import {useState} from 'react';
+import {type ReactNode, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {useNavigate, useSearchParams} from 'react-router';
 
@@ -23,7 +23,7 @@ interface LoginFormValues {
   password: string;
 }
 
-export default function LoginPage() {
+export default function LoginPage(): ReactNode {
   const {brandId, name} = useTenant();
   const {t, rich} = useI18n();
   const {page} = usePaths();

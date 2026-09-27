@@ -1,11 +1,13 @@
+import type {LoadedTenant} from '@livery/tokens';
 import {ToastProvider} from '@livery/ui';
+import type {ReactNode} from 'react';
 import {data, type LoaderFunctionArgs, useLoaderData} from 'react-router';
 import {loadTenant} from 'virtual:livery/tenants';
 
 import {AppLayout} from '../components/AppLayout/AppLayout';
 import {I18nProvider} from '../i18n/I18nContext';
-import {formattingLocale, isLanguage} from '../i18n/languages';
-import {loadMessages} from '../i18n/messages';
+import {formattingLocale, isLanguage, type Language} from '../i18n/languages';
+import {loadMessages, type Messages} from '../i18n/messages';
 import {useI18n} from '../i18n/useI18n';
 import {SessionProvider} from '../session/SessionContext';
 import {TenantProvider} from '../tenant/TenantContext';
@@ -15,7 +17,16 @@ import {TenantProvider} from '../tenant/TenantContext';
  * CSS and tokens, and the language's messages, each from a chunk of its own. It runs at build time for every
  * prerendered page; an unknown tenant or language is a 404.
  */
-export async function loader({params}: LoaderFunctionArgs) {
+/** What every page of a tenant reads through `useRouteLoaderData('tenant')`. */
+export interface TenantRouteData {
+  tenant: LoadedTenant;
+  language: Language;
+  /** The locale for numbers and dates on this page. */
+  locale: string;
+  messages: Messages;
+}
+
+export async function loader({params}: LoaderFunctionArgs): Promise<TenantRouteData> {
   const tenant = await loadTenant(params.tenant ?? '');
   const language = params.lang;
   if (!tenant || !isLanguage(language)) {
@@ -24,9 +35,7 @@ export async function loader({params}: LoaderFunctionArgs) {
   return {tenant, language, locale: formattingLocale(language, tenant.locale), messages: await loadMessages(language)};
 }
 
-export type TenantRouteData = Awaited<ReturnType<typeof loader>>;
-
-export default function TenantRoute() {
+export default function TenantRoute(): ReactNode {
   const {tenant, language, locale, messages} = useLoaderData<typeof loader>();
 
   return (

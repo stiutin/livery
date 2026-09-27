@@ -19,7 +19,7 @@ export interface DialogProps {
  * it inert, closes it on Escape and returns focus to where it was; this component keeps `open` in sync with
  * the element and turns every way of closing into `onClose`.
  */
-export function Dialog({open, onClose, title, children, footer, closeLabel = 'Close'}: DialogProps) {
+export function Dialog({open, onClose, title, children, footer, closeLabel = 'Close'}: DialogProps): ReactNode {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 

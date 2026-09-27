@@ -1,10 +1,11 @@
+import type {ReactNode} from 'react';
 import {NavLink} from 'react-router';
 
 import {usePaths} from '../../tenant/usePaths';
 import styles from './TenantNavLink.module.css';
 
 /** A header link to one of the current tenant's pages, in the current language. */
-export default function TenantNavLink({to, children}: {to: string; children: React.ReactNode}) {
+export default function TenantNavLink({to, children}: {to: string; children: React.ReactNode}): ReactNode {
   const {page} = usePaths();
 
   return (

@@ -1,5 +1,5 @@
 import {ToastProvider} from '@livery/ui';
-import {render} from '@testing-library/react';
+import {render, type RenderResult} from '@testing-library/react';
 import type {ReactNode} from 'react';
 import {MemoryRouter, Route, Routes} from 'react-router';
 
@@ -27,7 +27,10 @@ interface Options {
 const CATALOGUES: Record<Language, Messages> = {en, de, es};
 
 /** Renders a page the way the tenant route does: language, tenant, session and toasts around it, inside a router. */
-export function renderPage(page: ReactNode, {path, tenant = {}, session, routes = {}, language = 'en'}: Options) {
+export function renderPage(
+  page: ReactNode,
+  {path, tenant = {}, session, routes = {}, language = 'en'}: Options
+): RenderResult {
   const value = {...DEFAULT_TENANT, ...tenant};
   if (session) {
     sessionStorage.setItem(`livery:session:${value.brandId}`, JSON.stringify(session));
