@@ -17,6 +17,7 @@ import {
 } from 'react-router';
 import {defaultTenant, loadTenant, tenants} from 'virtual:livery/tenants';
 
+import {schemeAttribute, schemeScript, useSchemeChoice} from './colorScheme/colorScheme';
 import {isLanguage, LANGUAGE_CODES} from './i18n/languages';
 import type {TenantRouteData} from './routes/tenant';
 
@@ -53,15 +54,24 @@ export function Layout({children}: {children: ReactNode}): ReactNode {
   const root = useRouteLoaderData<typeof loader>('root');
   const page = useRouteLoaderData<TenantRouteData>('tenant');
   const current = page?.tenant ?? root?.fallback;
+  const [choice] = useSchemeChoice();
+  const brandDefault = current?.colorScheme ?? 'system';
   // Prerendering requests pages with a trailing slash; the browser's URL has none. Both must give the same links.
   const pathname = useLocation().pathname.replace(/(.)\/$/, '$1');
 
   return (
-    <html lang={page?.language ?? 'en'} data-tenant={current?.tokenSet}>
+    // The head script may have set data-color-scheme from the visitor's stored choice before React hydrates.
+    <html
+      lang={page?.language ?? 'en'}
+      data-tenant={current?.tokenSet}
+      data-color-scheme={schemeAttribute(choice, brandDefault)}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+        <script dangerouslySetInnerHTML={{__html: schemeScript(brandDefault)}} />
         <Meta />
         <Links />
         {/* The page's absolute address, and the same page in every language, for search engines. */}

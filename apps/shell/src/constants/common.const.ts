@@ -9,4 +9,5 @@ export const DEFAULT_TENANT: TenantContextValue = {
   locale: 'en-GB',
   currency: 'GBP',
   features: {payments: true},
+  colorScheme: 'system',
 };

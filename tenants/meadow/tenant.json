@@ -3,6 +3,7 @@
   "name": "Meadow",
   "locale": "de-DE",
   "currency": "EUR",
+  "colorScheme": "system",
   "features": {
     "payments": false
   }

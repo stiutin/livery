@@ -19,6 +19,7 @@ An airline's livery is the paint on the aircraft: the same plane in a different 
 
 - Three brands, each at its own address (`/harbour/…`, `/onyx/…`, `/meadow/…`), described by a settings file and a token file
 - Every tenant page in English, German and Spanish, with each brand opening in its own default language
+- A light and a dark mode in every brand: each follows the device, or the visitor's choice in the header, and Onyx starts dark
 - Each brand is a design token file in the W3C format: colours, type, radii and timing, nothing in code
 - The build fails if a brand's text or controls fall below WCAG AA contrast, and says which colour to change
 - Every page of every tenant is prerendered in that tenant's colours, so it is branded before any script runs, and readable without JavaScript
@@ -44,17 +45,23 @@ Tested with [Vitest](https://vitest.dev/), [Testing Library](https://testing-lib
 
 Each tenant's look is `tenants/<id>/tokens.json`, written in the [Design Tokens Format Module 2025.10](https://www.designtokens.org/tr/2025.10/format/), on top of a shared `packages/tokens/base.tokens.json`. Tokens sit in three layers. _Primitives_ are the raw palette, free-form and never emitted. _Semantic_ tokens say what a value is for: the page, a surface, muted text, the brand colour, the focus ring, the density of the layout. _Component_ tokens say what a button or an input uses, and the base file maps them to semantic ones, so a tenant usually writes only its palette and its semantic colours. Only the semantic and component layers become CSS custom properties, which keeps components away from raw palette values.
 
-The contract is closed: every tenant defines the same 50 semantic and component tokens with the same types. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
+The contract is closed: every tenant defines the same 50 semantic and component tokens with the same types, and a dark twin for each of its 19 semantic colours. A missing token, an unknown one (usually a typo) or a colour where a dimension belongs is an error, because a component library can only be shared if every brand answers the same questions.
 
 ### Contrast is a build gate
 
-The contract also lists which colour sits on which: body text on the page, the button label on the button and on its hover colour, a control's border on its background, and so on. `@livery/tokens` measures 21 such pairs per tenant with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops the build and names the file and token where each colour of the pair is written, since that is where the fix goes. `npm run tokens -- --all` prints every pair of every tenant.
+The contract also lists which colour sits on which: body text on the page, the button label on the button and on its hover colour, a control's border on its background, and so on. `@livery/tokens` measures 21 such pairs per tenant, in light and in dark mode, with the WCAG 2.2 formula, compositing translucent colours first, and requires 4.5:1 for text and 3:1 for control borders and focus rings. A failure stops the build and names the file and token where each colour of the pair is written, since that is where the fix goes. `npm run tokens -- --all` prints every pair of every tenant.
 
 ### A tenant is a folder
 
 Next to its `tokens.json`, each tenant has a `tenant.json`: its name, its locale, its currency, its feature flags, and optionally another tenant whose tokens it borrows. The build validates it like the tokens, and `tenants/tenant.schema.json` gives editors the same rules. The folder name is the tenant's id and the first segment of its URLs, so adding a brand is adding a folder: no code, no registry.
 
-Harbour, Onyx and Meadow run the same pages. Onyx shows that the contract holds for a dark brand too: its tokens flip the surfaces and text, gold on near-black passes every contrast pair, and no component knows it is dark. Meadow's rounder shapes are radius tokens and a pill-shaped button token. What differs in behaviour comes from `features` in tenant.json: with `payments` off, Meadow's invoices show bank-transfer details, and the payment dialog, loaded lazily, is never downloaded.
+Harbour, Onyx and Meadow run the same pages. Onyx shows how far the tokens reach: its dark mode is its home, gold on near-black, and no component knows which scheme it is in. Meadow's rounder shapes are radius tokens and a pill-shaped button token. What differs in behaviour comes from `features` in tenant.json: with `payments` off, Meadow's invoices show bank-transfer details, and the payment dialog, loaded lazily, is never downloaded.
+
+### Dark mode in every brand
+
+Each token file holds two sets of semantic colours: `semantic.color` for light pages and `dark.color` for dark ones. The dark set mirrors the light one exactly, every colour and nothing else, and the compiler holds it to the same contract and the same 21 contrast pairs. Component tokens are aliases of semantic ones, so buttons, fields and dialogs follow without a dark set of their own.
+
+The compiled stylesheet carries both: the light values on `:root`, the dark ones under `[data-color-scheme=dark]`, and again under `prefers-color-scheme: dark` for pages that follow the device. A brand says in tenant.json what a visitor sees first: Harbour and Meadow follow the device, Onyx is dark. A visitor can choose System, Light or Dark in the header; the choice is kept for every tenant, and a small script in the document's head applies it before the first paint, so a prerendered page never flashes in the other scheme. Studio makes both sets for every brand it builds, and its preview switches between them.
 
 ### Every page is prerendered in its own brand
 
@@ -94,8 +101,8 @@ The result goes through `compileTenant` and `parseTenantConfig`, the functions t
 | Unit          | Vitest, Testing Library | the components: names, descriptions, states, the dialog's ways of closing, toast timing - 17 tests                                                                                                                                                                                                                                                                                            |
 | Unit          | Vitest, Testing Library | the payment machine, card checks, the mock API, the catalogues (keys, arguments, plurals), and the home, sign-in and invoice pages against the mock API in several languages - 44 tests                                                                                                                                                                                                       |
 | End-to-end    | Playwright              | the production build on desktop and a Pixel 7: all 45 pages in three languages, default-language redirects, the language switcher, the sign-in redirect from the menu, the account and invoices on all three brands, card payments, declines, bank confirmation, flags, pages without JavaScript, 404s, components, and Studio from settings to a downloaded brand that builds - 37 scenarios |
-| Accessibility | Playwright, axe         | WCAG 2.2 A and AA on every tenant: public pages, the login form with errors, the account, the invoices, the payment dialog, German and Spanish pages, the landing page, Studio and the 404 page, on both viewports                                                                                                                                                                            |
-| Visual        | Playwright              | screenshots of every tenant × page (home, login, theme preview, account, invoices), the landing page and Studio, on both viewports, with a fixed clock                                                                                                                                                                                                                                        |
+| Accessibility | Playwright, axe         | WCAG 2.2 A and AA on every tenant: public pages, the login form with errors, the account, the invoices, the payment dialog, German and Spanish pages, dark mode, the landing page, Studio and the 404 page, on both viewports                                                                                                                                                                 |
+| Visual        | Playwright              | screenshots of every tenant × page (home, login, theme preview, account, invoices), each brand's invoices in its other scheme, the landing page and Studio, on both viewports, with a fixed clock                                                                                                                                                                                             |
 | Performance   | Lighthouse CI           | five pages, three runs each: accessibility, best practices and SEO at 100, layout shift under 0.02, performance at 0.9 or more                                                                                                                                                                                                                                                                |
 
 The end-to-end tests run against the production build, served by `scripts/serve.mjs` the way GitHub Pages serves it: under `/livery/`, with `404.html` for unknown paths. Axe fails on any WCAG 2.2 A or AA violation, on every tenant and in every state the tests reach.
@@ -150,7 +157,6 @@ Pushing to `master` runs formatting, lint, type checks, unit tests, the end-to-e
 
 ## Roadmap
 
-- [ ] Dark mode inside every brand, as a second set of semantic colours in the same token file
 - [ ] Importing tokens from Figma, in the Tokens Studio format
 - [ ] Publishing the `ui` and `tokens` packages to npm
 

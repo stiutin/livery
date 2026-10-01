@@ -25,7 +25,7 @@ describe('share links', () => {
       id: 'nordlicht',
       name: 'Nordlicht – Grün',
       color: '#0f766e',
-      mode: 'dark',
+      colorScheme: 'dark',
       font: 'serif',
       radius: 4,
       pill: true,
@@ -47,9 +47,14 @@ describe('share links', () => {
 });
 
 describe('checkBrand', () => {
-  it('passes the default brand in light and dark', () => {
+  it('passes the default brand, whose dark set is checked too', () => {
     expect(messages(checkBrand(DEFAULT_SETTINGS, base))).toEqual([]);
-    expect(messages(checkBrand({...DEFAULT_SETTINGS, mode: 'dark'}, base))).toEqual([]);
+    expect(messages(checkBrand({...DEFAULT_SETTINGS, colorScheme: 'dark'}, base))).toEqual([]);
+    const {tokenSet} = checkBrand(DEFAULT_SETTINGS, base);
+    expect(tokenSet.dark.contrast).toHaveLength(tokenSet.contrast.length);
+    expect(tokenSet.dark.tokens.find((token) => token.cssVariable === '--color-canvas')?.resolvedCss).toMatch(
+      /^oklch\(0\.17 /
+    );
   });
 
   it('turns the choices into tokens', () => {
@@ -114,7 +119,7 @@ describe('a brand exported from Studio', () => {
           id: `studio-brand-${index}`,
           name: `Brand ${index}`,
           color,
-          mode,
+          colorScheme: mode,
           font: (['system', 'humanist', 'rounded', 'serif', 'mono'] as const)[index % 5] ?? 'system',
           pill: index % 2 === 0,
           density: (['compact', 'regular', 'spacious'] as const)[index % 3] ?? 'regular',

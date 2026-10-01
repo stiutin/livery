@@ -1,6 +1,9 @@
+import type {ColorScheme} from '@livery/tokens';
+import {Select} from '@livery/ui';
 import type {ReactNode} from 'react';
 import {Link, NavLink, Outlet, useNavigate} from 'react-router';
 
+import {useSchemeChoice} from '../../colorScheme/colorScheme';
 import {LANGUAGE_CODES, LANGUAGES} from '../../i18n/languages';
 import {useI18n} from '../../i18n/useI18n';
 import {useSession} from '../../session/useSession';
@@ -9,11 +12,14 @@ import {useTenant} from '../../tenant/useTenant';
 import TenantNavLink from '../TenantNavLink/TenantNavLink';
 import styles from './AppLayout.module.css';
 
+const SCHEMES: readonly ColorScheme[] = ['system', 'light', 'dark'];
+
 export function AppLayout(): ReactNode {
-  const {name} = useTenant();
+  const {name, colorScheme: brandScheme} = useTenant();
   const {language, t} = useI18n();
   const {page, inLanguage} = usePaths();
   const {session, signOut} = useSession();
+  const [schemeChoice, chooseScheme] = useSchemeChoice();
   const navigate = useNavigate();
 
   return (
@@ -49,23 +55,42 @@ export function AppLayout(): ReactNode {
             </Link>
           </div>
         </div>
-        <nav className={styles.languages} aria-label={t('nav.language')}>
-          <ul>
-            {LANGUAGE_CODES.map((code) => (
-              <li key={code}>
-                <Link
-                  to={inLanguage(code)}
-                  lang={code}
-                  hrefLang={code}
-                  aria-current={code === language ? 'true' : undefined}
-                  className={styles.language}
-                >
-                  {LANGUAGES[code].name}
-                </Link>
-              </li>
+        <div className={styles.preferences}>
+          <Select
+            className={styles.scheme}
+            aria-label={t('theme.label')}
+            value={schemeChoice ?? brandScheme}
+            onChange={(event) => {
+              const next = SCHEMES.find((scheme) => scheme === event.target.value);
+              if (next) {
+                chooseScheme(next);
+              }
+            }}
+          >
+            {SCHEMES.map((scheme) => (
+              <option key={scheme} value={scheme}>
+                {t(`theme.${scheme}`)}
+              </option>
             ))}
-          </ul>
-        </nav>
+          </Select>
+          <nav className={styles.languages} aria-label={t('nav.language')}>
+            <ul>
+              {LANGUAGE_CODES.map((code) => (
+                <li key={code}>
+                  <Link
+                    to={inLanguage(code)}
+                    lang={code}
+                    hrefLang={code}
+                    aria-current={code === language ? 'true' : undefined}
+                    className={styles.language}
+                  >
+                    {LANGUAGES[code].name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </header>
 
       <main className={styles.shellMain} id="main-content">

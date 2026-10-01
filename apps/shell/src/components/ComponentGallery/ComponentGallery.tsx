@@ -11,8 +11,18 @@ type Token = CompiledToken;
  * Every component of @livery/ui, and a table of the semantic colours of a token set. The theme preview shows it
  * for the page's tenant; Studio shows it for the brand being made.
  */
-export function ComponentGallery({tokens, tokenSet}: {tokens: readonly Token[]; tokenSet: string}): ReactNode {
+export function ComponentGallery({
+  tokens,
+  darkTokens,
+  tokenSet,
+}: {
+  tokens: readonly Token[];
+  /** The dark set's colours, shown beside the light ones. */
+  darkTokens: readonly Token[];
+  tokenSet: string;
+}): ReactNode {
   const {t} = useI18n();
+  const darkByVariable = new Map(darkTokens.map((token) => [token.cssVariable, token.resolvedCss]));
   const columns: readonly TableColumn<Token>[] = [
     {
       key: 'swatch',
@@ -24,7 +34,12 @@ export function ComponentGallery({tokens, tokenSet}: {tokens: readonly Token[]; 
       header: t('preview.token'),
       cell: (token) => <code>{token.path.replace('semantic.color.', '')}</code>,
     },
-    {key: 'value', header: t('preview.value'), cell: (token) => <code>{token.resolvedCss}</code>},
+    {key: 'light', header: t('theme.light'), cell: (token) => <code>{token.resolvedCss}</code>},
+    {
+      key: 'dark',
+      header: t('theme.dark'),
+      cell: (token) => <code>{darkByVariable.get(token.cssVariable) ?? '—'}</code>,
+    },
   ];
   const toast = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);

@@ -3,6 +3,7 @@
   "name": "Onyx",
   "locale": "en-US",
   "currency": "USD",
+  "colorScheme": "dark",
   "features": {
     "payments": true
   }

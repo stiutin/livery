@@ -41,6 +41,24 @@ for (const tenant of TENANTS) {
   });
 }
 
+/** Each brand's other scheme: dark for the brands that start light, light for Onyx. */
+for (const [tenant, colorScheme] of [
+  ['harbour', 'dark'],
+  ['meadow', 'dark'],
+  ['onyx', 'light'],
+] as const) {
+  test(`${tenant} invoices in ${colorScheme}`, async ({page}) => {
+    await page.emulateMedia({colorScheme});
+    await page.addInitScript((choice) => {
+      localStorage.setItem('livery:color-scheme', choice);
+    }, colorScheme);
+    await signIn(page, tenant);
+    await page.goto(`./${tenant}/en/invoices`);
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page).toHaveScreenshot(`${tenant}-invoices-${colorScheme}.png`, {fullPage: true});
+  });
+}
+
 test('landing and Studio', async ({page}) => {
   await page.goto('./');
   await expect(page).toHaveScreenshot('landing.png', {fullPage: true});

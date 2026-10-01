@@ -86,7 +86,7 @@ describe('compileTenant', () => {
       theme: {accent: {$type: 'color', $value: srgb('#000000')}},
     });
     expect(messages).toEqual([
-      'theme.accent: tokens belong to one of the layers primitive, semantic, component',
+      'theme.accent: tokens belong to one of the layers primitive, semantic, component, dark',
       'component.card.radius: must be a dimension, not a color',
       'semantic.color.text.defualt: is not part of the contract; semantic and component tokens are a closed set',
     ]);
@@ -107,8 +107,40 @@ describe('compileTenant', () => {
 describe('tokenSetToCss', () => {
   it('puts every emitted token on :root, keeping aliases as var()', () => {
     const css = tokenSetToCss(compileWith({}));
-    expect(css.startsWith(':root{--color-canvas:#f4f4f2;')).toBe(true);
+    expect(css.startsWith(':root{color-scheme:light;--color-canvas:#f4f4f2;')).toBe(true);
+    expect(css).toContain(':root[data-color-scheme=dark]{color-scheme:dark;--color-canvas:#121110;');
+    expect(css).toContain('@media (prefers-color-scheme:dark){:root:not([data-color-scheme=light]){color-scheme:dark;');
     expect(css).toContain('--button-primary-background:var(--color-brand-default);');
     expect(css).not.toContain('primitive');
+  });
+});
+
+describe('dark mode', () => {
+  it('needs every semantic colour in the dark set, and nothing else', () => {
+    const tenant = defaultTenant();
+    const dark = tenant.dark as {color: {link?: unknown; glow?: unknown}};
+    delete dark.color.link;
+    dark.color.glow = {$value: srgb('#ffffff')};
+    const {problems} = compileTenant('test', [base, {name: 'tenant.json', json: tenant}]);
+    // A missing dark colour also leaves the light one in place, which then fails contrast in dark mode.
+    expect(problems.map((problem) => `${problem.path}: ${problem.message}`).slice(0, 2)).toEqual([
+      'dark.color.link: is missing (links, in dark mode)',
+      'dark.color.glow: is not a semantic colour; the dark set holds exactly the colours of semantic.color',
+    ]);
+  });
+
+  it('holds the dark set to the same contrast pairs, through the component aliases', () => {
+    const {messages} = compileWith({
+      dark: {
+        color: {
+          brand: {hover: {$type: 'color', $value: srgb('#d6d3d1')}, on: {$type: 'color', $value: srgb('#ffffff')}},
+        },
+      },
+    });
+    expect(
+      messages.find((message) => message.startsWith('primary button label under the pointer (dark mode)'))
+    ).toMatch(
+      /^primary button label under the pointer \(dark mode\): #ffffff \(dark\.color\.brand\.on in edit\.json\) on #d6d3d1 \(dark\.color\.brand\.hover in edit\.json\) is 1\.\d+:1/
+    );
   });
 });

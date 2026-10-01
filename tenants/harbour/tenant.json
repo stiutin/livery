@@ -3,6 +3,7 @@
   "name": "Harbour",
   "locale": "en-GB",
   "currency": "GBP",
+  "colorScheme": "system",
   "features": {
     "payments": true
   }

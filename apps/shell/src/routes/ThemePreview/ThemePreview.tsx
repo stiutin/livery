@@ -15,7 +15,7 @@ export default function ThemePreview(): ReactNode {
     <div className="page">
       <h1 className="h1">{t('preview.title')}</h1>
       <p className="description">{t('preview.intro', {tokenSet})}</p>
-      <ComponentGallery tokens={tenant?.tokens ?? []} tokenSet={tokenSet} />
+      <ComponentGallery tokens={tenant?.tokens ?? []} darkTokens={tenant?.darkTokens ?? []} tokenSet={tokenSet} />
     </div>
   );
 }

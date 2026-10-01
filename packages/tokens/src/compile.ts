@@ -1,6 +1,6 @@
 import {contrastRatio, toRgba} from './color.ts';
 import type {ContractToken} from './contract.ts';
-import {CONTRACT, CONTRAST_PAIRS, EMITTED_LAYERS, LAYERS} from './contract.ts';
+import {CONTRACT, CONTRAST_PAIRS, DARK_CONTRACT, darkPathOf, EMITTED_LAYERS, LAYERS} from './contract.ts';
 import {cssVariable, valueToCss} from './css.ts';
 import type {CompiledTenant, CompiledToken, ContrastResult, Problem, RawToken, TokenSource} from './model.ts';
 import {parseTokens} from './parse.ts';
@@ -54,7 +54,20 @@ function checkContract(
       });
     }
   }
+  const darkKnown = new Set(DARK_CONTRACT.map((entry) => entry.path));
+  for (const entry of DARK_CONTRACT) {
+    if (!tokens.has(entry.path)) {
+      problems.push({source: '(contract)', path: entry.path, message: `is missing (${entry.purpose})`});
+    }
+  }
   for (const raw of tokens.values()) {
+    if (layerOf(raw.path) === 'dark' && !darkKnown.has(raw.path)) {
+      problems.push({
+        source: raw.source,
+        path: raw.path,
+        message: 'is not a semantic colour; the dark set holds exactly the colours of semantic.color',
+      });
+    }
     if (isEmitted(raw.path) && !known.has(raw.path)) {
       problems.push({
         source: raw.source,
@@ -79,7 +92,10 @@ function origin(token: ResolvedToken, resolved: ReadonlyMap<string, ResolvedToke
   return current;
 }
 
-function checkContrast(resolved: ReadonlyMap<string, ResolvedToken>): {results: ContrastResult[]; problems: Problem[]} {
+function checkContrast(
+  resolved: ReadonlyMap<string, ResolvedToken>,
+  scheme: 'light' | 'dark'
+): {results: ContrastResult[]; problems: Problem[]} {
   const results: ContrastResult[] = [];
   const problems: Problem[] = [];
 
@@ -95,7 +111,7 @@ function checkContrast(resolved: ReadonlyMap<string, ResolvedToken>): {results: 
       problems.push({
         source: bottom.raw.source,
         path: background,
-        message: `must be opaque: it is the background of "${label}", and contrast cannot be judged through it`,
+        message: `must be opaque: it is the background of "${label}"${scheme === 'dark' ? ' in dark mode' : ''}, and contrast cannot be judged through it`,
       });
       continue;
     }
@@ -110,12 +126,56 @@ function checkContrast(resolved: ReadonlyMap<string, ResolvedToken>): {results: 
       };
       problems.push({
         source: 'contrast',
-        path: label,
+        path: scheme === 'dark' ? `${label} (dark mode)` : label,
         message: `${describe(top)} on ${describe(bottom)} is ${ratio.toFixed(2)}:1, WCAG AA needs ${minimum}:1`,
       });
     }
   }
   return {results, problems};
+}
+
+function compiledToken(path: string, token: ResolvedToken): CompiledToken {
+  return {
+    path,
+    cssVariable: cssVariable(path),
+    type: token.value.type,
+    css:
+      token.aliasOf !== undefined && isEmitted(token.aliasOf)
+        ? `var(${cssVariable(token.aliasOf)})`
+        : valueToCss(token.value),
+    resolvedCss: valueToCss(token.value),
+    description: token.raw.description,
+  };
+}
+
+/**
+ * Dark mode: the same tokens with every semantic colour replaced by its `dark.color` twin, resolved again, so
+ * component tokens and contrast pairs see the dark values through the same aliases as the light ones.
+ */
+function compileDark(tokens: ReadonlyMap<string, RawToken>): {
+  tokens: CompiledToken[];
+  contrast: ContrastResult[];
+  problems: Problem[];
+} {
+  const swapped = new Map(tokens);
+  for (const entry of DARK_CONTRACT) {
+    const twin = tokens.get(entry.path);
+    if (twin) {
+      swapped.set(`semantic.${entry.path.slice('dark.'.length)}`, twin);
+    }
+  }
+  const {resolved, problems} = resolveTokens(swapped);
+  const contrast = checkContrast(resolved, 'dark');
+  const darkTokens = CONTRACT.filter(
+    (entry) => tokens.has(darkPathOf(entry.path)) && entry.path.startsWith('semantic.color.')
+  )
+    .map((entry) => [entry.path, resolved.get(entry.path)] as const)
+    .filter((pair): pair is readonly [string, ResolvedToken] => pair[1] !== undefined)
+    .map(([path, token]) => compiledToken(path, token));
+
+  // Problems in tokens both modes share were reported by the light pass already.
+  const ownProblems = problems.filter((problem) => problem.path.startsWith('dark.'));
+  return {tokens: darkTokens, contrast: contrast.results, problems: [...ownProblems, ...contrast.problems]};
 }
 
 /**
@@ -125,33 +185,27 @@ function checkContrast(resolved: ReadonlyMap<string, ResolvedToken>): {results: 
 export function compileTenant(id: string, sources: readonly TokenSource[], contract = CONTRACT): CompiledTenant {
   const merged = mergeSources(sources);
   const {resolved, problems: resolveProblems} = resolveTokens(merged.tokens);
-  const contrast = checkContrast(resolved);
+  const contrast = checkContrast(resolved, 'light');
   const order = new Map(contract.map((entry, index) => [entry.path, index]));
 
-  const tokens: CompiledToken[] = [...resolved.values()]
-    .filter((token) => isEmitted(token.raw.path))
-    .sort((a, b) => (order.get(a.raw.path) ?? Infinity) - (order.get(b.raw.path) ?? Infinity))
-    .map((token) => ({
-      path: token.raw.path,
-      cssVariable: cssVariable(token.raw.path),
-      type: token.value.type,
-      css:
-        token.aliasOf !== undefined && isEmitted(token.aliasOf)
-          ? `var(${cssVariable(token.aliasOf)})`
-          : valueToCss(token.value),
-      resolvedCss: valueToCss(token.value),
-      description: token.raw.description,
-    }));
+  const tokens: CompiledToken[] = [...resolved.entries()]
+    .filter(([path]) => isEmitted(path))
+    .sort(([a], [b]) => (order.get(a) ?? Infinity) - (order.get(b) ?? Infinity))
+    .map(([path, token]) => compiledToken(path, token));
+
+  const dark = compileDark(merged.tokens);
 
   return {
     id,
     tokens,
     contrast: contrast.results,
+    dark: {tokens: dark.tokens, contrast: dark.contrast},
     problems: [
       ...merged.problems,
       ...resolveProblems,
       ...checkContract(merged.tokens, resolved, contract),
       ...contrast.problems,
+      ...dark.problems,
     ],
   };
 }
@@ -161,8 +215,15 @@ export function compileTenant(id: string, sources: readonly TokenSource[], contr
  * right colours before any script runs, and no page carries another tenant's tokens.
  */
 export function tokenSetToCss(tokenSet: CompiledTenant): string {
-  const declarations = tokenSet.tokens.map((token) => `${token.cssVariable}:${token.css};`).join('');
-  return `:root{${declarations}}`;
+  const declarations = (tokens: readonly CompiledToken[]): string =>
+    tokens.map((token) => `${token.cssVariable}:${token.css};`).join('');
+  const dark = `color-scheme:dark;${declarations(tokenSet.dark.tokens)}`;
+  // Dark when the page asks for it, or when the device does and the page has not asked for light.
+  return (
+    `:root{color-scheme:light;${declarations(tokenSet.tokens)}}` +
+    `:root[data-color-scheme=dark]{${dark}}` +
+    `@media (prefers-color-scheme:dark){:root:not([data-color-scheme=light]){${dark}}}`
+  );
 }
 
 /** Every problem of every tenant, one per line, ready for a terminal or Vite's error overlay. */

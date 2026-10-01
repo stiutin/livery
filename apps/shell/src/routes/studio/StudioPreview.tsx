@@ -30,11 +30,15 @@ const PREVIEW_ID = 'studio-preview';
 export type PreviewPage = 'home' | 'login' | 'components';
 
 /** The brand's tokens, for the gallery page inside the preview's router. */
-const PreviewTokens = createContext<{tokens: readonly CompiledToken[]; tokenSet: string}>({tokens: [], tokenSet: ''});
+const PreviewTokens = createContext<{
+  tokens: readonly CompiledToken[];
+  darkTokens: readonly CompiledToken[];
+  tokenSet: string;
+}>({tokens: [], darkTokens: [], tokenSet: ''});
 
 function PreviewGallery() {
-  const {tokens, tokenSet} = useContext(PreviewTokens);
-  return <ComponentGallery tokens={tokens} tokenSet={tokenSet} />;
+  const {tokens, darkTokens, tokenSet} = useContext(PreviewTokens);
+  return <ComponentGallery tokens={tokens} darkTokens={darkTokens} tokenSet={tokenSet} />;
 }
 
 const ROUTES = [
@@ -58,6 +62,9 @@ interface Props {
   currency: string;
   payments: boolean;
   tokens: readonly CompiledToken[];
+  darkTokens: readonly CompiledToken[];
+  /** Which set the preview shows. */
+  scheme: 'light' | 'dark';
   tokenSet: string;
 }
 
@@ -65,13 +72,28 @@ interface Props {
  * The product's real pages, the same components as every tenant, in the brand being made. The brand's tokens
  * are written as custom properties on the preview's own element, so nothing outside it changes.
  */
-export function StudioPreview({page, language, name, locale, currency, payments, tokens, tokenSet}: Props): ReactNode {
-  const css = `[data-studio-preview]{${tokens.map((token) => `${token.cssVariable}:${token.css};`).join('')}}`;
+export function StudioPreview({
+  page,
+  language,
+  name,
+  locale,
+  currency,
+  payments,
+  tokens,
+  darkTokens,
+  scheme,
+  tokenSet,
+}: Props): ReactNode {
+  const declarations = (list: readonly CompiledToken[]): string =>
+    list.map((token) => `${token.cssVariable}:${token.css};`).join('');
+  const css =
+    `[data-studio-preview]{color-scheme:light;${declarations(tokens)}}` +
+    `[data-studio-preview][data-color-scheme=dark]{color-scheme:dark;${declarations(darkTokens)}}`;
   const start = `/${PREVIEW_ID}/${language}${page === 'home' ? '' : `/${page}`}`;
-  const gallery = useMemo(() => ({tokens, tokenSet}), [tokens, tokenSet]);
+  const gallery = useMemo(() => ({tokens, darkTokens, tokenSet}), [tokens, darkTokens, tokenSet]);
 
   return (
-    <div data-studio-preview className={styles.preview}>
+    <div data-studio-preview data-color-scheme={scheme} className={styles.preview}>
       {/* Generated from the settings by the same compiler as the build, not from user-written CSS. */}
       <style dangerouslySetInnerHTML={{__html: css}} />
       <I18nProvider language={language} locale={locale} messages={CATALOGUES[language]}>

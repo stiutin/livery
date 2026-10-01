@@ -11,8 +11,12 @@ import type {TokenType} from './model.ts';
  *
  * The semantic and component layers are closed: a missing token, an unknown one (usually a typo) or one of the
  * wrong type fails the build. Only these two layers become CSS custom properties.
+ *
+ * - `dark`: the brand's dark mode, a second set of semantic colours. `dark.color.text.default` replaces
+ *   `semantic.color.text.default` when the page is dark. It mirrors `semantic.color` exactly: every colour is
+ *   there, nothing else is. Component tokens follow through their aliases.
  */
-export const LAYERS = ['primitive', 'semantic', 'component'] as const;
+export const LAYERS = ['primitive', 'semantic', 'component', 'dark'] as const;
 export type Layer = (typeof LAYERS)[number];
 export const EMITTED_LAYERS: readonly Layer[] = ['semantic', 'component'];
 
@@ -133,3 +137,13 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
   pair('focus ring on a surface', 'semantic.color.focus', 'semantic.color.surface.default', NON_TEXT_CONTRAST),
   pair('focus ring on the page', 'semantic.color.focus', 'semantic.color.canvas', NON_TEXT_CONTRAST),
 ];
+
+/** The semantic colours a dark set must mirror, and where each one lives in it. */
+export const DARK_CONTRACT: readonly ContractToken[] = CONTRACT.filter((entry) =>
+  entry.path.startsWith('semantic.color.')
+).map((entry) => ({...entry, path: darkPathOf(entry.path), purpose: `${entry.purpose}, in dark mode`}));
+
+/** `semantic.color.canvas` → `dark.color.canvas`. */
+export function darkPathOf(semanticPath: string): string {
+  return `dark.${semanticPath.slice('semantic.'.length)}`;
+}
