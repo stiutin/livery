@@ -23,13 +23,14 @@ test('Studio previews the real pages in the brand being made', async ({page}) =>
   const errors = trackErrors(page);
   await page.goto('./studio');
 
-  await expect(page.getByRole('status').filter({hasText: 'contrast pairs pass'})).toContainText('All 21');
+  await expect(page.getByRole('status').filter({hasText: 'contrast pairs pass'})).toContainText('All 42');
   await expect(preview(page).getByRole('heading', {level: 1, name: 'Welcome to Aurora'})).toBeVisible();
 
   await describeBrand(page, {id: 'nordlicht', name: 'Nordlicht', color: '#0f766e'});
-  await page.getByRole('form', {name: 'Brand settings'}).getByLabel('Mode').selectOption('dark');
-
   await expect(preview(page).getByRole('heading', {level: 1, name: 'Welcome to Nordlicht'})).toBeVisible();
+  // Every brand has both sets; the preview switches between them.
+  await page.getByRole('group', {name: 'Preview scheme'}).getByRole('button', {name: 'Dark'}).click();
+  await expect(preview(page)).toHaveAttribute('data-color-scheme', 'dark');
   expect(await previewToken(page, '--color-brand-default')).toMatch(/^oklch\(/);
   expect(await previewToken(page, '--color-canvas')).toMatch(/^oklch\(0\.17 /);
   // Only the preview changes: the Studio page keeps the default tenant's look.
@@ -79,7 +80,7 @@ test('a brand that fails contrast cannot be exported, and says why', async ({pag
 test('an exported brand builds with no code changes', async ({page}) => {
   await page.goto('./studio');
   await describeBrand(page, {id: 'nordlicht', name: 'Nordlicht', color: '#0f766e'});
-  await page.getByRole('form', {name: 'Brand settings'}).getByLabel('Mode').selectOption('dark');
+  await page.getByRole('form', {name: 'Brand settings'}).getByLabel('Default colour scheme').selectOption('dark');
 
   const root = mkdtempSync(join(tmpdir(), 'livery-studio-e2e-'));
   try {

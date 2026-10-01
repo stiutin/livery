@@ -14,7 +14,7 @@ test('every page of every tenant is prerendered in all three languages', async (
         const response = await request.get(path);
         expect(response.status(), path).toBe(200);
         const html = await response.text();
-        expect(html, path).toContain(`<html lang="${language}" data-tenant="${tenant}">`);
+        expect(html, path).toContain(`<html lang="${language}" data-tenant="${tenant}"`);
         for (const other of LANGUAGES.filter((code) => code !== language)) {
           expect(html, path).toContain(`hrefLang="${other}"`);
         }

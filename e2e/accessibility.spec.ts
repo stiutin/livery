@@ -64,6 +64,23 @@ for (const tenant of TENANTS) {
   });
 }
 
+test.describe('in dark mode', () => {
+  test.use({colorScheme: 'dark'});
+
+  for (const tenant of TENANTS) {
+    test(`${tenant} has no WCAG 2.2 AA violations`, async ({page}) => {
+      for (const path of ['', '/login', '/theme/preview']) {
+        await page.goto(`./${tenant}/en${path}`);
+        await expectAccessible(page, `${tenant}${path || ' home'} (dark)`);
+      }
+      await signIn(page, tenant);
+      await page.goto(`./${tenant}/en/invoices`);
+      await expect(page.getByRole('table')).toBeVisible();
+      await expectAccessible(page, `${tenant} invoices (dark)`);
+    });
+  }
+});
+
 test('the landing page, Studio and the 404 page have no WCAG 2.2 AA violations', async ({page}) => {
   await page.goto('./');
   await expectAccessible(page, 'landing');
