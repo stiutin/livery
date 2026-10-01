@@ -50,11 +50,11 @@ npm run check          # format:check + lint + typecheck + test  ← before fini
 
 ```
 tenants/<id>/tenant.json   settings: name, locale, currency, features ({payments}), optional `tokens` (borrow a look)
-tenants/<id>/tokens.json   the look: palette + semantic tokens, and overrides such as radii or a dark font stack
+tenants/<id>/tokens.json   the look: palette, semantic tokens, the dark set (dark.color), and overrides such as radii
 tenants/tenant.schema.json the tenant.json rules for editors; the build checks the same rules in tenant.ts
 packages/tokens/
   base.tokens.json         shared by every tenant: component → semantic mappings, font, radii, shadow, duration
-  src/contract.ts          the closed list of 50 semantic and component tokens, and the 21 contrast pairs
+  src/contract.ts          the closed list of 50 semantic and component tokens, DARK_CONTRACT (the 19 colours again, under dark.color), and the 21 contrast pairs
   src/parse.ts             file → flat tokens (dot paths, inherited $type), structural problems
   src/resolve.ts           aliases (whole values and inside shadows), cycles, value validation
   src/color.ts             sRGB/OKLCH conversion, compositing, WCAG luminance and contrast, CSS colours
@@ -107,6 +107,7 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 - **Token layers.** A tenant's files have three top-level groups. `primitive` is free-form and never emitted. `semantic` and `component` are closed: `CONTRACT` in `contract.ts` lists each token with its type, and a missing, unknown or mistyped token is a problem. The base file maps every component token to a semantic one; a tenant may override any token, since later files replace earlier ones token by token.
 - **Compilation.** `compileTenant` parses each file, merges them, resolves aliases, then checks the contract and the contrast pairs. It never throws: every problem is collected with its file and path. An alias to another emitted token becomes `var(--…)`, so the cascade keeps component → semantic; an alias to a primitive is inlined. CSS names drop the layer: `semantic.color.text.default` → `--color-text-default`.
 - **Contrast.** `CONTRAST_PAIRS` lists what the app draws on what. Ratios follow WCAG 2.2; a translucent foreground is composited over its background first, and backgrounds must be opaque. Text needs 4.5:1, control borders and focus rings 3:1. A failure names where each colour of the pair is finally written.
+- **Dark mode.** `dark.color` mirrors `semantic.color`; a missing or extra colour is a problem. `compileDark` swaps every semantic colour for its twin, resolves again and measures every pair again, labelled "(dark mode)". `tokenSetToCss` writes light on `:root` (`color-scheme: light`), dark under `[data-color-scheme=dark]` and under `prefers-color-scheme: dark` unless the page says light. `tenant.json`'s `colorScheme` (system, light, dark) is what a visitor sees first. In the app, `colorScheme/colorScheme.ts` keeps the visitor's choice in localStorage (`livery:color-scheme`) through `useSyncExternalStore`; root `Layout` writes `data-color-scheme` from it, and `schemeScript` makes the same decision in the head before the first paint (the `<html>` element suppresses the hydration warning that causes). Studio generates both sets.
 - **Delivery.** The Vite plugin compiles every token set and validates every tenant.json in `buildStart`, failing the build on any problem. `virtual:livery/tenants` exports the tenant list (id and name), the default tenant and `loadTenant(id)`, which dynamically imports `virtual:livery/tenant/<id>`: that tenant's settings, its token set's CSS (`tokenSetToCss`: every custom property on `:root`) and its tokens. In the dev server a tenant file change invalidates these modules in every environment and reloads the page.
 - **Routing and prerendering.** `react-router build` renders `prerenderPaths()` (the landing page and every `TENANT_PAGES` entry of every tenant) to HTML and `.data` files. The tenant route's `loader` runs only then; client navigations fetch the `.data` file. Root `Layout` reads the tenant from `useRouteLoaderData('tenant')`, else the root loader's default tenant, and writes `lang`, `data-tenant` and the inline `<style id="tenant-tokens">`, so HTML is branded before hydration.
 - **Output for GitHub Pages.** `buildEnd` in `react-router.config.ts` renames React Router's top-level `index.html` (the client-rendered fallback for URLs that were not prerendered) to `404.html`, moves the prerendered files out of the `livery/` basename folder, and turns every nested `x/index.html` into `x.html`, because Pages redirects a directory URL to its trailing slash.
@@ -138,6 +139,7 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 14. **Features are read from the tenant, never from the tenant id.** No `if (brandId === …)` anywhere.
 15. **No UI text in code.** Every string a person reads on a tenant page is a message key in all three catalogues; links go through `usePaths()` so they keep the language.
 16. **Studio checks with the build's code.** Studio never has its own rules: anything it accepts, `compileTenantsFromDisk` must accept. A new build check goes into the tokens package, and Studio shows it for free.
+17. **Both schemes, always.** A colour change touches `semantic.color` and `dark.color` together; components never test the scheme, they read the tokens. `schemeAttribute` and `schemeScript` make the same decision and change together.
 
 ## 7. Conventions (project-specific)
 
@@ -161,7 +163,7 @@ scripts/screenshots.mjs    README screenshots (three brands, Studio) and the soc
 ## 9. Recipes
 
 - **Add a tenant:** a folder in `tenants/` with a `tenant.json` (name, locale, currency) and either a `tokens.json` (copy one, change the palette and semantic colours, run `npm run tokens` until every pair passes) or `"tokens": "<other tenant>"`. No code changes: the router, the prerender list and the landing page pick it up.
-- **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match.
+- **Change a brand's colour:** edit its primitive in `tenants/<id>/tokens.json`, keeping `components` (0–1) and `hex` in step; the compiler rejects a hex that does not match. Check both schemes: `npm run tokens -- --all` lists every pair twice.
 - **Add a feature flag:** add it to `FEATURES` in `packages/tokens/src/tenant.ts`, to `features` in `tenants/tenant.schema.json` and `LoadedTenant`, set it in every tenant.json, and read it with `useTenant().features`.
 - **Add a page:** a route module under `src/routes/`, an entry in `routes.ts` under `:tenant` and in `TENANT_PAGES`, a link where it belongs, a unit test, an end-to-end scenario, an axe check and a screenshot (then run CI by hand with “Update the visual baselines”).
 - **Add a message:** add the key to `messages/en.json`, `de.json` and `es.json` with the same ICU arguments (the catalogue tests fail otherwise), then use `t('key', {…})` or `rich()` for tags.
