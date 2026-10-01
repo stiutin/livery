@@ -15,6 +15,7 @@ describe('parseTenantConfig', () => {
       tokens: 'acme',
       locale: 'en-GB',
       currency: 'GBP',
+      colorScheme: 'system',
       features: {payments: true},
     });
   });
@@ -43,7 +44,7 @@ describe('parseTenantConfig', () => {
     expect(config).toBeUndefined();
     expect(messages).toEqual([
       '(folder): "Acme_1" cannot be a tenant id: use lower-case letters, digits and single hyphens',
-      'colour: is not a tenant setting; use name, tokens, locale, currency and features',
+      'colour: is not a tenant setting; use name, tokens, locale, currency, colorScheme and features',
       'features.chat: is not a feature; the flags are payments',
       'features.payments: must be true or false',
       'name: is required: the brand name people read',

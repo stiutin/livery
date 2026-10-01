@@ -54,11 +54,16 @@ function StudioPage() {
   const [settings, update] = useStudioSettings();
   const [page, setPage] = useState<PreviewPage>('home');
   const [language, setLanguage] = useState<Language>('en');
+  const [previewScheme, setPreviewScheme] = useState<'light' | 'dark'>('light');
   const toast = useToast();
   const existing = tenants.map((tenant) => tenant.id);
   const result = useMemo(() => checkBrand(settings, BASE, existing), [settings, existing]);
   const exportable = result.problems.length === 0;
-  const failing = result.tokenSet.contrast.filter((pair) => !pair.passes).length;
+  const pairs = [
+    ...result.tokenSet.contrast,
+    ...result.tokenSet.dark.contrast.map((pair) => ({...pair, label: `${pair.label} (dark)`})),
+  ];
+  const failing = pairs.filter((pair) => !pair.passes).length;
 
   const field = (key: keyof StudioSettings) => ({
     value: String(settings[key]),
@@ -108,9 +113,13 @@ function StudioPage() {
                 </div>
               )}
             </Field>
-            <Field label="Mode">
+            <Field
+              label="Default colour scheme"
+              hint="Every brand has a light and a dark set; this is what visitors see first."
+            >
               {(control) => (
-                <Select {...control} {...field('mode')}>
+                <Select {...control} {...field('colorScheme')}>
+                  <option value="system">Follow the device</option>
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
                 </Select>
@@ -213,6 +222,20 @@ function StudioPage() {
                 </Button>
               ))}
             </div>
+            <div role="group" aria-label="Preview scheme" className={styles.segmented}>
+              {(['light', 'dark'] as const).map((scheme) => (
+                <Button
+                  key={scheme}
+                  variant={previewScheme === scheme ? 'primary' : 'secondary'}
+                  aria-pressed={previewScheme === scheme}
+                  onClick={() => {
+                    setPreviewScheme(scheme);
+                  }}
+                >
+                  {scheme === 'light' ? 'Light' : 'Dark'}
+                </Button>
+              ))}
+            </div>
             <Field label="Preview language" className={styles.language}>
               {(control) => (
                 <Select
@@ -243,6 +266,8 @@ function StudioPage() {
             currency={settings.currency}
             payments={settings.payments}
             tokens={result.tokenSet.tokens}
+            darkTokens={result.tokenSet.dark.tokens}
+            scheme={previewScheme}
             tokenSet={settings.id}
           />
         </section>
@@ -253,7 +278,7 @@ function StudioPage() {
           <h2 className="h3">Contrast</h2>
           <p role="status" className={exportable ? styles.ok : styles.bad}>
             {exportable
-              ? `All ${result.tokenSet.contrast.length} contrast pairs pass WCAG AA. The brand is ready to export.`
+              ? `All ${pairs.length} contrast pairs pass WCAG AA, in light and dark. The brand is ready to export.`
               : `${result.problems.length} ${result.problems.length === 1 ? 'problem' : 'problems'} to fix before export${failing ? `, ${failing} of them contrast` : ''}.`}
           </p>
           {!exportable && (
@@ -273,7 +298,7 @@ function StudioPage() {
               {key: 'minimum', header: 'Needs', align: 'end', cell: (pair) => `${pair.minimum}:1`},
               {key: 'result', header: 'Result', cell: (pair) => (pair.passes ? 'Pass' : 'Fail')},
             ]}
-            rows={result.tokenSet.contrast}
+            rows={pairs}
             rowKey={(pair) => pair.label}
           />
         </Card>

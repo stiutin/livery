@@ -84,7 +84,13 @@ export function compileTenantsFromDisk({
     const tokenSet = tokenSets.find((set) => set.id === config?.tokens);
     if (config && tokenSet) {
       const {tokens, ...settings} = config;
-      tenants.push({...settings, tokenSet: tokens, css: tokenSetToCss(tokenSet), tokens: tokenSet.tokens});
+      tenants.push({
+        ...settings,
+        tokenSet: tokens,
+        css: tokenSetToCss(tokenSet),
+        tokens: tokenSet.tokens,
+        darkTokens: tokenSet.dark.tokens,
+      });
     }
   }
 

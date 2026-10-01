@@ -100,8 +100,13 @@ export interface CompiledTenant {
   readonly id: string;
   readonly tokens: readonly CompiledToken[];
   readonly contrast: readonly ContrastResult[];
+  /** Dark mode: the semantic colours that replace the light ones, and every contrast pair measured again. */
+  readonly dark: {readonly tokens: readonly CompiledToken[]; readonly contrast: readonly ContrastResult[]};
   readonly problems: readonly Problem[];
 }
+
+/** Which scheme a tenant shows a visitor who has not chosen one: the system's, or always light or dark. */
+export type ColorScheme = 'system' | 'light' | 'dark';
 
 /** A tenant as the app loads it: its settings, the CSS of its token set, and the tokens as data. */
 export interface LoadedTenant {
@@ -112,9 +117,12 @@ export interface LoadedTenant {
   /** The folder whose tokens style this tenant. */
   readonly tokenSet: string;
   readonly features: Readonly<Record<'payments', boolean>>;
-  /** Every custom property of the token set on `:root`, minified. */
+  readonly colorScheme: ColorScheme;
+  /** Every custom property of the token set on `:root`, with the dark set for dark mode, minified. */
   readonly css: string;
   readonly tokens: readonly CompiledToken[];
+  /** The semantic colours of dark mode. */
+  readonly darkTokens: readonly CompiledToken[];
 }
 
 /** A tenant in the list every page can read: enough to link to it. */

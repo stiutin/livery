@@ -1,6 +1,6 @@
 import {contrastRatio, parseHex, toHex, toOklch, toRgba} from './color.ts';
 import {compileTenant} from './compile.ts';
-import type {ColorValue, CompiledTenant, Problem, TokenSource} from './model.ts';
+import type {ColorScheme, ColorValue, CompiledTenant, Problem, TokenSource} from './model.ts';
 import {fitToGamut, type Step, STEP_NAMES, tonalScale} from './palette.ts';
 import {parseTenantConfig, TENANT_ID} from './tenant.ts';
 
@@ -29,7 +29,8 @@ export interface StudioSettings {
   name: string;
   /** The brand colour as #rrggbb; everything else is derived from it. */
   color: string;
-  mode: 'light' | 'dark';
+  /** What a visitor sees before choosing a scheme; every brand has both. */
+  colorScheme: ColorScheme;
   font: FontKey;
   /** The medium corner radius in px; small and large follow it. */
   radius: number;
@@ -45,7 +46,7 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   id: 'aurora',
   name: 'Aurora',
   color: '#6d28d9',
-  mode: 'light',
+  colorScheme: 'system',
   font: 'system',
   radius: 10,
   pill: false,
@@ -92,7 +93,7 @@ export function decodeSettings(encoded: string): StudioSettings {
     id: pick('id', (value) => isString(value) && value.length <= 40),
     name: pick('name', (value) => isString(value) && value.length <= 60),
     color: pick('color', (value) => isString(value) && /^#[0-9a-f]{6}$/i.test(value)),
-    mode: pick('mode', (value) => value === 'light' || value === 'dark'),
+    colorScheme: pick('colorScheme', (value) => value === 'system' || value === 'light' || value === 'dark'),
     font: pick('font', (value) => isString(value) && Object.hasOwn(FONTS, value)),
     radius: pick(
       'radius',
@@ -155,13 +156,15 @@ export interface StudioBrand {
   tokensJson: Record<string, unknown>;
 }
 
-export function brandFromSettings(settings: StudioSettings): StudioBrand {
-  const dark = settings.mode === 'dark';
-  const base = toOklch(parseHex(settings.color) ?? {r: 0.43, g: 0.16, b: 0.85, a: 1});
-  const [lightness, chroma, hue] = base;
-  const brand = tonalScale(Math.max(chroma, 0.02), hue);
-  const neutral = tonalScale(0.02, hue);
+type Scheme = 'light' | 'dark';
 
+/** The colours of one scheme, as primitives under `day` or `night` and the semantic set that points at them. */
+function schemeColours(
+  scheme: Scheme,
+  {hue, brand, neutral}: {hue: number; brand: Record<Step, Lch>; neutral: Record<Step, Lch>}
+): {primitives: Record<string, unknown>; semantic: Record<string, unknown>} {
+  const dark = scheme === 'dark';
+  const group = dark ? 'night' : 'day';
   const surfaces: Record<'canvas' | 'default' | 'subtle', Lch> = dark
     ? {
         canvas: fitToGamut(0.17, 0.015, hue),
@@ -169,9 +172,52 @@ export function brandFromSettings(settings: StudioSettings): StudioBrand {
         subtle: fitToGamut(0.26, 0.018, hue),
       }
     : {canvas: neutral[50], default: [0.995, 0, 0], subtle: neutral[100]};
-  const text: Lch = dark ? fitToGamut(0.96, 0.01, hue) : neutral[950];
-  const muted: Lch = dark ? fitToGamut(0.76, 0.02, hue) : neutral[700];
-  const strongBorder: Lch = dark ? fitToGamut(0.6, 0.02, hue) : neutral[500];
+  const onSurfaces = [surfaces.default, surfaces.canvas];
+  const link = firstPassing(brand, dark ? [300, 200, 400, 100, 50] : [700, 600, 800, 900, 950], onSurfaces, 4.5);
+  const focus = firstPassing(brand, dark ? [400, 300, 500, 200] : [600, 700, 500, 800], onSurfaces, 3);
+  const feedback = FEEDBACK[scheme];
+  const path = (name: string): {$value: string} => ref(`primitive.color.${group}.${name}`);
+
+  return {
+    primitives: {
+      canvas: token(oklch(surfaces.canvas)),
+      surface: token(oklch(surfaces.default)),
+      subtle: token(oklch(surfaces.subtle)),
+      ink: token(oklch(dark ? fitToGamut(0.96, 0.01, hue) : neutral[950])),
+      'ink-muted': token(oklch(dark ? fitToGamut(0.76, 0.02, hue) : neutral[700])),
+      border: token(dark ? srgb('#ffffff', 0.1) : oklch(neutral[950], 0.12)),
+      'border-strong': token(oklch(dark ? fitToGamut(0.6, 0.02, hue) : neutral[500])),
+      danger: Object.fromEntries(Object.entries(feedback.danger).map(([key, hex]) => [key, token(srgb(hex))])),
+      success: Object.fromEntries(Object.entries(feedback.success).map(([key, hex]) => [key, token(srgb(hex))])),
+    },
+    semantic: {
+      $type: 'color',
+      canvas: path('canvas'),
+      surface: {default: path('surface'), subtle: path('subtle')},
+      border: {default: path('border'), strong: path('border-strong')},
+      text: {default: path('ink'), muted: path('ink-muted')},
+      brand: {
+        default: ref('primitive.color.brand.base'),
+        hover: ref('primitive.color.brand.hover'),
+        on: ref('primitive.color.on-brand'),
+      },
+      link: ref(`primitive.color.brand.${link}`),
+      focus: ref(`primitive.color.brand.${focus}`),
+      danger: {text: path('danger.text'), surface: path('danger.surface'), border: path('danger.border')},
+      success: {text: path('success.text'), surface: path('success.surface'), border: path('success.border')},
+    },
+  };
+}
+
+/**
+ * A tenant from Studio's settings: one brand colour, its tonal scales, and from them a light and a dark set of
+ * semantic colours, so every brand Studio makes has a dark mode. The brand colour itself is the same in both.
+ */
+export function brandFromSettings(settings: StudioSettings): StudioBrand {
+  const base = toOklch(parseHex(settings.color) ?? {r: 0.43, g: 0.16, b: 0.85, a: 1});
+  const [lightness, chroma, hue] = base;
+  const brand = tonalScale(Math.max(chroma, 0.02), hue);
+  const neutral = tonalScale(0.02, hue);
 
   // Text on the brand: white or near-black, whichever reads better on the colour. The hover state then moves
   // away from that text (darker under white, lighter under ink), so it reads at least as well as the colour.
@@ -180,65 +226,27 @@ export function brandFromSettings(settings: StudioSettings): StudioBrand {
   const onBrand = contrast(white, base) >= contrast(ink, base) ? white : ink;
   const hover = fitToGamut(Math.min(0.98, Math.max(0.05, lightness + (onBrand === white ? -0.08 : 0.08))), chroma, hue);
 
-  const onSurfaces = [surfaces.default, surfaces.canvas];
-  const link = firstPassing(brand, dark ? [300, 200, 400, 100, 50] : [700, 600, 800, 900, 950], onSurfaces, 4.5);
-  const focus = firstPassing(brand, dark ? [400, 300, 500, 200] : [600, 700, 500, 800], onSurfaces, 3);
-  const feedback = FEEDBACK[settings.mode];
-
-  const scaleTokens = (scale: Record<Step, Lch>) =>
+  const light = schemeColours('light', {hue, brand, neutral});
+  const dark = schemeColours('dark', {hue, brand, neutral});
+  const scaleTokens = (scale: Record<Step, Lch>): Record<string, unknown> =>
     Object.fromEntries(STEP_NAMES.map((step) => [String(step), token(oklch(scale[step]))]));
   const radius = settings.radius;
 
   const tokensJson: Record<string, unknown> = {
     $schema: 'https://www.designtokens.org/schemas/2025.10/format.json',
-    $description: `${settings.name}: made in Livery Studio from ${settings.color.toLowerCase()}, ${settings.mode}.`,
+    $description: `${settings.name}: made in Livery Studio from ${settings.color.toLowerCase()}.`,
     primitive: {
       color: {
         $type: 'color',
         brand: {...scaleTokens(brand), base: token(oklch(base)), hover: token(oklch(hover))},
         neutral: scaleTokens(neutral),
-        surface: {
-          canvas: token(oklch(surfaces.canvas)),
-          default: token(oklch(surfaces.default)),
-          subtle: token(oklch(surfaces.subtle)),
-        },
-        text: {default: token(oklch(text)), muted: token(oklch(muted))},
-        border: {
-          default: token(dark ? srgb('#ffffff', 0.1) : oklch(neutral[950], 0.12)),
-          strong: token(oklch(strongBorder)),
-        },
         'on-brand': token(oklch(onBrand)),
-        danger: Object.fromEntries(Object.entries(feedback.danger).map(([key, hex]) => [key, token(srgb(hex))])),
-        success: Object.fromEntries(Object.entries(feedback.success).map(([key, hex]) => [key, token(srgb(hex))])),
-        ...(dark ? {overlay: token(srgb('#000000', 0.7)), shadow: token(srgb('#000000', 0.5))} : {}),
+        day: light.primitives,
+        night: dark.primitives,
       },
     },
     semantic: {
-      color: {
-        $type: 'color',
-        canvas: ref('primitive.color.surface.canvas'),
-        surface: {default: ref('primitive.color.surface.default'), subtle: ref('primitive.color.surface.subtle')},
-        border: {default: ref('primitive.color.border.default'), strong: ref('primitive.color.border.strong')},
-        text: {default: ref('primitive.color.text.default'), muted: ref('primitive.color.text.muted')},
-        brand: {
-          default: ref('primitive.color.brand.base'),
-          hover: ref('primitive.color.brand.hover'),
-          on: ref('primitive.color.on-brand'),
-        },
-        link: ref(`primitive.color.brand.${link}`),
-        focus: ref(`primitive.color.brand.${focus}`),
-        danger: {
-          text: ref('primitive.color.danger.text'),
-          surface: ref('primitive.color.danger.surface'),
-          border: ref('primitive.color.danger.border'),
-        },
-        success: {
-          text: ref('primitive.color.success.text'),
-          surface: ref('primitive.color.success.surface'),
-          border: ref('primitive.color.success.border'),
-        },
-        ...(dark ? {overlay: ref('primitive.color.overlay')} : {}),
-      },
+      color: light.semantic,
       font: {family: {body: token([...FONTS[settings.font].stack], 'fontFamily')}},
       radius: {
         $type: 'dimension',
@@ -247,28 +255,8 @@ export function brandFromSettings(settings: StudioSettings): StudioBrand {
         large: token({value: Math.min(32, Math.round(radius * 1.4)), unit: 'px'}),
       },
       density: token(DENSITIES[settings.density], 'number'),
-      ...(dark
-        ? {
-            shadow: {
-              $type: 'shadow',
-              raised: token({
-                color: '{primitive.color.shadow}',
-                offsetX: px(0),
-                offsetY: px(8),
-                blur: px(24),
-                spread: px(0),
-              }),
-              overlay: token({
-                color: '{primitive.color.shadow}',
-                offsetX: px(0),
-                offsetY: px(32),
-                blur: px(64),
-                spread: px(-16),
-              }),
-            },
-          }
-        : {}),
     },
+    dark: {color: dark.semantic},
     ...(settings.pill ? {component: {button: {radius: token({value: 9999, unit: 'px'}, 'dimension')}}} : {}),
   };
 
@@ -277,14 +265,11 @@ export function brandFromSettings(settings: StudioSettings): StudioBrand {
     name: settings.name,
     locale: settings.locale,
     currency: settings.currency,
+    colorScheme: settings.colorScheme,
     features: {payments: settings.payments},
   };
 
   return {tenantJson, tokensJson};
-}
-
-function px(value: number) {
-  return {value, unit: 'px'};
 }
 
 // ---- Checking ------------------------------------------------------------------------------------------------

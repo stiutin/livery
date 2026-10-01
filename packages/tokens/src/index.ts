@@ -2,9 +2,18 @@ export type {Rgba} from './color.ts';
 export {composite, contrastRatio, inSrgbGamut, parseHex, relativeLuminance, toHex, toOklch, toRgba} from './color.ts';
 export {compileTenant, formatProblems, tokenSetToCss} from './compile.ts';
 export type {ContractToken, ContrastPair, Layer} from './contract.ts';
-export {CONTRACT, CONTRAST_PAIRS, LAYERS, NON_TEXT_CONTRAST, TEXT_CONTRAST} from './contract.ts';
+export {
+  CONTRACT,
+  CONTRAST_PAIRS,
+  DARK_CONTRACT,
+  darkPathOf,
+  LAYERS,
+  NON_TEXT_CONTRAST,
+  TEXT_CONTRAST,
+} from './contract.ts';
 export {cssVariable, valueToCss} from './css.ts';
 export type {
+  ColorScheme,
   ColorValue,
   CompiledTenant,
   CompiledToken,

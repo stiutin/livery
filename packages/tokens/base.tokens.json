@@ -225,5 +225,19 @@
         "$value": "{semantic.color.border.default}"
       }
     }
+  },
+  "dark": {
+    "$description": "Dark-mode defaults a tenant rarely changes.",
+    "color": {
+      "$type": "color",
+      "overlay": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0],
+          "alpha": 0.7,
+          "hex": "#000000"
+        }
+      }
+    }
   }
 }

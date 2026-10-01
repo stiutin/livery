@@ -1,4 +1,4 @@
-import type {Problem} from './model.ts';
+import type {ColorScheme, Problem} from './model.ts';
 
 /** A tenant as `tenants/<id>/tenant.json` describes it, after validation. */
 export interface TenantConfig {
@@ -12,6 +12,8 @@ export interface TenantConfig {
   readonly locale: string;
   /** ISO 4217 currency code, such as `GBP`. */
   readonly currency: string;
+  /** The scheme a visitor sees before choosing one; `system` follows the device. */
+  readonly colorScheme: ColorScheme;
   /** What the tenant's customers can do; every flag is set explicitly. */
   readonly features: Readonly<Record<Feature, boolean>>;
 }
@@ -20,7 +22,8 @@ export interface TenantConfig {
 export const FEATURES = ['payments'] as const;
 export type Feature = (typeof FEATURES)[number];
 
-const KNOWN_KEYS = new Set(['$schema', 'name', 'tokens', 'locale', 'currency', 'features']);
+const KNOWN_KEYS = new Set(['$schema', 'name', 'tokens', 'locale', 'currency', 'colorScheme', 'features']);
+const COLOR_SCHEMES: readonly ColorScheme[] = ['system', 'light', 'dark'];
 export const TENANT_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** Ids the app uses for its own pages, so no tenant can take them. */
@@ -95,11 +98,15 @@ export function parseTenantConfig(
   }
   for (const key of Object.keys(json)) {
     if (!KNOWN_KEYS.has(key)) {
-      report(key, 'is not a tenant setting; use name, tokens, locale, currency and features');
+      report(key, 'is not a tenant setting; use name, tokens, locale, currency, colorScheme and features');
     }
   }
 
-  const {name, tokens = id, locale, currency, features} = json;
+  const {name, tokens = id, locale, currency, colorScheme = 'system', features} = json;
+  const scheme = COLOR_SCHEMES.find((candidate) => candidate === colorScheme);
+  if (!scheme) {
+    report('colorScheme', 'must be "system", "light" or "dark"');
+  }
   const flags = readFeatures(features, report);
   if (typeof name !== 'string' || name.trim() === '') {
     report('name', 'is required: the brand name people read');
@@ -120,9 +127,10 @@ export function parseTenantConfig(
     typeof tokens !== 'string' ||
     typeof locale !== 'string' ||
     typeof currency !== 'string' ||
-    !flags
+    !flags ||
+    !scheme
   ) {
     return {config: undefined, problems};
   }
-  return {config: {id, name, tokens, locale, currency, features: flags}, problems};
+  return {config: {id, name, tokens, locale, currency, colorScheme: scheme, features: flags}, problems};
 }

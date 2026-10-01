@@ -86,10 +86,21 @@
   outline-offset: 2px;
 }
 
-.languages {
+.preferences {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: flex-end;
   margin: 0 auto;
   max-width: 1000px;
   padding: 0 20px 8px;
+}
+
+.scheme {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  width: auto;
 }
 
 .languages ul {

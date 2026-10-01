@@ -39,6 +39,11 @@
           "description": "Customers pay invoices by card in the app. Without it they see bank-transfer details instead, and the payment code is never downloaded."
         }
       }
+    },
+    "colorScheme": {
+      "enum": ["system", "light", "dark"],
+      "default": "system",
+      "description": "The scheme a visitor sees before choosing one: system follows the device; light or dark is the brand's own look."
     }
   }
 }

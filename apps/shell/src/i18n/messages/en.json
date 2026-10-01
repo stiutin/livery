@@ -119,5 +119,9 @@
   "preview.swatch": "Swatch",
   "preview.token": "Token",
   "preview.value": "Value",
-  "login.required": "Sign in to open {page, select, account {your account} invoices {your invoices} other {this page}}."
+  "login.required": "Sign in to open {page, select, account {your account} invoices {your invoices} other {this page}}.",
+  "theme.label": "Colour scheme",
+  "theme.system": "System",
+  "theme.light": "Light",
+  "theme.dark": "Dark"
 }

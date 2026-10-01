@@ -13,13 +13,14 @@ const all = process.argv.includes('--all');
 const result = compileTenantsFromDisk({root, tenantsDir: resolve(root, 'tenants'), defaultTenant: 'harbour'});
 
 for (const tenant of result.tokenSets) {
-  const failing = tenant.contrast.filter((pair) => !pair.passes).length;
+  const pairs = [...tenant.contrast, ...tenant.dark.contrast.map((pair) => ({...pair, label: `${pair.label} (dark)`}))];
+  const failing = pairs.filter((pair) => !pair.passes).length;
   const mark = tenant.problems.length === 0 ? '✔' : '✖';
   console.log(
-    `${mark} ${tenant.id}: ${tenant.tokens.length} tokens, ${tenant.contrast.length - failing}/${tenant.contrast.length} contrast pairs pass`
+    `${mark} ${tenant.id}: ${tenant.tokens.length} tokens, ${pairs.length - failing}/${pairs.length} contrast pairs pass`
   );
   if (all) {
-    for (const pair of tenant.contrast) {
+    for (const pair of pairs) {
       console.log(
         `    ${pair.passes ? '✔' : '✖'} ${pair.ratio.toFixed(2).padStart(5)}:1 (needs ${pair.minimum}) ${pair.label}`
       );

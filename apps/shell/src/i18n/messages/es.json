@@ -119,5 +119,9 @@
   "preview.swatch": "Muestra",
   "preview.token": "Token",
   "preview.value": "Valor",
-  "login.required": "Inicia sesión para abrir {page, select, account {tu cuenta} invoices {tus facturas} other {esta página}}."
+  "login.required": "Inicia sesión para abrir {page, select, account {tu cuenta} invoices {tus facturas} other {esta página}}.",
+  "theme.label": "Esquema de color",
+  "theme.system": "Sistema",
+  "theme.light": "Claro",
+  "theme.dark": "Oscuro"
 }

@@ -119,5 +119,9 @@
   "preview.swatch": "Farbmuster",
   "preview.token": "Token",
   "preview.value": "Wert",
-  "login.required": "Melde dich an, um {page, select, account {dein Konto} invoices {deine Rechnungen} other {diese Seite}} zu öffnen."
+  "login.required": "Melde dich an, um {page, select, account {dein Konto} invoices {deine Rechnungen} other {diese Seite}} zu öffnen.",
+  "theme.label": "Farbschema",
+  "theme.system": "System",
+  "theme.light": "Hell",
+  "theme.dark": "Dunkel"
 }

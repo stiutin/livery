@@ -41,7 +41,14 @@ export default function TenantRoute(): ReactNode {
   return (
     <I18nProvider language={language} locale={locale} messages={messages}>
       <TenantProvider
-        value={{brandId: tenant.id, name: tenant.name, locale, currency: tenant.currency, features: tenant.features}}
+        value={{
+          brandId: tenant.id,
+          name: tenant.name,
+          locale,
+          currency: tenant.currency,
+          features: tenant.features,
+          colorScheme: tenant.colorScheme,
+        }}
       >
         <SessionProvider tenant={tenant.id}>
           <LocalisedToasts>
